@@ -1,5 +1,5 @@
 {
-  "api-endpoint": "http://10.10.80.106:8080/",
+  "api-endpoint": "http://10.10.80.106:8080",
   "auth-endpoint": "https://dev-gu3yvto5.eu.auth0.com",
   "auth-client-id": "kvwVMzWrQZA5DVSg6GjxOLl52xFhlFbV"
 }
