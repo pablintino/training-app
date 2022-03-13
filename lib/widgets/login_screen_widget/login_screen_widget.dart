@@ -34,7 +34,7 @@ class LoginScreenWidget extends StatelessWidget {
               child: CircularProgressIndicator(),
             ),
             Container(
-              child: Text('Logging in...'),
+              child: Text('Logging in...', style: TextStyle(fontSize: 20, color: Colors.white,)),
               padding: EdgeInsets.all(25),
             )
           ],
@@ -44,25 +44,34 @@ class LoginScreenWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          flex: 6,
-          child: Container(),
-        ),
-        Expanded(
-            flex: 2,
-            child: BlocBuilder<AuthBloc, AuthState>(
-              builder: (ctx, state) => Column(
-                children: [
-                  !(state is AuthenticatingState)
-                      ? _buildLoginButton(ctx)
-                      : _buildLoadingSpinner(ctx),
-                ],
+        backgroundColor: Colors.transparent,
+        body: Container(
+          decoration: new BoxDecoration(
+            image: new DecorationImage(
+              image: new AssetImage("assets/images/login-background.jpg"),
+              fit: BoxFit.cover,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 6,
+                child: Container(),
               ),
-            )),
-      ],
-    ));
+              Expanded(
+                  flex: 2,
+                  child: BlocBuilder<AuthBloc, AuthState>(
+                    builder: (ctx, state) => Column(
+                      children: [
+                        !(state is AuthenticatingState)
+                            ? _buildLoginButton(ctx)
+                            : _buildLoadingSpinner(ctx),
+                      ],
+                    ),
+                  )),
+            ],
+          ),
+        ));
   }
 }

@@ -16,10 +16,9 @@ class AuthenticatingState extends AuthState {
 
 class AuthenticatedState extends AuthState {
   final UserInfo userInfo;
-  final String accessToken;
 
-  AuthenticatedState(this.userInfo, this.accessToken);
+  AuthenticatedState(this.userInfo);
 
   @override
-  List<Object> get props => [userInfo, accessToken];
+  List<Object> get props => [userInfo];
 }

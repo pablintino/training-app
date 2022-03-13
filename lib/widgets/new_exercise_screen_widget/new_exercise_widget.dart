@@ -1,32 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:training_app/models/exercises_models.dart';
+import 'package:training_app/widgets/new_exercise_screen_widget/bloc/exercise_create_bloc.dart';
 
 class NewExerciseScreenWidget extends StatefulWidget {
   @override
-  _NewExerciseScreenWidgetState createState() => _NewExerciseScreenWidgetState();
+  _NewExerciseScreenWidgetState createState() =>
+      _NewExerciseScreenWidgetState();
 }
 
 class _NewExerciseScreenWidgetState extends State<NewExerciseScreenWidget> {
   final _formKey = GlobalKey<FormState>();
 
   final FocusNode _nameFocusNode = FocusNode();
-  final FocusNode _phoneFocusNode = FocusNode();
-  final FocusNode _emailFocusNode = FocusNode();
-  final FocusNode _passwordFocusNode = FocusNode();
+  final FocusNode _descriptionFocusNode = FocusNode();
 
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  final ExerciseCreateBloc _exerciseCreateBloc = ExerciseCreateBloc();
 
   _submitForm() {
     if (_formKey.currentState != null && _formKey.currentState!.validate()) {
-      final user = {
-        'name': _nameController.text,
-        'phone': _phoneController.text,
-        'email': _emailController.text,
-        'password': _passwordController.text,
-      };
-      print(user.toString());
+      final Exercise exercise = Exercise(
+          name: _nameController.text, description: _descriptionController.text);
+
+      print(exercise.toString());
 
       // If the form passes validation, display a Snackbar.
       ScaffoldMessenger.of(context)
@@ -58,90 +56,68 @@ class _NewExerciseScreenWidgetState extends State<NewExerciseScreenWidget> {
         width: MediaQuery.of(context).size.width,
         height: MediaQuery.of(context).size.height,
         child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: 16,
-          ),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                TextFormField(
-                  focusNode: _nameFocusNode,
-                  controller: _nameController,
-                  keyboardType: TextInputType.name,
-                  textInputAction: TextInputAction.next,
-                  validator: _validateInput,
-                  onFieldSubmitted: (String value) {
-                    _nextFocus(_phoneFocusNode);
-                  },
-                  decoration: InputDecoration(
-                    hintText: 'Enter your full name',
-                    labelText: 'Full Name',
-                  ),
-                ),
-                TextFormField(
-                  focusNode: _phoneFocusNode,
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone,
-                  textInputAction: TextInputAction.next,
-                  validator: _validateInput,
-                  onFieldSubmitted: (String value) {
-                    _nextFocus(_emailFocusNode);
-                  },
-                  decoration: InputDecoration(
-                    hintText: 'Enter your phone number',
-                    labelText: 'Phone Number',
-                  ),
-                ),
-                TextFormField(
-                  focusNode: _emailFocusNode,
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.next,
-                  validator: _validateInput,
-                  onFieldSubmitted: (String value) {
-                    _nextFocus(_passwordFocusNode);
-                  },
-                  decoration: InputDecoration(
-                    hintText: 'Enter your email address',
-                    labelText: 'Email Address',
-                  ),
-                ),
-                TextFormField(
-                  focusNode: _passwordFocusNode,
-                  controller: _passwordController,
-                  keyboardType: TextInputType.text,
-                  textInputAction: TextInputAction.done,
-                  obscureText: true,
-                  validator: _validateInput,
-                  onFieldSubmitted: (String value) {
-                    _submitForm();
-                  },
-                  decoration: InputDecoration(
-                      hintText: 'Enter your password',
-                      labelText: 'Password',
-                      suffixIcon: Icon(Icons.visibility_off_outlined)),
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                          top: 16,
-                        ),
-                        child: ElevatedButton(
-                          onPressed: _submitForm,
-                          child: Text('Register'),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+            padding: EdgeInsets.symmetric(
+              horizontal: 16,
             ),
+            child: BlocConsumer<ExerciseCreateBloc, ExerciseCreateState>(
+              bloc: _exerciseCreateBloc,
+              listener: (ctx, state) => {},
+              builder: (ctx, state) => _buildForm(ctx),
+            )),
+      ),
+    );
+  }
+
+  Form _buildForm(BuildContext context) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          _buildFormTextField('Name', 'Exercise name', _nameFocusNode,
+              _nameController, (_) => _nextFocus(_descriptionFocusNode)),
+          _buildFormTextField(
+              'Description',
+              'Exercise description',
+              _descriptionFocusNode,
+              _descriptionController,
+              (_) => _submitForm()),
+          Row(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    top: 16,
+                  ),
+                  child: ElevatedButton(
+                    onPressed: _submitForm,
+                    child: Text('Add'),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ),
+        ],
+      ),
+    );
+  }
+
+  TextFormField _buildFormTextField(
+      String name,
+      String label,
+      FocusNode focusNode,
+      TextEditingController controller,
+      ValueChanged<String> onSubmit) {
+    return TextFormField(
+      focusNode: focusNode,
+      controller: controller,
+      keyboardType: TextInputType.name,
+      textInputAction: TextInputAction.next,
+      validator: _validateInput,
+      onFieldSubmitted: onSubmit,
+      decoration: InputDecoration(
+        hintText: name,
+        labelText: label,
       ),
     );
   }
