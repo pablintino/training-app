@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
@@ -21,12 +22,14 @@ class ExerciseListBloc extends Bloc<ExerciseListEvent, ExerciseListState> {
       : exercisesRepository = GetIt.instance<ExercisesRepository>(),
         super(ExerciseListInitialState()) {
     on<ExercisesFetchEvent>((_, emit) => _handleFetchEvent(emit));
+    on<CreateExerciseEvent>(
+        (event, emit) => _handleCreateExerciseEvent(event, emit));
     on<SearchFilterUpdateFetchEvent>(
         (event, emit) => _handleFilterChangeEvent(event, emit));
   }
 
   Future<void> _handleFetchEvent(Emitter emit) async {
-    emit(ExerciseListLoadingState('Loading exercises'));
+    emit(ExerciseListLoadingState());
     final response = await exercisesRepository.getExercises(page, filter);
     emit(ExerciseListLoadingSuccessState(response));
     page++;
@@ -34,11 +37,36 @@ class ExerciseListBloc extends Bloc<ExerciseListEvent, ExerciseListState> {
 
   Future<void> _handleFilterChangeEvent(
       SearchFilterUpdateFetchEvent event, Emitter emit) async {
-    emit(ExerciseListLoadingState('Loading exercises'));
+    emit(ExerciseListLoadingState());
     page = 0;
     filter = (event.filter ?? '').isEmpty ? null : event.filter;
-    final response = await exercisesRepository.getExercises(page, filter);
-    emit(ExerciseListReloadSuccessState(response));
-    page++;
+
+    await exercisesRepository.getExercises(page, filter).then((exercises) {
+      emit(ExerciseListReloadSuccessState(exercises));
+      page++;
+    }).catchError((error, stackTrace) {
+      emit(ExerciseListLoadingErrorState(error));
+    });
+  }
+
+  Future<void> _handleCreateExerciseEvent(
+      CreateExerciseEvent event, Emitter emit) async {
+    await exercisesRepository
+        .createExercise(event.exercise)
+        .then((exercise) async => await exercisesRepository
+                .walkUntilExercise(exercise.id)
+                .then((tuple) {
+              page = tuple.item2;
+
+              emit(ExerciseCreationSuccessState(
+                  tuple.item1
+                      .indexWhere((element) => exercise.id == element.id),
+                  tuple.item1));
+            }).catchError((error, stackTrace) {
+              emit(ExerciseListLoadingErrorState(error));
+            }))
+        .catchError((error, stackTrace) {
+      emit(ExerciseCreationErrorState(error));
+    });
   }
 }

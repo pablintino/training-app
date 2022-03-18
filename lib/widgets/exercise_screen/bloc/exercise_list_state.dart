@@ -9,12 +9,8 @@ class ExerciseListInitialState extends ExerciseListState {
 }
 
 class ExerciseListLoadingState extends ExerciseListState {
-  final String message;
-
-  ExerciseListLoadingState(this.message);
-
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [];
 }
 
 class ExerciseListLoadingSuccessState extends ExerciseListState {
@@ -35,10 +31,29 @@ class ExerciseListReloadSuccessState extends ExerciseListState {
   List<Object?> get props => [exercises];
 }
 
+class ExerciseCreationSuccessState extends ExerciseListState {
+  final int newIndex;
+  final List<Exercise> reloadedExercises;
+
+  ExerciseCreationSuccessState(this.newIndex, this.reloadedExercises);
+
+  @override
+  List<Object?> get props => [newIndex, reloadedExercises];
+}
+
 class ExerciseListLoadingErrorState extends ExerciseListState {
   final String error;
 
   ExerciseListLoadingErrorState(this.error);
+
+  @override
+  List<Object?> get props => [error];
+}
+
+class ExerciseCreationErrorState extends ExerciseListState {
+  final String error;
+
+  ExerciseCreationErrorState(this.error);
 
   @override
   List<Object?> get props => [error];

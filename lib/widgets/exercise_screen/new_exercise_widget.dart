@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:training_app/models/exercises_models.dart';
-import 'package:training_app/widgets/new_exercise_screen_widget/bloc/exercise_create_bloc.dart';
+import 'package:training_app/widgets/exercise_screen/bloc/exercise_list_bloc.dart';
 
 class NewExerciseScreenWidget extends StatefulWidget {
+  final ExerciseListBloc exerciseListBloc;
+
+  NewExerciseScreenWidget(this.exerciseListBloc);
+
   @override
   _NewExerciseScreenWidgetState createState() =>
       _NewExerciseScreenWidgetState();
@@ -17,13 +21,12 @@ class _NewExerciseScreenWidgetState extends State<NewExerciseScreenWidget> {
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-  final ExerciseCreateBloc _exerciseCreateBloc = ExerciseCreateBloc();
 
   _submitForm() {
     if (_formKey.currentState != null && _formKey.currentState!.validate()) {
       final Exercise exercise = Exercise(
           name: _nameController.text, description: _descriptionController.text);
-      _exerciseCreateBloc.add(NewExerciseCreationEvent(exercise));
+      widget.exerciseListBloc.add(CreateExerciseEvent(exercise));
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('Registration sent')));
     }
@@ -43,34 +46,53 @@ class _NewExerciseScreenWidgetState extends State<NewExerciseScreenWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('New exercise'),
-      ),
-      body: Container(
-        width: MediaQuery.of(context).size.width,
-        height: MediaQuery.of(context).size.height,
-        child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: 16,
-            ),
-            child: BlocConsumer<ExerciseCreateBloc, ExerciseCreateState>(
-              bloc: _exerciseCreateBloc,
-              listener: (ctx, state) {
-                if (state is SuccessExerciseCreationState) {
-                  Navigator.pop(context);
-                }
+        appBar: AppBar(
+          title: Text('New exercise'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                final Exercise exercise = Exercise(
+                    name: _nameController.text,
+                    description: _descriptionController.text);
+
+                widget.exerciseListBloc.add(CreateExerciseEvent(exercise));
               },
-              builder: (ctx, state) => _buildForm(ctx),
-            )),
-      ),
-    );
+              child: new Icon(
+                Icons.save,
+                color: Colors.white,
+              ),
+            )
+          ],
+        ),
+        body: BlocListener<ExerciseListBloc, ExerciseListState>(
+          bloc: widget.exerciseListBloc,
+          listener: (ctx, state) {
+            if (state is ExerciseCreationSuccessState) {
+              Navigator.of(context).pop();
+            } else if (state is ExerciseCreationErrorState) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(state.error),
+                duration: Duration(seconds: 2),
+              ));
+            }
+          },
+          child: Container(
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height,
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: 16,
+              ),
+              child: _buildForm(context),
+            ),
+          ),
+        ));
   }
 
   Form _buildForm(BuildContext context) {
     return Form(
       key: _formKey,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           _buildFormTextField('Name', 'Exercise name', _nameFocusNode,
               _nameController, (_) => _nextFocus(_descriptionFocusNode)),
@@ -80,21 +102,6 @@ class _NewExerciseScreenWidgetState extends State<NewExerciseScreenWidget> {
               _descriptionFocusNode,
               _descriptionController,
               (_) => _submitForm()),
-          Row(
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    top: 16,
-                  ),
-                  child: ElevatedButton(
-                    onPressed: _submitForm,
-                    child: Text('Add'),
-                  ),
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );

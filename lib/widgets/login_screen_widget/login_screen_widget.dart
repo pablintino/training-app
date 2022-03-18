@@ -5,16 +5,27 @@ import 'package:training_app/blocs/auth/auth_bloc.dart';
 class LoginScreenWidget extends StatelessWidget {
   static const routeName = '/welcome-screen';
 
-  Container _buildLoginButton(BuildContext ctx) {
+  Container _buildLoginButton(BuildContext ctx, bool isLoading) {
     return Container(
       height: 80,
       width: double.infinity,
       padding: const EdgeInsets.only(top: 25, left: 24, right: 24),
       child: ElevatedButton(
-        onPressed: () =>
-            BlocProvider.of<AuthBloc>(ctx).add(LaunchLoginAuthEvent()),
+        onPressed: !isLoading
+            ? () => BlocProvider.of<AuthBloc>(ctx).add(LaunchLoginAuthEvent())
+            : null,
+        style: ButtonStyle(
+          foregroundColor:
+              MaterialStateProperty.resolveWith<Color>((_) => Colors.white),
+          backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
+            if (states.contains(MaterialState.disabled)) {
+              return Colors.grey.withOpacity(0.4); // Disabled color
+            }
+            return Colors.blue; // Regular color
+          }),
+        ),
         child: Text(
-          'Login',
+          !isLoading ? 'Login' : 'Loading...',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w700,
@@ -34,7 +45,11 @@ class LoginScreenWidget extends StatelessWidget {
               child: CircularProgressIndicator(),
             ),
             Container(
-              child: Text('Logging in...', style: TextStyle(fontSize: 20, color: Colors.white,)),
+              child: Text('Logging in...',
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.white,
+                  )),
               padding: EdgeInsets.all(25),
             )
           ],
@@ -64,9 +79,7 @@ class LoginScreenWidget extends StatelessWidget {
                   child: BlocBuilder<AuthBloc, AuthState>(
                     builder: (ctx, state) => Column(
                       children: [
-                        !(state is AuthenticatingState)
-                            ? _buildLoginButton(ctx)
-                            : _buildLoadingSpinner(ctx),
+                        _buildLoginButton(ctx, state is AuthenticatingState)
                       ],
                     ),
                   )),

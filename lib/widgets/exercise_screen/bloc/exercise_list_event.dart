@@ -20,3 +20,13 @@ class SearchFilterUpdateFetchEvent extends ExerciseListEvent {
   @override
   List<Object?> get props => [filter];
 }
+
+@immutable
+class CreateExerciseEvent extends ExerciseListEvent {
+  final Exercise exercise;
+
+  CreateExerciseEvent(this.exercise);
+
+  @override
+  List<Object?> get props => [exercise];
+}
