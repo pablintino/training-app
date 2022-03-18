@@ -23,15 +23,9 @@ class _NewExerciseScreenWidgetState extends State<NewExerciseScreenWidget> {
     if (_formKey.currentState != null && _formKey.currentState!.validate()) {
       final Exercise exercise = Exercise(
           name: _nameController.text, description: _descriptionController.text);
-
-      print(exercise.toString());
-
-      // If the form passes validation, display a Snackbar.
+      _exerciseCreateBloc.add(NewExerciseCreationEvent(exercise));
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('Registration sent')));
-      //_formKey.currentState.save();
-      //_formKey.currentState.reset();
-      //_nextFocus(_nameFocusNode);
     }
   }
 
@@ -61,7 +55,11 @@ class _NewExerciseScreenWidgetState extends State<NewExerciseScreenWidget> {
             ),
             child: BlocConsumer<ExerciseCreateBloc, ExerciseCreateState>(
               bloc: _exerciseCreateBloc,
-              listener: (ctx, state) => {},
+              listener: (ctx, state) {
+                if (state is SuccessExerciseCreationState) {
+                  Navigator.pop(context);
+                }
+              },
               builder: (ctx, state) => _buildForm(ctx),
             )),
       ),

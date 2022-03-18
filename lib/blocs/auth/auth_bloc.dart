@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:get_it/get_it.dart';
-import 'package:training_app/blocs/auth/auth_models.dart';
+import 'package:training_app/models/auth_models.dart';
 import 'package:training_app/repositories/user_auth_repository.dart';
 
 part 'auth_event.dart';
@@ -22,8 +22,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   Future<void> _logoutAction(Emitter<AuthState> emit) async {
-    await _userAuthRepository.logout();
-    emit(UnauthenticatedState());
+    await _userAuthRepository
+        .logout()
+        .whenComplete(() => emit(UnauthenticatedState()));
   }
 
   Future<void> _loginAction(Emitter<AuthState> emit) async {

@@ -1,13 +1,13 @@
 part of 'exercise_create_bloc.dart';
 
-abstract class ExerciseCreateEvent extends Equatable {
-  const ExerciseCreateEvent();
+abstract class ExerciseCreationEvent extends Equatable {
+  const ExerciseCreationEvent();
 }
 
-class NewExerciseCreateEvent extends Equatable {
+class NewExerciseCreationEvent extends ExerciseCreationEvent {
   final Exercise exercise;
 
-  NewExerciseCreateEvent(this.exercise);
+  NewExerciseCreationEvent(this.exercise);
 
   @override
   List<Object?> get props => [exercise];

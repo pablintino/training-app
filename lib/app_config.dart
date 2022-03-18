@@ -6,14 +6,17 @@ class AppConfig {
   String apiUrl;
   String authEndpoint;
   String authClientId;
+  String authCallback;
 
-  AppConfig(this.apiUrl, this.authEndpoint, this.authClientId);
+  AppConfig(
+      this.apiUrl, this.authEndpoint, this.authClientId, this.authCallback);
 
   factory AppConfig.fromJson(Map<String, dynamic> data) {
     final apiUrl = data['api-endpoint'];
     final authEndpoint = data['auth-endpoint'];
     final authClientId = data['auth-client-id'];
-    return AppConfig(apiUrl, authEndpoint, authClientId);
+    final authCallback = data['auth-callback'];
+    return AppConfig(apiUrl, authEndpoint, authClientId, authCallback);
   }
 }
 

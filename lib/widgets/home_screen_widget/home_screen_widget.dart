@@ -12,7 +12,8 @@ class HomeTabbedWidget extends StatefulWidget {
 }
 
 class _HomeTabbedWidgetState extends State<HomeTabbedWidget> {
-  final _pageViewController = PageController();
+  final _pageViewController =
+      PageController(initialPage: BottomNavigationItem.CurrentSession.index);
 
   @override
   void dispose() {

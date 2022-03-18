@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:training_app/app_routes.dart';
 import 'package:training_app/blocs/auth/auth_bloc.dart';
 
 class DrawerNavigationWidget extends StatelessWidget {
@@ -19,7 +20,8 @@ class DrawerNavigationWidget extends StatelessWidget {
           ListTile(
             title: const Text('Exercises'),
             onTap: () {
-              Navigator.of(context).pushNamed('/exercises');
+              Navigator.of(context)
+                  .pushNamed(AppRoutes.EXERCISES_LISTS_SCREEN_ROUTE);
             },
           ),
           ListTile(

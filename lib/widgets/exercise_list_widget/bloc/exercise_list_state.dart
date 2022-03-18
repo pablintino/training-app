@@ -17,6 +17,12 @@ class ExerciseListLoadingSuccessState extends ExerciseListState {
   ExerciseListLoadingSuccessState(this.exercises);
 }
 
+class ExerciseListReloadSuccessState extends ExerciseListState {
+  final List<Exercise> exercises;
+
+  ExerciseListReloadSuccessState(this.exercises);
+}
+
 class ExerciseListLoadingErrorState extends ExerciseListState {
   final String error;
 

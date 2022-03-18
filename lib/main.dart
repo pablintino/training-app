@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:training_app/app_config.dart';
+import 'package:training_app/app_routes.dart';
 import 'package:training_app/blocs/auth/auth_bloc.dart';
 import 'package:training_app/repositories/exercises_repository.dart';
 import 'package:training_app/repositories/user_auth_repository.dart';
-import 'package:training_app/widgets/exercise_list_widget/exercise_list_widget.dart';
-import 'package:training_app/widgets/home_screen_widget/bloc/home_screen_bloc.dart';
+import 'package:training_app/widgets/exercise_list_widget/exercise_list_screen_widget.dart';
 import 'package:training_app/widgets/login_screen_widget/login_screen_widget.dart';
 import 'package:training_app/widgets/main_app_widget/main_app_widget.dart';
 import 'package:training_app/widgets/new_exercise_screen_widget/new_exercise_widget.dart';
@@ -22,7 +22,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
         providers: [
-          BlocProvider(create: (BuildContext context) => HomeScreenBloc()),
           BlocProvider(
               create: (BuildContext context) =>
                   AuthBloc()..add(InitAppAuthEvent())),
@@ -33,9 +32,11 @@ class MyApp extends StatelessWidget {
             primarySwatch: Colors.blue,
           ),
           routes: {
-            '/login': (context) => LoginScreenWidget(),
-            '/exercises': (context) => ExerciseListWidget(),
-            '/exercises/new': (context) => NewExerciseScreenWidget(),
+            AppRoutes.LOGIN_SCREEN_ROUTE: (context) => LoginScreenWidget(),
+            AppRoutes.EXERCISES_LISTS_SCREEN_ROUTE: (context) =>
+                ExerciseListScreenWidget(),
+            AppRoutes.NEW_EXERCISE_SCREEN_ROUTE: (context) =>
+                NewExerciseScreenWidget(),
           },
           home: MainAppWidget(),
         ));
