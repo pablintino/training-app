@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:training_app/models/exercises_models.dart';
+import 'package:training_app/widgets/two_letters_icon/two_letters_icon.dart';
 
 class ExerciseListItem extends StatelessWidget {
   final Exercise exercise;
@@ -8,22 +9,13 @@ class ExerciseListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ExpansionTile(
+    return ListTile(
       title: Text(exercise.name ?? 'No name'),
       subtitle: Text(exercise.description ?? ''),
-      childrenPadding: const EdgeInsets.all(16),
       leading: Container(
         margin: EdgeInsets.only(top: 8),
-        child: Text(exercise.id.toString()),
+        child: TwoLettersIcon(exercise.name ?? ''),
       ),
-      children: [
-        Text(
-          exercise.description ?? '',
-          textAlign: TextAlign.justify,
-        ),
-        const SizedBox(height: 20),
-        Container()
-      ],
     );
   }
 }

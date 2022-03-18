@@ -8,28 +8,32 @@ import 'package:training_app/widgets/exercise_list_widget/exercise_list_widget.d
 import 'package:training_app/widgets/list_search_widget/list_search_widget.dart';
 
 class ExerciseListScreenWidget extends StatelessWidget {
+  final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
+      GlobalKey<ScaffoldMessengerState>();
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-            automaticallyImplyLeading: true,
-            title: Text('Exercises'),
-            leading: IconButton(
-              icon: Icon(Icons.arrow_back),
-              onPressed: () => Navigator.pop(context, false),
-            )),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            Navigator.of(context)
-                .pushNamed(AppRoutes.NEW_EXERCISE_SCREEN_ROUTE);
-          },
-          backgroundColor: Colors.blue,
-          child: const Icon(Icons.add),
-        ),
-        body: BlocProvider<ExerciseListBloc>(
-          create: (_) => ExerciseListBloc()..add(ExercisesFetchEvent()),
-          child: ExerciseListWidget(),
-        ));
+    return ScaffoldMessenger(
+      key: scaffoldMessengerKey,
+        child: Scaffold(
+            appBar: AppBar(
+                automaticallyImplyLeading: true,
+                title: Text('Exercises'),
+                leading: IconButton(
+                  icon: Icon(Icons.arrow_back),
+                  onPressed: () => Navigator.pop(context, false),
+                )),
+            floatingActionButton: FloatingActionButton(
+              onPressed: () {
+                Navigator.of(context)
+                    .pushNamed(AppRoutes.NEW_EXERCISE_SCREEN_ROUTE);
+              },
+              backgroundColor: Colors.blue,
+              child: const Icon(Icons.add),
+            ),
+            body: BlocProvider<ExerciseListBloc>(
+              create: (_) => ExerciseListBloc()..add(ExercisesFetchEvent()),
+              child: ExerciseListWidget(),
+            )));
   }
 }

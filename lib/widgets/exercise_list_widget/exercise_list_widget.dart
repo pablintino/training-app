@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:training_app/app_routes.dart';
 import 'package:training_app/models/exercises_models.dart';
 import 'package:training_app/widgets/exercise_list_widget/bloc/exercise_list_bloc.dart';
 import 'package:training_app/widgets/exercise_list_widget/exercise_list_item.dart';
 import 'package:training_app/widgets/list_search_widget/list_search_widget.dart';
 
 class ExerciseListWidget extends StatefulWidget {
+
   @override
   _ExerciseListWidgetState createState() => _ExerciseListWidgetState();
 }
@@ -25,7 +25,7 @@ class _ExerciseListWidgetState extends State<ExerciseListWidget> {
                 BlocProvider.of<ExerciseListBloc>(context)
                     .add(SearchFilterUpdateFetchEvent(filterValue))
               },
-          hintText: "hint"),
+          hintText: "Search exercise..."),
       Expanded(
         child: BlocConsumer<ExerciseListBloc, ExerciseListState>(
           listener: (ctx, state) => _onStateChange(ctx, state),
