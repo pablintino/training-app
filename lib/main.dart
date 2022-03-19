@@ -10,7 +10,6 @@ import 'package:training_app/widgets/exercise_screen/exercise_list_screen_widget
 import 'package:training_app/widgets/login_screen_widget/login_screen_widget.dart';
 import 'package:training_app/widgets/main_app_widget/main_app_widget.dart';
 
-
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   setup().then((_) => runApp(MyApp()));
@@ -32,11 +31,12 @@ class MyApp extends StatelessWidget {
             primarySwatch: Colors.blue,
           ),
           routes: {
+            AppRoutes.DEFAULT_ROUTE: (context) => LoginScreenWidget(),
             AppRoutes.LOGIN_SCREEN_ROUTE: (context) => LoginScreenWidget(),
+            AppRoutes.HOME_SCREEN_ROUTE: (context) => MainAppWidget(),
             AppRoutes.EXERCISES_LISTS_SCREEN_ROUTE: (context) =>
                 ExerciseListScreenWidget()
           },
-          home: MainAppWidget(),
         ));
   }
 }

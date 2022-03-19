@@ -15,8 +15,13 @@ class DrawerNavigationWidget extends StatelessWidget {
         // Important: Remove any padding from the ListView.
         padding: EdgeInsets.zero,
         children: [
-          BlocBuilder<AuthBloc, AuthState>(
-              bloc: authBloc, builder: (_, state) => _buildHeader(state)),
+          BlocConsumer<AuthBloc, AuthState>(
+              bloc: authBloc,
+              listener: (ctx, state) {
+                Navigator.of(ctx).pushNamedAndRemoveUntil(
+                    AppRoutes.LOGIN_SCREEN_ROUTE, (route) => false);
+              },
+              builder: (_, state) => _buildHeader(state)),
           ListTile(
             title: const Text('Exercises'),
             onTap: () {
@@ -45,10 +50,8 @@ class DrawerNavigationWidget extends StatelessWidget {
   }
 
   UserAccountsDrawerHeader _buildHeader(AuthState state) {
-    final String picture = state is AuthenticatedState
-        ? state.userInfo.picture ??
-            'https://visualpharm.com/assets/908/User-595b40b85ba036ed117dc597.svg'
-        : 'https://visualpharm.com/assets/908/User-595b40b85ba036ed117dc597.svg';
+    final String? picture =
+        state is AuthenticatedState ? state.userInfo.picture ?? null : null;
     final String userName =
         state is AuthenticatedState ? state.userInfo.nickname ?? '' : '';
     final String email =
@@ -60,8 +63,10 @@ class DrawerNavigationWidget extends StatelessWidget {
       currentAccountPicture: Container(
         decoration: BoxDecoration(
             shape: BoxShape.circle,
-            image: DecorationImage(
-                fit: BoxFit.fill, image: NetworkImage(picture))),
+            image: picture != null
+                ? DecorationImage(
+                    fit: BoxFit.fill, image: NetworkImage(picture))
+                : null),
       ),
       accountEmail: Text(email),
       accountName: Text(userName),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
 import 'package:training_app/models/exercises_models.dart';
 import 'package:training_app/widgets/exercise_screen/bloc/exercise_list_bloc.dart';
@@ -83,7 +84,8 @@ class _ExerciseListWidgetState extends State<ExerciseListWidget> {
     return _buildListView(bloc);
   }
 
-  Column _buildReloadButton(BuildContext context, ExerciseListBloc bloc, ExerciseListLoadingErrorState state) {
+  Widget _buildReloadButton(BuildContext context, ExerciseListBloc bloc,
+      ExerciseListLoadingErrorState state) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -101,8 +103,9 @@ class _ExerciseListWidgetState extends State<ExerciseListWidget> {
     );
   }
 
-  ListView _buildListView(ExerciseListBloc bloc) {
-    return ListView.builder(
+  Widget _buildListView(ExerciseListBloc bloc) {
+    return SlidableAutoCloseBehavior(
+        child: ListView.builder(
       controller: _scrollController
         ..addListener(() {
           if (_scrollController.offset ==
@@ -117,8 +120,8 @@ class _ExerciseListWidgetState extends State<ExerciseListWidget> {
           controller: _scrollController,
           index: index,
           highlightColor: Colors.black.withOpacity(0.1),
-          child: ExerciseListItem(_exercises[index])),
+          child: ExerciseListItem(_exercises[index], (_) => {}, (_) => {})),
       itemCount: _exercises.length,
-    );
+    ));
   }
 }
