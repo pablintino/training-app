@@ -1,13 +1,13 @@
 import 'dart:async';
-import 'dart:collection';
-import 'dart:math';
 
 import 'package:bloc/bloc.dart';
+import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:equatable/equatable.dart';
 import 'package:get_it/get_it.dart';
 import 'package:meta/meta.dart';
 import 'package:training_app/models/exercises_models.dart';
 import 'package:training_app/repositories/exercises_repository.dart';
+import 'package:rxdart/rxdart.dart';
 
 part 'exercise_list_event.dart';
 
@@ -27,7 +27,8 @@ class ExerciseListBloc extends Bloc<ExerciseListEvent, ExerciseListState> {
     on<CreateExerciseEvent>(
         (event, emit) => _handleCreateExerciseEvent(event, emit));
     on<SearchFilterUpdateFetchEvent>(
-        (event, emit) => _handleFilterChangeEvent(event, emit));
+        (event, emit) => _handleFilterChangeEvent(event, emit),
+        transformer: _debounceRestartable(Duration(milliseconds: 500)));
   }
 
   Future<void> _handleFetchEvent(Emitter emit) async {
@@ -91,5 +92,14 @@ class ExerciseListBloc extends Bloc<ExerciseListEvent, ExerciseListState> {
   static List<Exercise> _removeExistingExercises(
       ExerciseListState state, final List<Exercise> list) {
     return list.where((element) => !state.exercises.contains(element)).toList();
+  }
+
+  EventTransformer<ExerciseListEvent> _debounceRestartable<ExerciseListEvent>(
+    Duration duration,
+  ) {
+    // This feeds the debounced event stream to restartable() and returns that
+    // as a transformer.
+    return (events, mapper) => restartable<ExerciseListEvent>()
+        .call(events.debounceTime(duration), mapper);
   }
 }
