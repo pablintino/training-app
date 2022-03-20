@@ -14,78 +14,72 @@ part 'exercise_list_event.dart';
 part 'exercise_list_state.dart';
 
 class ExerciseListBloc extends Bloc<ExerciseListEvent, ExerciseListState> {
-  final ExercisesRepository exercisesRepository;
+  final ExercisesRepository _exercisesRepository;
 
-  bool get isFetching => state is ExerciseListFetchingState;
+  bool get isFetching => state is ExerciseListLoadingState;
 
   ExerciseListBloc()
-      : exercisesRepository = GetIt.instance<ExercisesRepository>(),
-        super(ExerciseListInitialState()) {
+      : _exercisesRepository = GetIt.instance<ExercisesRepository>(),
+        super(ExerciseListState()) {
     on<ExercisesFetchEvent>((_, emit) => _handleFetchEvent(emit));
-    on<DeleteExerciseEvent>(
-        (event, emit) => _handleDeleteExerciseEvent(event, emit));
-    on<CreateExerciseEvent>(
-        (event, emit) => _handleCreateExerciseEvent(event, emit));
+    on<ModifiedOrCreatedExerciseEvent>(
+        (event, emit) => _handleListModificationEvent(event, emit));
     on<SearchFilterUpdateFetchEvent>(
         (event, emit) => _handleFilterChangeEvent(event, emit),
-        transformer: _debounceRestartable(Duration(milliseconds: 500)));
+        transformer: _debounceRestartable(const Duration(milliseconds: 500)));
   }
 
   Future<void> _handleFetchEvent(Emitter emit) async {
-    emit(ExerciseListFetchingState(state.exercises));
-    try {
-      final pageNumber =
-          (state.exercises.length / ExercisesRepository.PAGE_SIZE).truncate();
-      final retrievedExercises = await exercisesRepository.getExercisesByPage(
-          pageNumber, state.searchFilter);
+    emit(ExerciseListLoadingState.fromState(state));
+    final pageNumber =
+        (state.exercises.length / ExercisesRepository.PAGE_SIZE).truncate();
+    await _exercisesRepository
+        .getExercisesByPage(pageNumber, state.searchFilter)
+        .then((retrievedExercises) {
       List<Exercise> exercises = List.from(state.exercises)
         ..addAll(_removeExistingExercises(state, retrievedExercises));
-      emit(state.exercises.length == exercises.length
-          ? ExerciseListFetchExhaustedState(exercises)
-          : ExerciseListFetchSuccessState(exercises));
-    } catch (ex) {
-      emit(ExerciseListErrorState(state.exercises, ex.toString()));
+      emit(ExerciseListLoadingState.fromState(state, exercises: exercises));
+    }).catchError((err) {
+      emit(ExerciseListErrorState.fromState(state, err.toString()));
+    });
+  }
+
+  Future<void> _handleListModificationEvent(
+      ModifiedOrCreatedExerciseEvent event, Emitter emit) async {
+    if (event.exercise.id != null) {
+      int index = state.exercises
+          .indexWhere((element) => element.id == event.exercise.id);
+      List<Exercise> exercises = List.from(state.exercises);
+      if (index >= 0) {
+        exercises[index] = event.exercise;
+        emit(ExerciseListItemModifiedState.fromState(state, index));
+      } else {
+        exercises.add(event.exercise);
+        // On client sort of the new list after appending
+        exercises.sort((a, b) =>
+            a.name != null && b.name != null ? a.name!.compareTo(b.name!) : 0);
+        emit(ExerciseListItemModifiedState.fromState(state,
+            exercises.indexWhere((element) => element.id == event.exercise.id),
+            exercises: exercises));
+      }
     }
   }
 
   Future<void> _handleFilterChangeEvent(
       SearchFilterUpdateFetchEvent event, Emitter emit) async {
     final filter = (event.filter ?? '').isEmpty ? null : event.filter;
-    emit(ExerciseListFetchingState([]));
-    try {
-      final retrievedExercises =
-          await exercisesRepository.getExercisesByPage(0, filter);
+    // Reset the whole state
+    emit(ExerciseListLoadingState.fromState(state));
+
+    await _exercisesRepository
+        .getExercisesByPage(0, filter)
+        .then((retrievedExercises) {
       List<Exercise> exercises = List.from(state.exercises)
         ..addAll(_removeExistingExercises(state, retrievedExercises));
-      emit(ExerciseListFetchSuccessState(exercises, searchFilter: filter));
-    } catch (ex) {
-      emit(ExerciseListErrorState(state.exercises, ex.toString()));
-    }
-  }
-
-  Future<void> _handleCreateExerciseEvent(
-      CreateExerciseEvent event, Emitter emit) async {
-    await exercisesRepository.createExercise(event.exercise).then((exercise) {
-      List<Exercise> exercises = List.from(state.exercises)..add(exercise);
-      exercises.sort((a, b) =>
-          a.name != null && b.name != null ? a.name!.compareTo(b.name!) : 0);
-      emit(
-          ExerciseCreationSuccessState(exercises, exercises.indexOf(exercise)));
-    }).catchError((error, stackTrace) {
-      emit(ExerciseCreationErrorState(state.exercises, error));
-    });
-  }
-
-  Future<void> _handleDeleteExerciseEvent(
-      DeleteExerciseEvent event, Emitter emit) async {
-    await exercisesRepository
-        .deleteExercise(event.exerciseId)
-        .then((exercise) async {
-      List<Exercise> exercises = List.from(state.exercises);
-      exercises.removeWhere((ex) => ex.id == event.exerciseId);
-      emit(ExerciseDeletionSuccessState(exercises));
-    }).catchError((error, stackTrace) {
-      emit(ExerciseListErrorState(state.exercises, error));
+      emit(ExerciseListLoadingState.fromState(state,
+          searchFilter: filter, exercises: exercises));
+    }).catchError((err) {
+      emit(ExerciseListErrorState.fromState(state, err.toString()));
     });
   }
 

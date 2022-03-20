@@ -22,16 +22,6 @@ class SearchFilterUpdateFetchEvent extends ExerciseListEvent {
 }
 
 @immutable
-class CreateExerciseEvent extends ExerciseListEvent {
-  final Exercise exercise;
-
-  CreateExerciseEvent(this.exercise);
-
-  @override
-  List<Object?> get props => [exercise];
-}
-
-@immutable
 class DeleteExerciseEvent extends ExerciseListEvent {
   final int exerciseId;
 
@@ -39,4 +29,14 @@ class DeleteExerciseEvent extends ExerciseListEvent {
 
   @override
   List<Object?> get props => [exerciseId];
+}
+
+@immutable
+class ModifiedOrCreatedExerciseEvent extends ExerciseListEvent {
+  final Exercise exercise;
+
+  ModifiedOrCreatedExerciseEvent(this.exercise);
+
+  @override
+  List<Object?> get props => [exercise];
 }

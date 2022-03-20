@@ -1,75 +1,74 @@
 part of 'exercise_list_bloc.dart';
 
-@immutable
-abstract class ExerciseListState extends Equatable {
+class ExerciseListState extends Equatable {
   final List<Exercise> exercises;
   final String? searchFilter;
 
-  ExerciseListState(this.exercises, {this.searchFilter});
-}
-
-class ExerciseListInitialState extends ExerciseListState {
-  ExerciseListInitialState() : super([]);
+  const ExerciseListState(
+      {this.exercises = const <Exercise>[], this.searchFilter});
 
   @override
   List<Object?> get props => [exercises, searchFilter];
 }
 
-class ExerciseListFetchingState extends ExerciseListState {
-  ExerciseListFetchingState(List<Exercise> exercises) : super(exercises);
+@immutable
+class ExerciseListLoadingState extends ExerciseListState {
+  const ExerciseListLoadingState(
+      {List<Exercise>? exercises, String? searchFilter})
+      : super(
+            exercises: exercises ?? const <Exercise>[],
+            searchFilter: searchFilter);
 
-  @override
-  List<Object?> get props => [exercises, searchFilter];
+  static ExerciseListLoadingState fromState(
+    ExerciseListState state, {
+    List<Exercise>? exercises,
+    String? searchFilter,
+  }) {
+    return ExerciseListLoadingState(
+        exercises: exercises ?? state.exercises,
+        searchFilter: searchFilter ?? state.searchFilter);
+  }
 }
 
-class ExerciseListFetchSuccessState extends ExerciseListState {
-  ExerciseListFetchSuccessState(List<Exercise> exercises,
-      {String? searchFilter})
-      : super(exercises, searchFilter: searchFilter);
+@immutable
+class ExerciseListItemModifiedState extends ExerciseListState {
+  final int modifiedIndex;
 
-  @override
-  List<Object?> get props => [exercises, searchFilter];
+  const ExerciseListItemModifiedState(int modifiedIndex,
+      {List<Exercise>? exercises, String? searchFilter})
+      : modifiedIndex = modifiedIndex,
+        super(
+            exercises: exercises ?? const <Exercise>[],
+            searchFilter: searchFilter);
+
+  static ExerciseListItemModifiedState fromState(
+    ExerciseListState state,
+    int modifiedIndex, {
+    List<Exercise>? exercises,
+    String? searchFilter,
+  }) {
+    return ExerciseListItemModifiedState(modifiedIndex,
+        exercises: exercises ?? state.exercises,
+        searchFilter: searchFilter ?? state.searchFilter);
+  }
 }
 
-class ExerciseListFetchExhaustedState extends ExerciseListState {
-  ExerciseListFetchExhaustedState(List<Exercise> exercises,
-      {String? searchFilter})
-      : super(exercises, searchFilter: searchFilter);
-
-  @override
-  List<Object?> get props => [exercises, searchFilter];
-}
-
-class ExerciseDeletionSuccessState extends ExerciseListState {
-  ExerciseDeletionSuccessState(List<Exercise> exercises) : super(exercises);
-
-  @override
-  List<Object?> get props => [exercises, searchFilter];
-}
-
-class ExerciseCreationSuccessState extends ExerciseListState {
-  final int newIndex;
-
-  ExerciseCreationSuccessState(List<Exercise> exercises, int newIndex)
-      : newIndex = newIndex,
-        super(exercises);
-
-  @override
-  List<Object?> get props => [newIndex, exercises, searchFilter];
-}
-
+@immutable
 class ExerciseListErrorState extends ExerciseListState {
-  final String error;
+  final String errorMessage;
 
-  ExerciseListErrorState(List<Exercise> exercises, String error)
-      : error = error,
-        super(exercises);
+  const ExerciseListErrorState._(String errorMessage,
+      {List<Exercise>? exercises, String? searchFilter})
+      : errorMessage = errorMessage,
+        super(exercises: exercises ?? const <Exercise>[]);
 
-  @override
-  List<Object?> get props => [error, exercises, searchFilter];
-}
-
-class ExerciseCreationErrorState extends ExerciseListErrorState {
-  ExerciseCreationErrorState(List<Exercise> exercises, String error)
-      : super(exercises, error);
+  static fromState(
+    ExerciseListState state,
+    String errorMessage, {
+    List<Exercise>? exercises,
+  }) {
+    return ExerciseListErrorState._(errorMessage,
+        exercises: exercises ?? state.exercises,
+        searchFilter: state.searchFilter);
+  }
 }

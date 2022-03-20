@@ -53,15 +53,9 @@ class _ExerciseListWidgetState extends State<ExerciseListWidget> {
   }
 
   void _onStateChange(BuildContext context, ExerciseListState state) {
-    if (state is ExerciseListFetchExhaustedState) {
+    if (state is ExerciseListErrorState) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('No more exercises'),
-        duration: Duration(seconds: 2),
-      ));
-    } else if (state is ExerciseListErrorState &&
-        !(state is ExerciseCreationErrorState)) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(state.error),
+        content: Text(state.errorMessage),
         duration: Duration(seconds: 2),
       ));
     }
@@ -69,10 +63,10 @@ class _ExerciseListWidgetState extends State<ExerciseListWidget> {
 
   Widget _buildList(BuildContext context, ExerciseListState state) {
     final bloc = BlocProvider.of<ExerciseListBloc>(context);
-    if (state is ExerciseCreationSuccessState) {
+    if (state is ExerciseListItemModifiedState) {
       // Remember: This add works online once per build call
       WidgetsBinding.instance!.addPostFrameCallback((_) =>
-          _scrollController.scrollToIndex(state.newIndex,
+          _scrollController.scrollToIndex(state.modifiedIndex,
               duration: Duration(seconds: 1),
               preferPosition: AutoScrollPosition.middle));
     } else if (state is ExerciseListErrorState && state.exercises.isEmpty) {
@@ -92,7 +86,7 @@ class _ExerciseListWidgetState extends State<ExerciseListWidget> {
           icon: Icon(Icons.refresh),
         ),
         const SizedBox(height: 15),
-        Text(state.error, textAlign: TextAlign.center),
+        Text(state.errorMessage, textAlign: TextAlign.center),
       ],
     );
   }

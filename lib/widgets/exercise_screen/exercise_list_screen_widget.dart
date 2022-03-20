@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:training_app/widgets/exercise_editor_screen/exercise_editor_screen_widget.dart';
 import 'package:training_app/widgets/exercise_screen/bloc/exercise_list_bloc.dart';
 import 'package:training_app/widgets/exercise_screen/exercise_list_widget.dart';
-import 'package:training_app/widgets/exercise_screen/new_exercise_widget.dart';
 
 class ExerciseListScreenWidget extends StatelessWidget {
   final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
@@ -48,7 +48,7 @@ class _ScaffoldedExerciseListWidget extends StatelessWidget {
       BuildContext context, ExerciseListBloc bloc) async {
     await Navigator.of(context).push(new MaterialPageRoute<void>(
         builder: (BuildContext context) {
-          return NewExerciseScreenWidget(bloc);
+          return ExerciseEditorScreenWidget(bloc);
         },
         fullscreenDialog: true));
   }

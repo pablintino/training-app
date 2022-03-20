@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:training_app/app_config.dart';
 import 'package:training_app/models/exercises_models.dart';
-import 'package:tuple/tuple.dart';
 
 class ExercisesRepository {
   static const int PAGE_SIZE = 10;
@@ -17,6 +16,12 @@ class ExercisesRepository {
         '${_appConfig.apiUrl}/api/v1/exercises?page=$page&size=$PAGE_SIZE&sort=name$searchFilter'));
   }
 
+  Future<bool> existsByName(String name) async {
+    return (await _commonExercisesRetreival(Uri.parse(
+            '${_appConfig.apiUrl}/api/v1/exercises?filters=eq_name=$name')))
+        .isNotEmpty;
+  }
+
   Future<List<Exercise>> _commonExercisesRetreival(Uri uri) async {
     try {
       final response = await http.get(uri);
@@ -25,7 +30,7 @@ class ExercisesRepository {
         return List<Exercise>.from(
             exercisesList.map((model) => Exercise.fromJson(model)));
       }
-      throw 'Unexpected response retrieving new exercise';
+      throw 'Unexpected response retrieving exercises';
     } catch (e) {
       print(e.toString());
       throw e;
