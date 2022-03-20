@@ -1,60 +1,75 @@
 part of 'exercise_list_bloc.dart';
 
 @immutable
-abstract class ExerciseListState extends Equatable {}
+abstract class ExerciseListState extends Equatable {
+  final List<Exercise> exercises;
+  final String? searchFilter;
+
+  ExerciseListState(this.exercises, {this.searchFilter});
+}
 
 class ExerciseListInitialState extends ExerciseListState {
+  ExerciseListInitialState() : super([]);
+
   @override
-  List<Object?> get props => [];
+  List<Object?> get props => [exercises, searchFilter];
 }
 
-class ExerciseListLoadingState extends ExerciseListState {
+class ExerciseListFetchingState extends ExerciseListState {
+  ExerciseListFetchingState(List<Exercise> exercises) : super(exercises);
+
   @override
-  List<Object?> get props => [];
+  List<Object?> get props => [exercises, searchFilter];
 }
 
-class ExerciseListLoadingSuccessState extends ExerciseListState {
-  final List<Exercise> exercises;
-
-  ExerciseListLoadingSuccessState(this.exercises);
+class ExerciseListFetchSuccessState extends ExerciseListState {
+  ExerciseListFetchSuccessState(List<Exercise> exercises,
+      {String? searchFilter})
+      : super(exercises, searchFilter: searchFilter);
 
   @override
-  List<Object?> get props => [exercises];
+  List<Object?> get props => [exercises, searchFilter];
 }
 
-class ExerciseListReloadSuccessState extends ExerciseListState {
-  final List<Exercise> exercises;
-
-  ExerciseListReloadSuccessState(this.exercises);
+class ExerciseListFetchExhaustedState extends ExerciseListState {
+  ExerciseListFetchExhaustedState(List<Exercise> exercises,
+      {String? searchFilter})
+      : super(exercises, searchFilter: searchFilter);
 
   @override
-  List<Object?> get props => [exercises];
+  List<Object?> get props => [exercises, searchFilter];
+}
+
+class ExerciseDeletionSuccessState extends ExerciseListState {
+  ExerciseDeletionSuccessState(List<Exercise> exercises) : super(exercises);
+
+  @override
+  List<Object?> get props => [exercises, searchFilter];
 }
 
 class ExerciseCreationSuccessState extends ExerciseListState {
   final int newIndex;
-  final List<Exercise> reloadedExercises;
 
-  ExerciseCreationSuccessState(this.newIndex, this.reloadedExercises);
+  ExerciseCreationSuccessState(List<Exercise> exercises, int newIndex)
+      : newIndex = newIndex,
+        super(exercises);
 
   @override
-  List<Object?> get props => [newIndex, reloadedExercises];
+  List<Object?> get props => [newIndex, exercises, searchFilter];
 }
 
-class ExerciseListLoadingErrorState extends ExerciseListState {
+class ExerciseListErrorState extends ExerciseListState {
   final String error;
 
-  ExerciseListLoadingErrorState(this.error);
+  ExerciseListErrorState(List<Exercise> exercises, String error)
+      : error = error,
+        super(exercises);
 
   @override
-  List<Object?> get props => [error];
+  List<Object?> get props => [error, exercises, searchFilter];
 }
 
-class ExerciseCreationErrorState extends ExerciseListState {
-  final String error;
-
-  ExerciseCreationErrorState(this.error);
-
-  @override
-  List<Object?> get props => [error];
+class ExerciseCreationErrorState extends ExerciseListErrorState {
+  ExerciseCreationErrorState(List<Exercise> exercises, String error)
+      : super(exercises, error);
 }

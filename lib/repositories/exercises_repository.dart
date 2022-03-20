@@ -6,18 +6,20 @@ import 'package:training_app/models/exercises_models.dart';
 import 'package:tuple/tuple.dart';
 
 class ExercisesRepository {
-  static const int _perPage = 10;
+  static const int PAGE_SIZE = 10;
   final _appConfig = AppConfigLoader().instance;
 
-  Future<List<Exercise>> getExercises(int page, String? nameFilter) async {
-    try {
-      final String searchFilter =
-          nameFilter != null ? '&filters=cti_name=$nameFilter' : '';
-      final response = await http.get(
-        Uri.parse(
-            '${_appConfig.apiUrl}/api/v1/exercises?page=$page&size=$_perPage&sort=name$searchFilter'),
-      );
+  Future<List<Exercise>> getExercisesByPage(
+      int page, String? nameFilter) async {
+    final String searchFilter =
+        nameFilter != null ? '&filters=cti_name=$nameFilter' : '';
+    return _commonExercisesRetreival(Uri.parse(
+        '${_appConfig.apiUrl}/api/v1/exercises?page=$page&size=$PAGE_SIZE&sort=name$searchFilter'));
+  }
 
+  Future<List<Exercise>> _commonExercisesRetreival(Uri uri) async {
+    try {
+      final response = await http.get(uri);
       if (response.statusCode == 200) {
         Iterable exercisesList = json.decode(response.body)['data'];
         return List<Exercise>.from(
@@ -50,18 +52,15 @@ class ExercisesRepository {
     }
   }
 
-  Future<Tuple2<List<Exercise>, int>> walkUntilExercise(longExerciseId) async {
-    List<Exercise> exercises = [];
+  Future<void> deleteExercise(int id) async {
     try {
-      List<Exercise>? pageData;
-      for (int page = 0; pageData?.isNotEmpty ?? true; page++) {
-        pageData = await getExercises(page, null);
-        exercises.addAll(pageData);
-        if (exercises.any((element) => longExerciseId == element.id)) {
-          return Tuple2(exercises, page);
-        }
+      final response = await http.delete(
+        Uri.parse('${_appConfig.apiUrl}/api/v1/exercises/$id'),
+      );
+
+      if (response.statusCode != 200) {
+        throw 'Unexpected response deleting exercise';
       }
-      throw 'Error walking to exercise';
     } catch (e) {
       print(e.toString());
       throw e;

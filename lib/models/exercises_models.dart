@@ -1,7 +1,7 @@
 class Exercise {
-  String? name;
-  String? description;
-  int? id;
+  final String? name;
+  final String? description;
+  final int? id;
 
   Exercise({this.id, this.name, this.description});
 
@@ -15,4 +15,10 @@ class Exercise {
         'name': name,
         'description': description,
       };
+
+  @override
+  bool operator ==(Object other) => other is Exercise && other.id == id;
+
+  @override
+  int get hashCode => id.hashCode;
 }

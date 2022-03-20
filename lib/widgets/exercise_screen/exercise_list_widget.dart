@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
-import 'package:training_app/models/exercises_models.dart';
 import 'package:training_app/widgets/exercise_screen/bloc/exercise_list_bloc.dart';
 import 'package:training_app/widgets/exercise_screen/exercise_list_item.dart';
 import 'package:training_app/widgets/list_search_widget/list_search_widget.dart';
@@ -13,7 +12,6 @@ class ExerciseListWidget extends StatefulWidget {
 }
 
 class _ExerciseListWidgetState extends State<ExerciseListWidget> {
-  final List<Exercise> _exercises = [];
   late AutoScrollController _scrollController;
 
   @override
@@ -23,6 +21,15 @@ class _ExerciseListWidgetState extends State<ExerciseListWidget> {
         viewportBoundaryGetter: () =>
             Rect.fromLTRB(0, 0, 0, MediaQuery.of(context).padding.bottom),
         axis: Axis.vertical);
+    final bloc = BlocProvider.of<ExerciseListBloc>(context);
+    _scrollController.addListener(() {
+      if (_scrollController.offset != 0.0 &&
+          _scrollController.offset ==
+              _scrollController.position.maxScrollExtent &&
+          !bloc.isFetching) {
+        bloc.add(ExercisesFetchEvent());
+      }
+    });
   }
 
   @override
@@ -46,55 +53,42 @@ class _ExerciseListWidgetState extends State<ExerciseListWidget> {
   }
 
   void _onStateChange(BuildContext context, ExerciseListState state) {
-    if (state is ExerciseListLoadingSuccessState && state.exercises.isEmpty) {
+    if (state is ExerciseListFetchExhaustedState) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('No more exercises'),
         duration: Duration(seconds: 2),
       ));
-    } else if (state is ExerciseListLoadingErrorState) {
+    } else if (state is ExerciseListErrorState &&
+        !(state is ExerciseCreationErrorState)) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(state.error),
         duration: Duration(seconds: 2),
       ));
-      BlocProvider.of<ExerciseListBloc>(context).isFetching = false;
     }
   }
 
   Widget _buildList(BuildContext context, ExerciseListState state) {
     final bloc = BlocProvider.of<ExerciseListBloc>(context);
-    if (state is ExerciseListLoadingSuccessState) {
-      _exercises.addAll(state.exercises);
-      bloc.isFetching = false;
-    } else if (state is ExerciseListReloadSuccessState) {
-      _exercises.clear();
-      _exercises.addAll(state.exercises);
-      bloc.isFetching = false;
-    } else if (state is ExerciseCreationSuccessState) {
-      _exercises.clear();
-      _exercises.addAll(state.reloadedExercises);
-      bloc.isFetching = false;
+    if (state is ExerciseCreationSuccessState) {
       // Remember: This add works online once per build call
       WidgetsBinding.instance!.addPostFrameCallback((_) =>
           _scrollController.scrollToIndex(state.newIndex,
               duration: Duration(seconds: 1),
               preferPosition: AutoScrollPosition.middle));
-    } else if (state is ExerciseListLoadingErrorState && _exercises.isEmpty) {
+    } else if (state is ExerciseListErrorState && state.exercises.isEmpty) {
       return _buildReloadButton(context, bloc, state);
     }
-    return _buildListView(bloc);
+    return _buildListView(bloc, state);
   }
 
   Widget _buildReloadButton(BuildContext context, ExerciseListBloc bloc,
-      ExerciseListLoadingErrorState state) {
+      ExerciseListErrorState state) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         IconButton(
-          onPressed: () {
-            BlocProvider.of<ExerciseListBloc>(context).isFetching = true;
-            bloc.add(ExercisesFetchEvent());
-          },
+          onPressed: () => bloc.add(ExercisesFetchEvent()),
           icon: Icon(Icons.refresh),
         ),
         const SizedBox(height: 15),
@@ -103,25 +97,20 @@ class _ExerciseListWidgetState extends State<ExerciseListWidget> {
     );
   }
 
-  Widget _buildListView(ExerciseListBloc bloc) {
+  Widget _buildListView(ExerciseListBloc bloc, ExerciseListState state) {
     return SlidableAutoCloseBehavior(
         child: ListView.builder(
-      controller: _scrollController
-        ..addListener(() {
-          if (_scrollController.offset ==
-                  _scrollController.position.maxScrollExtent &&
-              !bloc.isFetching) {
-            bloc.isFetching = true;
-            bloc.add(ExercisesFetchEvent());
-          }
-        }),
+      controller: _scrollController,
       itemBuilder: (context, index) => AutoScrollTag(
           key: ValueKey(index),
           controller: _scrollController,
           index: index,
           highlightColor: Colors.black.withOpacity(0.1),
-          child: ExerciseListItem(_exercises[index], (_) => {}, (_) => {})),
-      itemCount: _exercises.length,
+          child: ExerciseListItem(
+              state.exercises[index],
+              (exerciseId) => bloc.add(DeleteExerciseEvent(exerciseId)),
+              (_) => {})),
+      itemCount: state.exercises.length,
     ));
   }
 }

@@ -30,3 +30,13 @@ class CreateExerciseEvent extends ExerciseListEvent {
   @override
   List<Object?> get props => [exercise];
 }
+
+@immutable
+class DeleteExerciseEvent extends ExerciseListEvent {
+  final int exerciseId;
+
+  DeleteExerciseEvent(this.exerciseId);
+
+  @override
+  List<Object?> get props => [exerciseId];
+}

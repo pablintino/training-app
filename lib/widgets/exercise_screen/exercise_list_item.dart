@@ -40,8 +40,8 @@ class ExerciseListItem extends StatelessWidget {
       ),
       child: ListTile(
         title: Text(exercise.name ?? 'No name'),
-        subtitle: Text(description.length >= 20
-            ? description.replaceRange(20, description.length, '...')
+        subtitle: Text(description.length >= 40
+            ? description.replaceRange(40, description.length, '...')
             : description),
         leading: Container(
           margin: EdgeInsets.only(top: 8),
