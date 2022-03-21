@@ -1,6 +1,6 @@
 part of 'exercise_list_bloc.dart';
 
-class ExerciseListState extends Equatable {
+abstract class ExerciseListState extends Equatable {
   final List<Exercise> exercises;
   final String? searchFilter;
 
@@ -21,8 +21,8 @@ class ExerciseListLoadingState extends ExerciseListState {
 
   static ExerciseListLoadingState fromState(
     ExerciseListState state, {
-    List<Exercise>? exercises,
-    String? searchFilter,
+    exercises,
+    searchFilter,
   }) {
     return ExerciseListLoadingState(
         exercises: exercises ?? state.exercises,
@@ -30,42 +30,46 @@ class ExerciseListLoadingState extends ExerciseListState {
   }
 }
 
+enum ModificationType { deletion, creation, update }
+
 @immutable
 class ExerciseListItemModifiedState extends ExerciseListState {
   final int modifiedIndex;
+  final ModificationType type;
 
-  const ExerciseListItemModifiedState(int modifiedIndex,
-      {List<Exercise>? exercises, String? searchFilter})
+  const ExerciseListItemModifiedState(modifiedIndex, type,
+      {exercises, searchFilter})
       : modifiedIndex = modifiedIndex,
+        type = type,
         super(
             exercises: exercises ?? const <Exercise>[],
             searchFilter: searchFilter);
 
-  static ExerciseListItemModifiedState fromState(
+  ExerciseListItemModifiedState.fromState(
     ExerciseListState state,
-    int modifiedIndex, {
-    List<Exercise>? exercises,
-    String? searchFilter,
-  }) {
-    return ExerciseListItemModifiedState(modifiedIndex,
-        exercises: exercises ?? state.exercises,
-        searchFilter: searchFilter ?? state.searchFilter);
-  }
+    modifiedIndex,
+    type, {
+    exercises,
+    searchFilter,
+  })  : modifiedIndex = modifiedIndex,
+        type = type,
+        super(
+            exercises: exercises ?? state.exercises,
+            searchFilter: searchFilter ?? state.searchFilter);
 }
 
 @immutable
 class ExerciseListErrorState extends ExerciseListState {
   final String errorMessage;
 
-  const ExerciseListErrorState._(String errorMessage,
-      {List<Exercise>? exercises, String? searchFilter})
+  const ExerciseListErrorState._(errorMessage, {exercises, searchFilter})
       : errorMessage = errorMessage,
         super(exercises: exercises ?? const <Exercise>[]);
 
   static fromState(
     ExerciseListState state,
-    String errorMessage, {
-    List<Exercise>? exercises,
+    errorMessage, {
+    exercises,
   }) {
     return ExerciseListErrorState._(errorMessage,
         exercises: exercises ?? state.exercises,

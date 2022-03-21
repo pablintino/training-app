@@ -5,13 +5,13 @@ enum ExerciseNameInputError { empty, alreadyExists }
 class ExerciseNameField extends FormField<String, ExerciseNameInputError> {
   ExerciseNameField({String? value}) : super(value: value);
 
-  ExerciseNameField.invalid(
+  ExerciseNameField.createInvalidFrom(
       ExerciseNameField form, ExerciseNameInputError error,
       {value})
-      : super.invalidate(form, error, value: value);
+      : super.createInvalidFrom(form, error, value: value);
 
-  ExerciseNameField.valid(ExerciseNameField form, {value})
-      : super.valid(form, value: value);
+  ExerciseNameField.createValidFrom(ExerciseNameField form, {value})
+      : super.createValidFrom(form, value: value);
 }
 
 enum ExerciseDescriptionInputError { empty }
@@ -20,11 +20,12 @@ class ExerciseDescriptionField
     extends FormField<String, ExerciseDescriptionInputError> {
   ExerciseDescriptionField({String? value}) : super(value: value);
 
-  ExerciseDescriptionField.invalid(
+  ExerciseDescriptionField.createInvalidFrom(
       ExerciseDescriptionField form, ExerciseDescriptionInputError error,
       {value})
-      : super.invalidate(form, error, value: value);
+      : super.createInvalidFrom(form, error, value: value);
 
-  ExerciseDescriptionField.valid(ExerciseDescriptionField form, {value})
-      : super.valid(form, value: value);
+  ExerciseDescriptionField.createValidFrom(ExerciseDescriptionField form,
+      {value})
+      : super.createValidFrom(form, value: value);
 }

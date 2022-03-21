@@ -10,13 +10,13 @@ abstract class FormField<T, E> {
         valid = false,
         status = status;
 
-  FormField.invalidate(FormField<T, E> form, E status, {value})
+  FormField.createInvalidFrom(FormField<T, E> form, E status, {value})
       : status = status,
         dirty = true,
         valid = false,
         value = value ?? form.value;
 
-  FormField.valid(FormField<T, E> form, {value})
+  FormField.createValidFrom(FormField<T, E> form, {value})
       : status = null,
         dirty = true,
         valid = true,

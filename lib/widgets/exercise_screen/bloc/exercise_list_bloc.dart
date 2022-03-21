@@ -1,13 +1,13 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
-import 'package:bloc_concurrency/bloc_concurrency.dart';
+import "package:collection/collection.dart";
 import 'package:equatable/equatable.dart';
 import 'package:get_it/get_it.dart';
 import 'package:meta/meta.dart';
 import 'package:training_app/models/exercises_models.dart';
 import 'package:training_app/repositories/exercises_repository.dart';
-import 'package:rxdart/rxdart.dart';
+import 'package:training_app/utils/streams.dart';
 
 part 'exercise_list_event.dart';
 
@@ -20,13 +20,16 @@ class ExerciseListBloc extends Bloc<ExerciseListEvent, ExerciseListState> {
 
   ExerciseListBloc()
       : _exercisesRepository = GetIt.instance<ExercisesRepository>(),
-        super(ExerciseListState()) {
+        super(ExerciseListLoadingState()) {
     on<ExercisesFetchEvent>((_, emit) => _handleFetchEvent(emit));
     on<ModifiedOrCreatedExerciseEvent>(
         (event, emit) => _handleListModificationEvent(event, emit));
+    on<DeleteExerciseEvent>(
+        (event, emit) => _handleListDeletionEvent(event, emit));
     on<SearchFilterUpdateFetchEvent>(
         (event, emit) => _handleFilterChangeEvent(event, emit),
-        transformer: _debounceRestartable(const Duration(milliseconds: 500)));
+        transformer:
+            DebounceTransformer.debounce(const Duration(milliseconds: 500)));
   }
 
   Future<void> _handleFetchEvent(Emitter emit) async {
@@ -52,17 +55,37 @@ class ExerciseListBloc extends Bloc<ExerciseListEvent, ExerciseListState> {
       List<Exercise> exercises = List.from(state.exercises);
       if (index >= 0) {
         exercises[index] = event.exercise;
-        emit(ExerciseListItemModifiedState.fromState(state, index));
+        emit(ExerciseListItemModifiedState.fromState(
+            state, index, ModificationType.update));
       } else {
         exercises.add(event.exercise);
         // On client sort of the new list after appending
-        exercises.sort((a, b) =>
-            a.name != null && b.name != null ? a.name!.compareTo(b.name!) : 0);
-        emit(ExerciseListItemModifiedState.fromState(state,
+        exercises
+            .sort((a, b) => compareAsciiUpperCase(a.name ?? '', b.name ?? ''));
+        emit(ExerciseListItemModifiedState.fromState(
+            state,
             exercises.indexWhere((element) => element.id == event.exercise.id),
+            ModificationType.creation,
             exercises: exercises));
       }
     }
+  }
+
+  Future<void> _handleListDeletionEvent(
+      DeleteExerciseEvent event, Emitter emit) async {
+    final index =
+        state.exercises.indexWhere((element) => element.id == event.exerciseId);
+    await _exercisesRepository
+        .deleteExercise(event.exerciseId)
+        .then((retrievedExercises) {
+      final List<Exercise> exercises = List.from(state.exercises);
+      exercises.removeAt(index);
+      emit(ExerciseListItemModifiedState.fromState(
+          state, index, ModificationType.deletion,
+          exercises: exercises));
+    }).catchError((err) {
+      emit(ExerciseListErrorState.fromState(state, err.toString()));
+    });
   }
 
   Future<void> _handleFilterChangeEvent(
@@ -74,10 +97,9 @@ class ExerciseListBloc extends Bloc<ExerciseListEvent, ExerciseListState> {
     await _exercisesRepository
         .getExercisesByPage(0, filter)
         .then((retrievedExercises) {
-      List<Exercise> exercises = List.from(state.exercises)
-        ..addAll(_removeExistingExercises(state, retrievedExercises));
+      // Do not add old exercises from state.exercises
       emit(ExerciseListLoadingState.fromState(state,
-          searchFilter: filter, exercises: exercises));
+          searchFilter: filter, exercises: retrievedExercises));
     }).catchError((err) {
       emit(ExerciseListErrorState.fromState(state, err.toString()));
     });
@@ -86,14 +108,5 @@ class ExerciseListBloc extends Bloc<ExerciseListEvent, ExerciseListState> {
   static List<Exercise> _removeExistingExercises(
       ExerciseListState state, final List<Exercise> list) {
     return list.where((element) => !state.exercises.contains(element)).toList();
-  }
-
-  EventTransformer<ExerciseListEvent> _debounceRestartable<ExerciseListEvent>(
-    Duration duration,
-  ) {
-    // This feeds the debounced event stream to restartable() and returns that
-    // as a transformer.
-    return (events, mapper) => restartable<ExerciseListEvent>()
-        .call(events.debounceTime(duration), mapper);
   }
 }
