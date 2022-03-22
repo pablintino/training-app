@@ -5,6 +5,16 @@ abstract class ExerciseManipulationEvent extends Equatable {
 }
 
 @immutable
+class InitializeUpdateEvent extends ExerciseManipulationEvent {
+  final Exercise exercise;
+
+  InitializeUpdateEvent(this.exercise);
+
+  @override
+  List<Object?> get props => [exercise];
+}
+
+@immutable
 class NameInputUpdateEvent extends ExerciseManipulationEvent {
   final String? nameValue;
 

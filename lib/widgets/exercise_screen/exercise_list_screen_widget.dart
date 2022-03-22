@@ -44,9 +44,9 @@ class _ScaffoldedExerciseListWidget extends StatelessWidget {
         body: ExerciseListWidget());
   }
 
-  Future _openExerciseCreationDialog(
-      BuildContext context, ExerciseListBloc bloc) async {
-    await Navigator.of(context).push(new MaterialPageRoute<void>(
+  void _openExerciseCreationDialog(
+      BuildContext context, ExerciseListBloc bloc) {
+    Navigator.of(context).push(new MaterialPageRoute<void>(
         builder: (BuildContext context) {
           return ExerciseEditorScreenWidget(bloc);
         },

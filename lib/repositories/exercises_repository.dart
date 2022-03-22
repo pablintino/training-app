@@ -12,17 +12,17 @@ class ExercisesRepository {
       int page, String? nameFilter) async {
     final String searchFilter =
         nameFilter != null ? '&filters=cti_name=$nameFilter' : '';
-    return _commonExercisesRetreival(Uri.parse(
+    return _commonExercisesRetrieval(Uri.parse(
         '${_appConfig.apiUrl}/api/v1/exercises?page=$page&size=$PAGE_SIZE&sort=name$searchFilter'));
   }
 
-  Future<bool> existsByName(String name) async {
-    return (await _commonExercisesRetreival(Uri.parse(
-            '${_appConfig.apiUrl}/api/v1/exercises?filters=eq_name=$name')))
-        .isNotEmpty;
+  Future<Exercise?> getByName(String name) async {
+    final exercises = await _commonExercisesRetrieval(Uri.parse(
+        '${_appConfig.apiUrl}/api/v1/exercises?filters=eq_name=$name'));
+    return exercises.isNotEmpty ? exercises[0] : null;
   }
 
-  Future<List<Exercise>> _commonExercisesRetreival(Uri uri) async {
+  Future<List<Exercise>> _commonExercisesRetrieval(Uri uri) async {
     try {
       final response = await http.get(uri);
       if (response.statusCode == 200) {
@@ -51,6 +51,26 @@ class ExercisesRepository {
         return Exercise.fromJson(json.decode(response.body));
       }
       throw 'Unexpected response creating new exercise';
+    } catch (e) {
+      print(e.toString());
+      throw e;
+    }
+  }
+
+  Future<Exercise> updateExercise(Exercise exercise) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${_appConfig.apiUrl}/api/v1/exercises/${exercise.id}'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(exercise),
+      );
+
+      if (response.statusCode == 200) {
+        return Exercise.fromJson(json.decode(response.body));
+      }
+      throw 'Unexpected response creating updating exercise ${exercise.id}';
     } catch (e) {
       print(e.toString());
       throw e;

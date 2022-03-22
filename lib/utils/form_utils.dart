@@ -22,3 +22,25 @@ abstract class FormField<T, E> {
         valid = true,
         value = value ?? form.value;
 }
+
+///// Commonly used Types
+enum ValidationError {
+  empty,
+  alreadyExists,
+  minLengthRequired,
+  maxLengthExceed,
+  pastTime
+}
+
+class StringField extends FormField<String, ValidationError> {
+  StringField({value, status}) : super(value: value);
+
+  @override
+  StringField.createInvalidFrom(StringField form, ValidationError status,
+      {value})
+      : super.createInvalidFrom(form, status, value: value);
+
+  @override
+  StringField.createValidFrom(StringField form, {value})
+      : super.createValidFrom(form, value: value);
+}

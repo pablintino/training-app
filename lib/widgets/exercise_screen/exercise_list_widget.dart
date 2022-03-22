@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
+import 'package:training_app/models/exercises_models.dart';
+import 'package:training_app/widgets/exercise_editor_screen/exercise_editor_screen_widget.dart';
 import 'package:training_app/widgets/exercise_screen/bloc/exercise_list_bloc.dart';
 import 'package:training_app/widgets/exercise_screen/exercise_list_item.dart';
 import 'package:training_app/widgets/list_search_widget/list_search_widget.dart';
@@ -73,7 +75,7 @@ class _ExerciseListWidgetState extends State<ExerciseListWidget> {
     } else if (state is ExerciseListErrorState && state.exercises.isEmpty) {
       return _buildReloadButton(context, bloc, state);
     }
-    return _buildListView(bloc, state);
+    return _buildListView(context, bloc, state);
   }
 
   Widget _buildReloadButton(BuildContext context, ExerciseListBloc bloc,
@@ -92,7 +94,8 @@ class _ExerciseListWidgetState extends State<ExerciseListWidget> {
     );
   }
 
-  Widget _buildListView(ExerciseListBloc bloc, ExerciseListState state) {
+  Widget _buildListView(
+      BuildContext context, ExerciseListBloc bloc, ExerciseListState state) {
     return SlidableAutoCloseBehavior(
         child: ListView.builder(
       controller: _scrollController,
@@ -104,8 +107,24 @@ class _ExerciseListWidgetState extends State<ExerciseListWidget> {
           child: ExerciseListItem(
               state.exercises[index],
               (exerciseId) => bloc.add(DeleteExerciseEvent(exerciseId)),
-              (_) => {})),
+              (exerciseId) => _openExerciseEditionDialog(
+                  context,
+                  bloc,
+                  state.exercises
+                      .firstWhere((element) => exerciseId == element.id)))),
       itemCount: state.exercises.length,
     ));
+  }
+
+  void _openExerciseEditionDialog(
+      BuildContext context, ExerciseListBloc bloc, Exercise exercise) {
+    Navigator.of(context).push(new MaterialPageRoute<void>(
+        builder: (BuildContext context) {
+          return ExerciseEditorScreenWidget(
+            bloc,
+            initialExercise: exercise,
+          );
+        },
+        fullscreenDialog: true));
   }
 }

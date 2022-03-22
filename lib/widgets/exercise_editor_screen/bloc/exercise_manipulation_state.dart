@@ -1,53 +1,60 @@
 part of 'exercise_manipulation_bloc.dart';
 
 abstract class ExerciseManipulationState extends Equatable {
-  final Exercise? exercise;
+  final Exercise? initialExercise;
 
-  ExerciseManipulationState({this.exercise});
+  ExerciseManipulationState({this.initialExercise});
 }
 
 @immutable
 class OnGoingExerciseManipulationState extends ExerciseManipulationState {
-  final ExerciseNameField exerciseNameField;
-  final ExerciseDescriptionField exerciseDescriptionField;
+  final StringField exerciseName;
+  final StringField exerciseDescription;
 
-  OnGoingExerciseManipulationState(
-      this.exerciseNameField, this.exerciseDescriptionField,
-      {exercise})
-      : super(exercise: exercise);
+  OnGoingExerciseManipulationState(this.exerciseName, this.exerciseDescription,
+      {initialExercise})
+      : super(initialExercise: initialExercise);
 
   OnGoingExerciseManipulationState copyWith(
-      {ExerciseNameField? exerciseNameField,
-      ExerciseDescriptionField? exerciseDescriptionField,
+      {StringField? exerciseName,
+      StringField? exerciseDescription,
       Exercise? exercise}) {
-    return OnGoingExerciseManipulationState(
-        exerciseNameField ?? this.exerciseNameField,
-        exerciseDescriptionField ?? this.exerciseDescriptionField,
-        exercise: exercise ?? this.exercise);
+    return OnGoingExerciseManipulationState(exerciseName ?? this.exerciseName,
+        exerciseDescription ?? this.exerciseDescription,
+        initialExercise: exercise ?? this.initialExercise);
   }
 
   static OnGoingExerciseManipulationState empty() {
+    return OnGoingExerciseManipulationState(StringField(), StringField());
+  }
+
+  static OnGoingExerciseManipulationState pure(
+      String? name, String? description,
+      {initialExercise}) {
     return OnGoingExerciseManipulationState(
-        ExerciseNameField(), ExerciseDescriptionField());
+        StringField(value: name), StringField(value: description),
+        initialExercise: initialExercise);
   }
 
   @override
   List<Object?> get props =>
-      [exercise, exerciseNameField, exerciseDescriptionField];
+      [initialExercise, exerciseName, exerciseDescription];
 }
 
 @immutable
 class ExerciseManipulationFinishedState extends ExerciseManipulationState {
-  ExerciseManipulationFinishedState._(exercise) : super(exercise: exercise);
+  ExerciseManipulationFinishedState._(exercise)
+      : super(initialExercise: exercise);
 
   static ExerciseManipulationFinishedState fromState(
       ExerciseManipulationState state,
       {exercise}) {
-    return ExerciseManipulationFinishedState._(exercise ?? state.exercise);
+    return ExerciseManipulationFinishedState._(
+        exercise ?? state.initialExercise);
   }
 
   @override
-  List<Object?> get props => [exercise];
+  List<Object?> get props => [initialExercise];
 }
 
 @immutable
@@ -55,19 +62,20 @@ class ExerciseManipulationErrorState extends OnGoingExerciseManipulationState {
   final String error;
 
   ExerciseManipulationErrorState._(
-      this.error, exercise, exerciseNameField, exerciseDescriptionField)
-      : super(exerciseNameField, exerciseDescriptionField, exercise: exercise);
+      this.error, StringField exerciseName, StringField exerciseDescription,
+      {Exercise? initialExercise})
+      : super(exerciseName, exerciseDescription,
+            initialExercise: initialExercise);
 
   static ExerciseManipulationErrorState fromState(
       OnGoingExerciseManipulationState state, String errorMessage,
-      {Exercise? exercise}) {
+      {Exercise? initialExercise}) {
     return ExerciseManipulationErrorState._(
-        errorMessage,
-        state.exerciseNameField,
-        state.exerciseDescriptionField,
-        exercise ?? state.exercise);
+        errorMessage, state.exerciseName, state.exerciseDescription,
+        initialExercise: initialExercise ?? state.initialExercise);
   }
 
   @override
-  List<Object?> get props => [exercise, error];
+  List<Object?> get props =>
+      [initialExercise, error, exerciseName, exerciseDescription];
 }

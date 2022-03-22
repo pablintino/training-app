@@ -54,9 +54,16 @@ class ExerciseListBloc extends Bloc<ExerciseListEvent, ExerciseListState> {
           .indexWhere((element) => element.id == event.exercise.id);
       List<Exercise> exercises = List.from(state.exercises);
       if (index >= 0) {
+        final oldName = exercises[index].name;
         exercises[index] = event.exercise;
+        // If name has changed we need to sort the list again
+        if (oldName != event.exercise.name) {
+          exercises.sort(
+              (a, b) => compareAsciiUpperCase(a.name ?? '', b.name ?? ''));
+        }
         emit(ExerciseListItemModifiedState.fromState(
-            state, index, ModificationType.update));
+            state, index, ModificationType.update,
+            exercises: exercises));
       } else {
         exercises.add(event.exercise);
         // On client sort of the new list after appending
