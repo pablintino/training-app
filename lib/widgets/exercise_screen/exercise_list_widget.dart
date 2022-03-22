@@ -97,23 +97,28 @@ class _ExerciseListWidgetState extends State<ExerciseListWidget> {
   Widget _buildListView(
       BuildContext context, ExerciseListBloc bloc, ExerciseListState state) {
     return SlidableAutoCloseBehavior(
-        child: ListView.builder(
-      controller: _scrollController,
-      itemBuilder: (context, index) => AutoScrollTag(
-          key: ValueKey(index),
-          controller: _scrollController,
-          index: index,
-          highlightColor: Colors.black.withOpacity(0.1),
-          child: ExerciseListItem(
-              state.exercises[index],
-              (exerciseId) => bloc.add(DeleteExerciseEvent(exerciseId)),
-              (exerciseId) => _openExerciseEditionDialog(
-                  context,
-                  bloc,
-                  state.exercises
-                      .firstWhere((element) => exerciseId == element.id)))),
-      itemCount: state.exercises.length,
-    ));
+        child: RefreshIndicator(
+            onRefresh: () async {
+              bloc.add(ExercisesFetchEvent(reload: true));
+            },
+            child: ListView.builder(
+              physics: AlwaysScrollableScrollPhysics(),
+              controller: _scrollController,
+              itemBuilder: (context, index) => AutoScrollTag(
+                  key: ValueKey(index),
+                  controller: _scrollController,
+                  index: index,
+                  highlightColor: Colors.black.withOpacity(0.1),
+                  child: ExerciseListItem(
+                      state.exercises[index],
+                      (exerciseId) => bloc.add(DeleteExerciseEvent(exerciseId)),
+                      (exerciseId) => _openExerciseEditionDialog(
+                          context,
+                          bloc,
+                          state.exercises.firstWhere(
+                              (element) => exerciseId == element.id)))),
+              itemCount: state.exercises.length,
+            )));
   }
 
   void _openExerciseEditionDialog(

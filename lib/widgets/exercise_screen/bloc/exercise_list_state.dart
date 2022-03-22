@@ -56,6 +56,9 @@ class ExerciseListItemModifiedState extends ExerciseListState {
         super(
             exercises: exercises ?? state.exercises,
             searchFilter: searchFilter ?? state.searchFilter);
+
+  @override
+  List<Object?> get props => [exercises, searchFilter, modifiedIndex, type];
 }
 
 @immutable
@@ -75,4 +78,7 @@ class ExerciseListErrorState extends ExerciseListState {
         exercises: exercises ?? state.exercises,
         searchFilter: state.searchFilter);
   }
+
+  @override
+  List<Object?> get props => [exercises, searchFilter, errorMessage];
 }

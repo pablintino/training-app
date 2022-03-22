@@ -5,10 +5,12 @@ abstract class ExerciseListEvent extends Equatable {}
 
 @immutable
 class ExercisesFetchEvent extends ExerciseListEvent {
-  ExercisesFetchEvent();
+  final bool reload;
+
+  ExercisesFetchEvent({this.reload = false});
 
   @override
-  List<Object?> get props => [];
+  List<Object?> get props => [reload];
 }
 
 @immutable

@@ -21,7 +21,7 @@ class ExerciseListBloc extends Bloc<ExerciseListEvent, ExerciseListState> {
   ExerciseListBloc()
       : _exercisesRepository = GetIt.instance<ExercisesRepository>(),
         super(ExerciseListLoadingState()) {
-    on<ExercisesFetchEvent>((_, emit) => _handleFetchEvent(emit));
+    on<ExercisesFetchEvent>((event, emit) => _handleFetchEvent(emit, event));
     on<ModifiedOrCreatedExerciseEvent>(
         (event, emit) => _handleListModificationEvent(event, emit));
     on<DeleteExerciseEvent>(
@@ -32,15 +32,23 @@ class ExerciseListBloc extends Bloc<ExerciseListEvent, ExerciseListState> {
             DebounceTransformer.debounce(const Duration(milliseconds: 500)));
   }
 
-  Future<void> _handleFetchEvent(Emitter emit) async {
+  Future<void> _handleFetchEvent(
+      Emitter emit, ExercisesFetchEvent event) async {
     emit(ExerciseListLoadingState.fromState(state));
-    final pageNumber =
-        (state.exercises.length / ExercisesRepository.PAGE_SIZE).truncate();
+
+    // On reload just grab the first page
+    final pageNumber = !event.reload
+        ? (state.exercises.length / ExercisesRepository.PAGE_SIZE).truncate()
+        : 0;
+
     await _exercisesRepository
         .getExercisesByPage(pageNumber, state.searchFilter)
         .then((retrievedExercises) {
-      List<Exercise> exercises = List.from(state.exercises)
-        ..addAll(_removeExistingExercises(state, retrievedExercises));
+      List<Exercise> exercises = !event.reload
+          ? (List.from(state.exercises)
+            ..addAll(_removeExistingExercises(state, retrievedExercises)))
+          : retrievedExercises;
+
       emit(ExerciseListLoadingState.fromState(state, exercises: exercises));
     }).catchError((err) {
       emit(ExerciseListErrorState.fromState(state, err.toString()));

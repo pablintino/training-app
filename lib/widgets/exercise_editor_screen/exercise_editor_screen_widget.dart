@@ -140,9 +140,6 @@ class _ExerciseEditorScreenWidgetState
   }
 
   Widget _buildDescriptionTextField(ExerciseManipulationState state) {
-    String? value = state is OnGoingExerciseManipulationState
-        ? state.exerciseDescription.value
-        : null;
     return TextFormField(
       controller: _descriptionController,
       onChanged: (value) =>
@@ -150,8 +147,9 @@ class _ExerciseEditorScreenWidgetState
       onFieldSubmitted: (String value) {
         _exerciseManipulationBloc.add(SubmitExerciseEvent());
       },
+      maxLines: null,
       focusNode: _descriptionFocusNode,
-      keyboardType: TextInputType.name,
+      keyboardType: TextInputType.multiline,
       textInputAction: TextInputAction.next,
       decoration: InputDecoration(
           hintText: 'Description',
