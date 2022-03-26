@@ -33,7 +33,7 @@ class DrawerNavigationWidget extends StatelessWidget {
             title: const Text('Item 2'),
             onTap: () {
               // Update the state of the app.
-              // ...
+              Navigator.of(context).pushNamed('/test-wizard');
             },
           ),
           Divider(),
