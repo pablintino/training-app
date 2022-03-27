@@ -2,18 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
-import 'package:training_app/models/exercises_models.dart';
-import 'package:training_app/widgets/exercise_editor_screen/exercise_editor_screen_widget.dart';
-import 'package:training_app/widgets/exercise_screen/bloc/exercise_list_bloc.dart';
-import 'package:training_app/widgets/slidable_list_item.dart';
 import 'package:training_app/widgets/list_search_widget/list_search_widget.dart';
+import 'package:training_app/widgets/simple_list_item.dart';
+import 'package:training_app/widgets/workout_list_widget/bloc/workout_list_bloc.dart';
 
-class ExerciseListWidget extends StatefulWidget {
+class WorkoutListWidget extends StatefulWidget {
   @override
-  _ExerciseListWidgetState createState() => _ExerciseListWidgetState();
+  _WorkoutListWidgetState createState() => _WorkoutListWidgetState();
 }
 
-class _ExerciseListWidgetState extends State<ExerciseListWidget> {
+class _WorkoutListWidgetState extends State<WorkoutListWidget> {
   late AutoScrollController _scrollController;
 
   @override
@@ -23,13 +21,13 @@ class _ExerciseListWidgetState extends State<ExerciseListWidget> {
         viewportBoundaryGetter: () =>
             Rect.fromLTRB(0, 0, 0, MediaQuery.of(context).padding.bottom),
         axis: Axis.vertical);
-    final bloc = BlocProvider.of<ExerciseListBloc>(context);
+    final bloc = BlocProvider.of<WorkoutListBloc>(context);
     _scrollController.addListener(() {
       if (_scrollController.offset != 0.0 &&
           _scrollController.offset ==
               _scrollController.position.maxScrollExtent &&
           !bloc.isFetching) {
-        bloc.add(ExercisesFetchEvent());
+        bloc.add(WorkoutFetchEvent());
       }
     });
   }
@@ -41,12 +39,12 @@ class _ExerciseListWidgetState extends State<ExerciseListWidget> {
       ListSearchWidget(
           text: 'text',
           onChanged: (filterValue) => {
-                BlocProvider.of<ExerciseListBloc>(context)
+                BlocProvider.of<WorkoutListBloc>(context)
                     .add(SearchFilterUpdateFetchEvent(filterValue))
               },
-          hintText: "Search exercise..."),
+          hintText: "Search workouts..."),
       Expanded(
-        child: BlocConsumer<ExerciseListBloc, ExerciseListState>(
+        child: BlocConsumer<WorkoutListBloc, WorkoutListState>(
           listener: (ctx, state) => _onStateChange(ctx, state),
           builder: (ctx, state) => _buildList(ctx, state),
         ),
@@ -54,8 +52,8 @@ class _ExerciseListWidgetState extends State<ExerciseListWidget> {
     ]));
   }
 
-  void _onStateChange(BuildContext context, ExerciseListState state) {
-    if (state is ExerciseListErrorState) {
+  void _onStateChange(BuildContext context, WorkoutListState state) {
+    if (state is WorkoutListErrorState) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(state.errorMessage),
         duration: Duration(seconds: 2),
@@ -63,29 +61,29 @@ class _ExerciseListWidgetState extends State<ExerciseListWidget> {
     }
   }
 
-  Widget _buildList(BuildContext context, ExerciseListState state) {
-    final bloc = BlocProvider.of<ExerciseListBloc>(context);
-    if (state is ExerciseListItemModifiedState &&
+  Widget _buildList(BuildContext context, WorkoutListState state) {
+    final bloc = BlocProvider.of<WorkoutListBloc>(context);
+    if (state is WorkoutListItemModifiedState &&
         state.type == ModificationType.creation) {
       // Remember: This add works online once per build call
       WidgetsBinding.instance!.addPostFrameCallback((_) =>
           _scrollController.scrollToIndex(state.modifiedIndex,
               duration: Duration(seconds: 1),
               preferPosition: AutoScrollPosition.middle));
-    } else if (state is ExerciseListErrorState && state.exercises.isEmpty) {
+    } else if (state is WorkoutListErrorState && state.workouts.isEmpty) {
       return _buildReloadButton(context, bloc, state);
     }
     return _buildListView(context, bloc, state);
   }
 
-  Widget _buildReloadButton(BuildContext context, ExerciseListBloc bloc,
-      ExerciseListErrorState state) {
+  Widget _buildReloadButton(
+      BuildContext context, WorkoutListBloc bloc, WorkoutListErrorState state) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         IconButton(
-          onPressed: () => bloc.add(ExercisesFetchEvent()),
+          onPressed: () => bloc.add(WorkoutFetchEvent()),
           icon: Icon(Icons.refresh),
         ),
         const SizedBox(height: 15),
@@ -95,11 +93,11 @@ class _ExerciseListWidgetState extends State<ExerciseListWidget> {
   }
 
   Widget _buildListView(
-      BuildContext context, ExerciseListBloc bloc, ExerciseListState state) {
+      BuildContext context, WorkoutListBloc bloc, WorkoutListState state) {
     return SlidableAutoCloseBehavior(
         child: RefreshIndicator(
             onRefresh: () async {
-              bloc.add(ExercisesFetchEvent(reload: true));
+              bloc.add(WorkoutFetchEvent(reload: true));
             },
             child: ListView.builder(
               physics: AlwaysScrollableScrollPhysics(),
@@ -109,30 +107,12 @@ class _ExerciseListWidgetState extends State<ExerciseListWidget> {
                   controller: _scrollController,
                   index: index,
                   highlightColor: Colors.black.withOpacity(0.1),
-                  // TODO Review this null accessor ! id!
-                  child: SlidableListItem(state.exercises[index].id!,
-                      itemTitle: state.exercises[index].name,
-                      itemSubtitle: state.exercises[index].description,
-                      onDelete: (exerciseId) =>
-                          bloc.add(DeleteExerciseEvent(exerciseId)),
-                      onEdit: (exerciseId) => _openExerciseEditionDialog(
-                          context,
-                          bloc,
-                          state.exercises.firstWhere(
-                              (element) => exerciseId == element.id)))),
-              itemCount: state.exercises.length,
+                  child: SimpleListItem(
+                    state.workouts[index].id!,
+                    itemTitle: state.workouts[index].name,
+                    itemSubtitle: state.workouts[index].description,
+                  )),
+              itemCount: state.workouts.length,
             )));
-  }
-
-  void _openExerciseEditionDialog(
-      BuildContext context, ExerciseListBloc bloc, Exercise exercise) {
-    Navigator.of(context).push(new MaterialPageRoute<void>(
-        builder: (BuildContext context) {
-          return ExerciseEditorScreenWidget(
-            bloc,
-            initialExercise: exercise,
-          );
-        },
-        fullscreenDialog: true));
   }
 }

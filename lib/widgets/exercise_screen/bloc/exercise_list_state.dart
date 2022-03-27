@@ -12,6 +12,25 @@ abstract class ExerciseListState extends Equatable {
 }
 
 @immutable
+class StartedListLoadingState extends ExerciseListState {
+  const StartedListLoadingState(
+      {List<Exercise>? exercises, String? searchFilter})
+      : super(
+            exercises: exercises ?? const <Exercise>[],
+            searchFilter: searchFilter);
+
+  static StartedListLoadingState fromState(
+    ExerciseListState state, {
+    exercises,
+    searchFilter,
+  }) {
+    return StartedListLoadingState(
+        exercises: exercises ?? state.exercises,
+        searchFilter: searchFilter ?? state.searchFilter);
+  }
+}
+
+@immutable
 class ExerciseListLoadingState extends ExerciseListState {
   const ExerciseListLoadingState(
       {List<Exercise>? exercises, String? searchFilter})

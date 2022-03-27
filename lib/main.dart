@@ -6,10 +6,11 @@ import 'package:training_app/app_routes.dart';
 import 'package:training_app/blocs/auth/auth_bloc.dart';
 import 'package:training_app/repositories/exercises_repository.dart';
 import 'package:training_app/repositories/user_auth_repository.dart';
+import 'package:training_app/repositories/workouts_repository.dart';
 import 'package:training_app/widgets/exercise_screen/exercise_list_screen_widget.dart';
 import 'package:training_app/widgets/login_screen_widget/login_screen_widget.dart';
 import 'package:training_app/widgets/main_app_widget/main_app_widget.dart';
-import 'package:training_app/widgets/workout_creation_screen_widget/workout_creation_wizard_screen_widget.dart';
+import 'package:training_app/widgets/workout_detail_screen_widget/workout_detail_screen_widget.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,5 +47,6 @@ class MyApp extends StatelessWidget {
 Future<void> setup() async {
   await AppConfigLoader().init();
   GetIt.instance.registerSingleton<ExercisesRepository>(ExercisesRepository());
+  GetIt.instance.registerSingleton<WorkoutRepository>(WorkoutRepository());
   GetIt.instance.registerSingleton<UserAuthRepository>(UserAuthRepository());
 }

@@ -5,7 +5,7 @@ import 'package:training_app/widgets/two_letters_icon/two_letters_icon.dart';
 class TestStepper extends StatelessWidget {
   const TestStepper({Key? key}) : super(key: key);
 
-  static const String _title = 'Workout title';
+  static const String _title = 'Workout details';
 
   @override
   Widget build(BuildContext context) {

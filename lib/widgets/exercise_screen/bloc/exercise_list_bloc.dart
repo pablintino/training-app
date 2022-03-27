@@ -16,7 +16,7 @@ part 'exercise_list_state.dart';
 class ExerciseListBloc extends Bloc<ExerciseListEvent, ExerciseListState> {
   final ExercisesRepository _exercisesRepository;
 
-  bool get isFetching => state is ExerciseListLoadingState;
+  bool get isFetching => state is StartedListLoadingState;
 
   ExerciseListBloc()
       : _exercisesRepository = GetIt.instance<ExercisesRepository>(),
@@ -34,7 +34,7 @@ class ExerciseListBloc extends Bloc<ExerciseListEvent, ExerciseListState> {
 
   Future<void> _handleFetchEvent(
       Emitter emit, ExercisesFetchEvent event) async {
-    emit(ExerciseListLoadingState.fromState(state));
+    emit(StartedListLoadingState.fromState(state));
 
     // On reload just grab the first page
     final pageNumber = !event.reload
