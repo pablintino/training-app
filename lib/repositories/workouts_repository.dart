@@ -37,6 +37,20 @@ class WorkoutRepository {
     }
   }
 
+  Future<WorkoutSession> getWorkoutSession(int id, {bool fat = false}) async {
+    try {
+      final response = await http.get(Uri.parse(
+          '${_appConfig.apiUrl}$_WORKOUT_BASE_PATH/sessions/$id?fat=$fat'));
+      if (response.statusCode == 200) {
+        return WorkoutSession.fromJson(json.decode(response.body));
+      }
+      throw 'Unexpected response retrieving workouts';
+    } catch (e) {
+      print(e.toString());
+      throw e;
+    }
+  }
+
   Future<Workout> createWorkout(Workout workout) async {
     try {
       final response = await http.post(

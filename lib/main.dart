@@ -11,6 +11,7 @@ import 'package:training_app/widgets/exercise_screen/exercise_list_screen_widget
 import 'package:training_app/widgets/login_screen_widget/login_screen_widget.dart';
 import 'package:training_app/widgets/main_app_widget/main_app_widget.dart';
 import 'package:training_app/widgets/workout_detail_screen_widget/workout_detail_screen_widget.dart';
+import 'package:training_app/widgets/workout_session_detail_screen_widget/workout_session_detail_screen_widget.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,7 +34,8 @@ class MyApp extends StatelessWidget {
             primarySwatch: Colors.blue,
           ),
           routes: {
-            '/test-wizard': (context) => TestStepper(),
+            '/test-wizard': (context) => WorkoutScreenWidget(),
+            '/test-wizard2': (context) => WorkoutSessionScreenWidget(),
             AppRoutes.DEFAULT_ROUTE: (context) => LoginScreenWidget(),
             AppRoutes.LOGIN_SCREEN_ROUTE: (context) => LoginScreenWidget(),
             AppRoutes.HOME_SCREEN_ROUTE: (context) => MainAppWidget(),
