@@ -4,126 +4,95 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:training_app/models/workout_models.dart';
 import 'package:training_app/widgets/workout_session_detail_screen_widget/bloc/workout_session_details_bloc.dart';
 
+class WorkoutSessionScreenWidgetArguments {
+  final int sessionId;
+
+  WorkoutSessionScreenWidgetArguments(this.sessionId);
+}
+
 class WorkoutSessionScreenWidget extends StatelessWidget {
   const WorkoutSessionScreenWidget({Key? key}) : super(key: key);
 
-  static const String _title = 'Session details';
-
   @override
   Widget build(BuildContext context) {
+    final args = ModalRoute.of(context)!.settings.arguments
+        as WorkoutSessionScreenWidgetArguments;
     return Scaffold(
-      appBar: AppBar(title: const Text(_title)),
-      body: BlocProvider<WorkoutSessionDetailsBloc>(
-        create: (_) => WorkoutSessionDetailsBloc()..add(LoadSessionEvent(7)),
-        child: _ScrollableSessionViewWidget(),
-      ),
-    );
-  }
-}
-
-class _ScrollableSessionViewWidget extends StatefulWidget {
-  @override
-  State<StatefulWidget> createState() => _ScrollableSessionViewWidgetState();
-}
-
-class _ScrollableSessionViewWidgetState
-    extends State<_ScrollableSessionViewWidget>
-    with SingleTickerProviderStateMixin {
-  @override
-  Widget build(BuildContext context) {
-    return NestedScrollView(
-      headerSliverBuilder: _getHeaderBuilder(),
-      body: Padding(
-          padding: EdgeInsets.symmetric(vertical: 0, horizontal: 10),
-          child: BlocBuilder<WorkoutSessionDetailsBloc,
-              WorkoutSessionDetailsState>(builder: (_, state) {
-            if (state is SessionLoadedState) {
-              final sortedList = List.from(state.workoutSession.phases);
-              sortedList.sort((a, b) =>
-                  ((a.sequence != null && b.sequence != null)
-                      ? (a.sequence! - b.sequence!)
-                      : 0));
-              return ListView.builder(
-                itemBuilder: (_, idx) => _PhaseContainerWidget(sortedList[idx]),
-                itemCount: state.workoutSession.phases.length,
-              );
-            }
-            return Center(
-              child: Text('No data'),
-            );
-          })),
-    );
-  }
-
-  NestedScrollViewHeaderSliversBuilder _getHeaderBuilder() {
-    return (BuildContext context, bool innerBoxIsScrolled) => [
-          SliverAppBar(
-            automaticallyImplyLeading: false,
-            pinned: false,
-            backgroundColor: Colors.white,
-            flexibleSpace: FlexibleSpaceBar(
-              collapseMode: CollapseMode.pin,
-              background: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  BlocBuilder<WorkoutSessionDetailsBloc,
-                      WorkoutSessionDetailsState>(builder: (context, state) {
-                    final loadedState =
-                        (state is SessionLoadedState) ? state : null;
-
-                    final headerText =
-                        'Week ${loadedState?.workoutSession?.week ?? ''} - Day ${loadedState?.workoutSession?.weekDay ?? ''}';
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 0, horizontal: 10),
-                      child: TextFormField(
-                        enabled: false,
-                        decoration: InputDecoration(
-                          border: InputBorder.none,
-                          hintText: headerText,
-                        ),
-                        initialValue: headerText,
-                        style: TextStyle(fontSize: 25.0),
-                        textAlign: TextAlign.left,
-                      ),
-                    );
-                  }),
-                ],
-              ),
-            ),
-            bottom: PreferredSize(
-              preferredSize: Size(
-                  double.infinity, MediaQuery.of(context).size.height / 10),
-              child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Column(
-                  children: [
-                    Container(
-                      alignment: AlignmentDirectional.topStart,
-                      child: const Text(
-                        'Phases',
-                        style: TextStyle(fontSize: 18.0),
-                        textAlign: TextAlign.left,
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        Container(
-                          width: MediaQuery.of(context).size.width - 50,
-                          child: Divider(
-                            thickness: 1,
-                            color: Colors.blue.withOpacity(0.5),
-                          ),
-                        ),
-                        Expanded(child: Container())
-                      ],
-                    )
+        //appBar: AppBar(title: const Text(_title)),
+        body: BlocProvider<WorkoutSessionDetailsBloc>(
+      create: (_) =>
+          WorkoutSessionDetailsBloc()..add(LoadSessionEvent(args.sessionId)),
+      child: BlocBuilder<WorkoutSessionDetailsBloc, WorkoutSessionDetailsState>(
+          builder: (ctx, state) => state is SessionLoadedState
+              ? CustomScrollView(
+                  slivers: [
+                    _getAppBar(ctx, state),
+                    _buildBody(state),
                   ],
-                ),
-              ),
-            ),
-          )
-        ];
+                )
+              : const Center(
+                  child: Text('No data'),
+                )),
+    ));
+  }
+
+  Widget _buildBody(SessionLoadedState state) {
+    final sortedList = List.from(state.workoutSession.phases);
+    sortedList.sort((a, b) => ((a.sequence != null && b.sequence != null)
+        ? (a.sequence! - b.sequence!)
+        : 0));
+    return SliverList(
+        delegate: SliverChildBuilderDelegate(
+      (_, idx) => _PhaseContainerWidget(sortedList[idx]),
+      childCount: state.workoutSession.phases.length,
+    ));
+  }
+
+  SliverAppBar _getAppBar(BuildContext context, SessionLoadedState state) {
+    final headerText =
+        'Session: ${_getDayName(state.workoutSession.weekDay)} ${state.workoutSession.week ?? ''}';
+    return SliverAppBar(
+      automaticallyImplyLeading: true,
+      backgroundColor: Theme.of(context).primaryColor,
+      expandedHeight: 150,
+      floating: true,
+      pinned: true,
+      flexibleSpace: FlexibleSpaceBar(
+        //titlePadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+        background: Image.network(
+          'https://source.unsplash.com/random?monochromatic+dark',
+          fit: BoxFit.cover,
+        ),
+        title: Text(headerText),
+        //centerTitle: true,
+      ),
+      //title: const Text('Session'),
+      //leading: Icon(Icons.arrow_back),
+      //actions: [
+      //  Icon(Icons.settings),
+      //  SizedBox(width: 12),
+      //],
+    );
+  }
+
+  static String _getDayName(int? day) {
+    switch (day) {
+      case 0:
+        return 'Monday';
+      case 1:
+        return 'Tuesday';
+      case 2:
+        return 'Wednesday';
+      case 3:
+        return 'Thursday';
+      case 4:
+        return 'Friday';
+      case 5:
+        return 'Saturday';
+      case 6:
+        return 'Sunday';
+    }
+    return '';
   }
 }
 
@@ -299,7 +268,11 @@ class _TestCardState extends State<_PhaseContainerWidget> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildWorkoutItemDetails(workoutItem),
-              ..._buildExercisesDetailsList(workoutItem),
+              Padding(padding: EdgeInsets.symmetric(vertical: 5),
+                child: Column(
+                  children: _buildExercisesDetailsList(workoutItem),
+                ),
+              ),
             ],
           )),
     );
@@ -326,7 +299,11 @@ class _TestCardState extends State<_PhaseContainerWidget> {
         workoutItem.workModality!.isNotEmpty) {
       itemDetails = itemDetails + '\nModality: ${workoutItem.workModality}';
     }
-    return itemDetails != '' ? Text(itemDetails) : Container();
+    return itemDetails != ''
+        ? Padding(
+            padding: EdgeInsets.symmetric(vertical: 5),
+            child: Text(itemDetails))
+        : Container();
   }
 
   List<Widget> _buildExercisesDetailsList(WorkoutItem workoutItem) {
@@ -337,13 +314,14 @@ class _TestCardState extends State<_PhaseContainerWidget> {
     sortedSets.sort((a, b) => ((a.sequence != null && b.sequence != null)
         ? (a.sequence! - b.sequence!)
         : 0));
-
+    int rows = 0;
     while (index < sortedSets.length) {
       int lastEquals = _getLastEqualExerciseIndex(sortedSets, index);
       final exerciseExecutionsDetails = [
         for (var i = index; i <= lastEquals; i += 1) i
       ].map((e) => _buildSetRepsWeightTest(sortedSets[e])).toList();
       final widget = Container(
+        color: rows % 2 == 0 ? Colors.grey : Colors.grey.withOpacity(0.5),
         padding: EdgeInsets.symmetric(vertical: 3),
         child: IntrinsicHeight(
             child: Row(
@@ -368,6 +346,7 @@ class _TestCardState extends State<_PhaseContainerWidget> {
       } else {
         index = lastEquals + 1;
       }
+      rows++;
     }
     return exercisesWidgets;
   }

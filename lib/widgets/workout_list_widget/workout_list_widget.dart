@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
+import 'package:training_app/app_routes.dart';
 import 'package:training_app/widgets/list_search_widget/list_search_widget.dart';
 import 'package:training_app/widgets/simple_list_item.dart';
+import 'package:training_app/widgets/workout_detail_screen_widget/workout_detail_screen_widget.dart';
 import 'package:training_app/widgets/workout_list_widget/bloc/workout_list_bloc.dart';
 
 class WorkoutListWidget extends StatefulWidget {
@@ -111,6 +113,11 @@ class _WorkoutListWidgetState extends State<WorkoutListWidget> {
                     state.workouts[index].id!,
                     itemTitle: state.workouts[index].name,
                     itemSubtitle: state.workouts[index].description,
+                    onClick: (id) {
+                      Navigator.pushNamed(context,
+                          AppRoutes.WORKOUTS_WORKOUT_DETAILS_SCREEN_ROUTE,
+                          arguments: WorkoutScreenWidgetArguments(id));
+                    },
                   )),
               itemCount: state.workouts.length,
             )));

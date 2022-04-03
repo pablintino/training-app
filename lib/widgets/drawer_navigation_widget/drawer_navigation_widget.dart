@@ -29,21 +29,6 @@ class DrawerNavigationWidget extends StatelessWidget {
                   .pushNamed(AppRoutes.EXERCISES_LISTS_SCREEN_ROUTE);
             },
           ),
-          ListTile(
-            title: const Text('Item 2'),
-            onTap: () {
-              // Update the state of the app.
-              Navigator.of(context).pushNamed('/test-wizard');
-            },
-          ),
-          Divider(),
-          ListTile(
-            title: const Text('Item 3'),
-            onTap: () {
-              // Update the state of the app.
-              Navigator.of(context).pushNamed('/test-wizard2');
-            },
-          ),
           Divider(),
           ListTile(
             leading: Icon(Icons.logout),

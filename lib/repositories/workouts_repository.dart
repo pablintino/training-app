@@ -44,7 +44,21 @@ class WorkoutRepository {
       if (response.statusCode == 200) {
         return WorkoutSession.fromJson(json.decode(response.body));
       }
-      throw 'Unexpected response retrieving workouts';
+      throw 'Unexpected response retrieving workout session $id';
+    } catch (e) {
+      print(e.toString());
+      throw e;
+    }
+  }
+
+  Future<Workout> getWorkout(int id, {bool fat = false}) async {
+    try {
+      final response = await http.get(Uri.parse(
+          '${_appConfig.apiUrl}$_WORKOUT_BASE_PATH/$id?fat=$fat'));
+      if (response.statusCode == 200) {
+        return Workout.fromJson(json.decode(response.body));
+      }
+      throw 'Unexpected response retrieving workout $id';
     } catch (e) {
       print(e.toString());
       throw e;

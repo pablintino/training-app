@@ -34,13 +34,15 @@ class MyApp extends StatelessWidget {
             primarySwatch: Colors.blue,
           ),
           routes: {
-            '/test-wizard': (context) => WorkoutScreenWidget(),
-            '/test-wizard2': (context) => WorkoutSessionScreenWidget(),
             AppRoutes.DEFAULT_ROUTE: (context) => LoginScreenWidget(),
             AppRoutes.LOGIN_SCREEN_ROUTE: (context) => LoginScreenWidget(),
             AppRoutes.HOME_SCREEN_ROUTE: (context) => MainAppWidget(),
             AppRoutes.EXERCISES_LISTS_SCREEN_ROUTE: (context) =>
-                ExerciseListScreenWidget()
+                ExerciseListScreenWidget(),
+            AppRoutes.WORKOUTS_SESSIONS_DETAILS_SCREEN_ROUTE: (context) =>
+                WorkoutSessionScreenWidget(),
+            AppRoutes.WORKOUTS_WORKOUT_DETAILS_SCREEN_ROUTE: (context) =>
+                WorkoutDetailsScreenWidget()
           },
         ));
   }
