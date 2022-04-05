@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:training_app/models/workout_models.dart';
 import 'package:training_app/widgets/workout_session_detail_screen_widget/bloc/workout_session_details_bloc.dart';
+import 'dart:math';
 
 class WorkoutSessionScreenWidgetArguments {
   final int sessionId;
@@ -10,30 +11,89 @@ class WorkoutSessionScreenWidgetArguments {
   WorkoutSessionScreenWidgetArguments(this.sessionId);
 }
 
-class WorkoutSessionScreenWidget extends StatelessWidget {
+class WorkoutSessionScreenWidget extends StatefulWidget {
   const WorkoutSessionScreenWidget({Key? key}) : super(key: key);
 
   @override
+  State<StatefulWidget> createState() => _WorkoutSessionScreenWidgetState();
+}
+
+class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
+  _SliverAppBarDelegate(this._tabBar);
+
+  final TabBar _tabBar;
+
+  @override
+  double get minExtent => _tabBar.preferredSize.height;
+
+  @override
+  double get maxExtent => _tabBar.preferredSize.height;
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return new Container(
+      child: _tabBar,
+    );
+  }
+
+  @override
+  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
+    return false;
+  }
+}
+
+class MyCustomClipper extends CustomClipper<Rect> {
+  final double clipHeight;
+
+  MyCustomClipper({required this.clipHeight});
+
+  @override
+  getClip(Size size) {
+    double top = max(size.height - clipHeight, 0);
+    Rect rect = Rect.fromLTRB(0.0, top, size.width, size.height);
+    return rect;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper oldClipper) {
+    return false;
+  }
+}
+
+class _WorkoutSessionScreenWidgetState
+    extends State<WorkoutSessionScreenWidget> {
+  @override
   Widget build(BuildContext context) {
+    final List<String> _tabs = <String>['Tab 1', 'Tab 2'];
     final args = ModalRoute.of(context)!.settings.arguments
         as WorkoutSessionScreenWidgetArguments;
     return Scaffold(
-        //appBar: AppBar(title: const Text(_title)),
-        body: BlocProvider<WorkoutSessionDetailsBloc>(
-      create: (_) =>
-          WorkoutSessionDetailsBloc()..add(LoadSessionEvent(args.sessionId)),
-      child: BlocBuilder<WorkoutSessionDetailsBloc, WorkoutSessionDetailsState>(
-          builder: (ctx, state) => state is SessionLoadedState
-              ? CustomScrollView(
-                  slivers: [
-                    _getAppBar(ctx, state),
-                    _buildBody(state),
-                  ],
-                )
-              : const Center(
-                  child: Text('No data'),
-                )),
+        body: SafeArea(
+      child: BlocProvider<WorkoutSessionDetailsBloc>(
+        create: (_) =>
+            WorkoutSessionDetailsBloc()..add(LoadSessionEvent(args.sessionId)),
+        child:
+            BlocBuilder<WorkoutSessionDetailsBloc, WorkoutSessionDetailsState>(
+                builder: (ctx, state) => state is SessionLoadedState
+                    ? _buildScroll(ctx, state, _tabs)
+                    : const Center(
+                        child: Text('No data'),
+                      )),
+      ),
     ));
+  }
+
+  Widget _buildScroll(
+      BuildContext context, SessionLoadedState state, List<String> tabs) {
+    return DefaultTabController(
+        length: 2,
+        child: NestedScrollView(
+          // controller: _scrollController,
+          headerSliverBuilder: (scrollContext, innerBoxIsScrolled) =>
+              _getAppBar(scrollContext, state, tabs, innerBoxIsScrolled),
+          body: _buildBody(state),
+        ));
   }
 
   Widget _buildBody(SessionLoadedState state) {
@@ -41,38 +101,77 @@ class WorkoutSessionScreenWidget extends StatelessWidget {
     sortedList.sort((a, b) => ((a.sequence != null && b.sequence != null)
         ? (a.sequence! - b.sequence!)
         : 0));
-    return SliverList(
-        delegate: SliverChildBuilderDelegate(
-      (_, idx) => _PhaseContainerWidget(sortedList[idx]),
-      childCount: state.workoutSession.phases.length,
-    ));
+    return ClipRect(
+      clipper: MyCustomClipper(
+          clipHeight: MediaQuery.of(context).size.height -
+              (kToolbarHeight + 46 + MediaQuery.of(context).padding.top)),
+      // TODO YAPA appbar size + tabs + safe area margin (the mobile appbar)
+      child: TabBarView(
+        children: [
+          ListView.builder(
+            key: new PageStorageKey('myListView'),
+            shrinkWrap: true,
+            physics: ClampingScrollPhysics(),
+            itemBuilder: (_, idx) => _PhaseContainerWidget(
+              sortedList[idx],
+              key: PageStorageKey('tile$idx'),
+            ),
+            itemCount: state.workoutSession.phases.length,
+          ),
+          Center(
+            child: Text('Other section'),
+          )
+        ],
+      ),
+    );
   }
 
-  SliverAppBar _getAppBar(BuildContext context, SessionLoadedState state) {
+  List<Widget> _getAppBar(BuildContext context, SessionLoadedState state,
+      List<String> tabs, bool innerBoxIsScrolled) {
+    if (innerBoxIsScrolled) {
+      //  print(_scrollController?.position);
+    }
+
     final headerText =
         'Session: ${_getDayName(state.workoutSession.weekDay)} ${state.workoutSession.week ?? ''}';
-    return SliverAppBar(
-      automaticallyImplyLeading: true,
-      backgroundColor: Theme.of(context).primaryColor,
-      expandedHeight: 150,
-      floating: true,
-      pinned: true,
-      flexibleSpace: FlexibleSpaceBar(
-        //titlePadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-        background: Image.network(
-          'https://source.unsplash.com/random?monochromatic+dark',
-          fit: BoxFit.cover,
+    return [
+      SliverAppBar(
+        automaticallyImplyLeading: true,
+        backgroundColor: Theme.of(context).primaryColor,
+        expandedHeight: 100,
+        pinned: true,
+        flexibleSpace: FlexibleSpaceBar(
+          //titlePadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+          background: Image.network(
+            'https://source.unsplash.com/random?monochromatic+dark',
+            fit: BoxFit.cover,
+          ),
+          title: Text(headerText),
+          centerTitle: true,
         ),
-        title: Text(headerText),
-        //centerTitle: true,
+        //title: const Text('Session'),
+        //leading: Icon(Icons.arrow_back),
+        //actions: [
+        //  Icon(Icons.settings),
+        //  SizedBox(width: 12),
+        //],
       ),
-      //title: const Text('Session'),
-      //leading: Icon(Icons.arrow_back),
-      //actions: [
-      //  Icon(Icons.settings),
-      //  SizedBox(width: 12),
-      //],
-    );
+      SliverPersistentHeader(
+        delegate: _SliverAppBarDelegate(
+          TabBar(
+            labelColor: Colors.black87,
+            unselectedLabelColor: Colors.grey,
+            // These are the widgets to put in each tab in the tab bar.
+            tabs: tabs
+                .map((String name) => Tab(
+                      text: name,
+                    ))
+                .toList(),
+          ),
+        ),
+        pinned: true,
+      )
+    ];
   }
 
   static String _getDayName(int? day) {
@@ -105,17 +204,30 @@ class _PhaseContainerWidget extends StatefulWidget {
   State<StatefulWidget> createState() => _TestCardState();
 }
 
-class _TestCardState extends State<_PhaseContainerWidget> {
-  final GlobalKey<ExpansionTileCardState> cardA = new GlobalKey();
+class _DummyIcon extends StatelessWidget {
+  final int number;
+
+  const _DummyIcon(this.number, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final ButtonStyle flatButtonStyle = TextButton.styleFrom(
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(4.0)),
+    return Container(
+      //width: 50.0,
+      //height: 50.0,
+      padding: const EdgeInsets.all(15.0),
+      decoration: new BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.grey,
       ),
+      child: new Text(number.toString(),
+          style: new TextStyle(color: Colors.white, fontSize: 20.0)),
     );
+  }
+}
 
+class _TestCardState extends State<_PhaseContainerWidget> {
+  @override
+  Widget build(BuildContext context) {
     final sortedList = List<WorkoutItem>.from(widget.workoutPhase.items);
     sortedList.sort((a, b) => ((a.sequence != null && b.sequence != null)
         ? (a.sequence! - b.sequence!)
@@ -125,8 +237,10 @@ class _TestCardState extends State<_PhaseContainerWidget> {
       child: ExpansionTileCard(
         initialElevation: 5.0,
         elevation: 5.0,
+        leading: widget.workoutPhase.sequence != null
+            ? _DummyIcon(widget.workoutPhase.sequence!)
+            : null,
         title: Text(widget.workoutPhase.name ?? 'No name'),
-        //subtitle: Text('I expand, too!'),
         children: <Widget>[
           Divider(
             thickness: 1.0,
@@ -141,46 +255,6 @@ class _TestCardState extends State<_PhaseContainerWidget> {
               ),
               child: _buildItemList(context, sortedList),
             ),
-          ),
-          ButtonBar(
-            alignment: MainAxisAlignment.spaceAround,
-            buttonHeight: 52.0,
-            buttonMinWidth: 90.0,
-            children: <Widget>[
-              TextButton(
-                style: flatButtonStyle,
-                onPressed: () {
-                  cardA.currentState?.collapse();
-                },
-                child: Column(
-                  children: <Widget>[
-                    const Icon(Icons.delete, color: Colors.red),
-                    const Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2.0),
-                    ),
-                    const Text(
-                      'Close',
-                      style: TextStyle(color: Colors.red),
-                    ),
-                  ],
-                ),
-              ),
-              TextButton(
-                style: flatButtonStyle,
-                onPressed: () {
-                  cardA.currentState?.toggleExpansion();
-                },
-                child: Column(
-                  children: <Widget>[
-                    Icon(Icons.add),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2.0),
-                    ),
-                    Text('Add'),
-                  ],
-                ),
-              ),
-            ],
           ),
         ],
       ),
@@ -245,7 +319,7 @@ class _TestCardState extends State<_PhaseContainerWidget> {
                   //subtitle: Text(
                   //  'Sub Title',
                   //),
-                  trailing: const Icon(Icons.drag_indicator),
+                  //trailing: const Icon(Icons.drag_indicator),
                 ),
               ),
             ),
@@ -259,26 +333,30 @@ class _TestCardState extends State<_PhaseContainerWidget> {
 
   Container _buildItemDetails(
       BuildContext buildContext, WorkoutItem workoutItem) {
+    final itemDetails = _buildWorkoutItemDetails(workoutItem);
     return Container(
-      //decoration: BoxDecoration(color: Colors.tealAccent.withOpacity(0.5)),
       alignment: AlignmentDirectional.centerStart,
-      child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildWorkoutItemDetails(workoutItem),
-              Padding(padding: EdgeInsets.symmetric(vertical: 5),
-                child: Column(
-                  children: _buildExercisesDetailsList(workoutItem),
-                ),
+      padding: EdgeInsets.symmetric(horizontal: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (itemDetails != null) itemDetails,
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: 5),
+            child: IntrinsicWidth(
+              // Give the column the width of its largest child (determined by each row Wrap)
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: _buildExercisesDetailsList(workoutItem),
               ),
-            ],
-          )),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildWorkoutItemDetails(WorkoutItem workoutItem) {
+  Widget? _buildWorkoutItemDetails(WorkoutItem workoutItem) {
     String itemDetails = '';
     if (workoutItem.rounds != null) {
       itemDetails = itemDetails + 'Rounds: ${workoutItem.rounds}';
@@ -303,42 +381,29 @@ class _TestCardState extends State<_PhaseContainerWidget> {
         ? Padding(
             padding: EdgeInsets.symmetric(vertical: 5),
             child: Text(itemDetails))
-        : Container();
+        : null;
   }
 
   List<Widget> _buildExercisesDetailsList(WorkoutItem workoutItem) {
-    List<Widget> exercisesWidgets = [];
-    int index = 0;
+    final oddBackgroundColor = Theme.of(context).primaryColor.withOpacity(0.2);
+    final evenBackgroundColor = Theme.of(context).primaryColor.withOpacity(0.1);
 
+    List<Widget> exercisesWidgets = [];
     final sortedSets = List<WorkoutSet>.from(workoutItem.sets);
     sortedSets.sort((a, b) => ((a.sequence != null && b.sequence != null)
         ? (a.sequence! - b.sequence!)
         : 0));
     int rows = 0;
+    int index = 0;
     while (index < sortedSets.length) {
       int lastEquals = _getLastEqualExerciseIndex(sortedSets, index);
       final exerciseExecutionsDetails = [
         for (var i = index; i <= lastEquals; i += 1) i
       ].map((e) => _buildSetRepsWeightTest(sortedSets[e])).toList();
-      final widget = Container(
-        color: rows % 2 == 0 ? Colors.grey : Colors.grey.withOpacity(0.5),
-        padding: EdgeInsets.symmetric(vertical: 3),
-        child: IntrinsicHeight(
-            child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              sortedSets[index].exercise?.name ?? 'Unknown exercise',
-              textAlign: TextAlign.start,
-            ),
-            Expanded(
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: exerciseExecutionsDetails)),
-          ],
-        )),
-      );
-      exercisesWidgets.add(widget);
+      exercisesWidgets.add(_buildSetDetailsRowWidget(
+          sortedSets[index],
+          exerciseExecutionsDetails,
+          rows % 2 == 0 ? oddBackgroundColor : evenBackgroundColor));
 
       //Update index
       if (lastEquals + 1 == index) {
@@ -349,6 +414,32 @@ class _TestCardState extends State<_PhaseContainerWidget> {
       rows++;
     }
     return exercisesWidgets;
+  }
+
+  Container _buildSetDetailsRowWidget(WorkoutSet workoutSet,
+      List<Text> exerciseExecutionsDetails, Color backgroundColor) {
+    return Container(
+      color: backgroundColor,
+      padding: EdgeInsets.symmetric(vertical: 3),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 5),
+        child: IntrinsicHeight(
+            child: Wrap(
+          children: [
+            Text(
+              workoutSet.exercise?.name ?? 'Unknown exercise',
+              textAlign: TextAlign.start,
+            ),
+            Padding(
+              padding: EdgeInsets.only(left: 10),
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: exerciseExecutionsDetails),
+            ),
+          ],
+        )),
+      ),
+    );
   }
 
   int _getLastEqualExerciseIndex(
