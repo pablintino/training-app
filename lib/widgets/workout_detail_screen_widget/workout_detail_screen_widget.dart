@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:training_app/app_routes.dart';
 import 'package:training_app/models/workout_models.dart';
-import 'package:training_app/widgets/two_letters_icon/two_letters_icon.dart';
+import 'package:training_app/widgets/two_letters_icon.dart';
 import 'package:training_app/widgets/workout_detail_screen_widget/bloc/workout_details_bloc.dart';
 import 'package:training_app/widgets/workout_session_detail_screen_widget/workout_session_detail_screen_widget.dart';
 
@@ -77,12 +77,6 @@ class WorkoutDetailsScreenWidget extends StatelessWidget {
       groupedSessions[workoutSession.week!]!.add(workoutSession);
     }
 
-    /*
-    sortedList.sort((a, b) => (((a.weekDay != null && b.weekDay != null) &&
-            (a.week != null && b.week != null))
-        ? ((a.week! * 10 + a.weekDay!) - (b.week! * 10 + b.weekDay!))
-        : 0));
-    */
     return [
       SliverList(
           delegate: SliverChildListDelegate([

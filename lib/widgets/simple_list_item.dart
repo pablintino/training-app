@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:training_app/widgets/two_letters_icon/two_letters_icon.dart';
+import 'package:training_app/widgets/two_letters_icon.dart';
 
 class SimpleListItem extends StatelessWidget {
   final int itemId;
