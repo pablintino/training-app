@@ -13,6 +13,8 @@ import 'package:training_app/widgets/main_app_widget/main_app_widget.dart';
 import 'package:training_app/widgets/workout_detail_screen_widget/workout_detail_screen_widget.dart';
 import 'package:training_app/widgets/workout_session_detail_screen_widget/workout_session_detail_screen_widget.dart';
 
+import 'database/database.dart';
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   setup().then((_) => runApp(MyApp()));
@@ -50,6 +52,7 @@ class MyApp extends StatelessWidget {
 
 Future<void> setup() async {
   await AppConfigLoader().init();
+  GetIt.instance.registerSingleton<AppDatabase>(AppDatabase());
   GetIt.instance.registerSingleton<ExercisesRepository>(ExercisesRepository());
   GetIt.instance.registerSingleton<WorkoutRepository>(WorkoutRepository());
   GetIt.instance.registerSingleton<UserAuthRepository>(UserAuthRepository());

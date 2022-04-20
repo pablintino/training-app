@@ -147,7 +147,6 @@ class WorkoutSet extends Equatable {
   final int? sequence;
   final int? id;
   final int? exerciseId;
-  final Exercise? exercise;
 
   WorkoutSet(
       {this.reps,
@@ -156,7 +155,6 @@ class WorkoutSet extends Equatable {
       this.setExecutions,
       this.sequence,
       this.id,
-      this.exercise,
       this.exerciseId});
 
   WorkoutSet.fromJson(Map<String, dynamic> json)
@@ -165,10 +163,7 @@ class WorkoutSet extends Equatable {
         reps = json['reps'],
         distance = json['distance'],
         weight = json['weight'],
-        exerciseId = json['exerciseId']?['id'] ?? json['exercise']?['id'],
-        exercise = json.containsKey('exercise')
-            ? Exercise.fromJson(json['exercise'])
-            : null,
+        exerciseId = json['exerciseId'] ?? json['exercise']?['id'],
         setExecutions = json['setExecutions'];
 
   Map toJson() => {
@@ -189,6 +184,5 @@ class WorkoutSet extends Equatable {
         distance,
         weight,
         exerciseId,
-        exercise,
       ];
 }

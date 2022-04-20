@@ -1,12 +1,16 @@
 import 'dart:convert';
 
+import 'package:drift/drift.dart';
+import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 import 'package:training_app/app_config.dart';
+import 'package:training_app/database/database.dart';
 import 'package:training_app/models/exercises_models.dart';
 
 class ExercisesRepository {
   static const int PAGE_SIZE = 10;
   final _appConfig = AppConfigLoader().instance;
+  final _db = GetIt.instance<AppDatabase>();
 
   Future<List<Exercise>> getExercisesByPage(
       int page, String? nameFilter) async {
@@ -24,6 +28,8 @@ class ExercisesRepository {
 
   Future<List<Exercise>> _commonExercisesRetrieval(Uri uri) async {
     try {
+      final test = await _db.exerciseDAO.getAllExercises();
+
       final response = await http.get(uri);
       if (response.statusCode == 200) {
         Iterable exercisesList = json.decode(response.body)['data'];
@@ -48,7 +54,14 @@ class ExercisesRepository {
       );
 
       if (response.statusCode == 200) {
-        return Exercise.fromJson(json.decode(response.body));
+        exercise = Exercise.fromJson(json.decode(response.body));
+
+        _db.exerciseDAO.insertExercise(ExercisesCompanion(
+            name: Value(exercise.name!),
+            serverId: Value(exercise.id!),
+            description: Value(exercise.description)));
+
+        return exercise;
       }
       throw 'Unexpected response creating new exercise';
     } catch (e) {

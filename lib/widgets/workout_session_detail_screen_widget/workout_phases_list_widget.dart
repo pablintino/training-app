@@ -226,7 +226,9 @@ class _PhaseContainerWidget extends StatelessWidget {
             child: Wrap(
           children: [
             Text(
-              workoutSet.exercise?.name ?? 'Unknown exercise',
+              'TODO',
+              //TODO
+              //workoutSet.exercise?.name ?? 'Unknown exercise',
               textAlign: TextAlign.start,
             ),
             Padding(
