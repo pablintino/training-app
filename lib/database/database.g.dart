@@ -258,6 +258,7 @@ class $ExercisesTable extends Exercises
 
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(SqlTypeSystem.defaultInstance, e);
+  _$AppDatabase.connect(DatabaseConnection c) : super.connect(c);
   late final $ExercisesTable exercises = $ExercisesTable(this);
   late final ExerciseDAO exerciseDAO = ExerciseDAO(this as AppDatabase);
   @override

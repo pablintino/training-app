@@ -13,6 +13,9 @@ class AppDatabase extends _$AppDatabase {
   // we tell the database where to store the data with this constructor
   AppDatabase() : super(_openConnection());
 
+  AppDatabase.connect(DatabaseConnection connection)
+      : super.connect(connection);
+
   // you should bump this number whenever you change or add a table definition.
   // Migrations are covered later in the documentation.
   @override

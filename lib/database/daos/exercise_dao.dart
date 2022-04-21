@@ -12,4 +12,13 @@ class ExerciseDAO extends DatabaseAccessor<AppDatabase>
       into(exercises).insert(exercise);
 
   Future<List<ExerciseM>> getAllExercises() => select(exercises).get();
+
+  Future<List<ExerciseM>> getPagedExercises(int limit, int offset) =>
+      (select(exercises)..limit(limit, offset: offset)).get();
+
+  Future<ExerciseM> getExerciseById(int id) =>
+      (select(exercises)..where((t) => t.id.equals(id))).getSingle();
+
+  Future<ExerciseM> getExerciseByServerId(int id) =>
+      (select(exercises)..where((t) => t.serverId.equals(id))).getSingle();
 }

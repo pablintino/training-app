@@ -4,6 +4,7 @@ import 'package:get_it/get_it.dart';
 import 'package:training_app/app_config.dart';
 import 'package:training_app/app_routes.dart';
 import 'package:training_app/blocs/auth/auth_bloc.dart';
+import 'package:training_app/database/database_isolate.dart';
 import 'package:training_app/repositories/exercises_repository.dart';
 import 'package:training_app/repositories/user_auth_repository.dart';
 import 'package:training_app/repositories/workouts_repository.dart';
@@ -12,7 +13,6 @@ import 'package:training_app/widgets/login_screen_widget/login_screen_widget.dar
 import 'package:training_app/widgets/main_app_widget/main_app_widget.dart';
 import 'package:training_app/widgets/workout_detail_screen_widget/workout_detail_screen_widget.dart';
 import 'package:training_app/widgets/workout_session_detail_screen_widget/workout_session_detail_screen_widget.dart';
-
 import 'database/database.dart';
 
 void main() {
@@ -52,7 +52,8 @@ class MyApp extends StatelessWidget {
 
 Future<void> setup() async {
   await AppConfigLoader().init();
-  GetIt.instance.registerSingleton<AppDatabase>(AppDatabase());
+  GetIt.instance.registerSingleton<AppDatabase>(
+      AppDatabase.connect(createDriftIsolateAndConnect()));
   GetIt.instance.registerSingleton<ExercisesRepository>(ExercisesRepository());
   GetIt.instance.registerSingleton<WorkoutRepository>(WorkoutRepository());
   GetIt.instance.registerSingleton<UserAuthRepository>(UserAuthRepository());
