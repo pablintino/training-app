@@ -218,13 +218,479 @@ class $ExercisesTable extends Exercises
   }
 }
 
+class WorkoutM extends DataClass implements Insertable<WorkoutM> {
+  final int id;
+  final String name;
+  final String? description;
+  WorkoutM({required this.id, required this.name, this.description});
+  factory WorkoutM.fromData(Map<String, dynamic> data, {String? prefix}) {
+    final effectivePrefix = prefix ?? '';
+    return WorkoutM(
+      id: const IntType()
+          .mapFromDatabaseResponse(data['${effectivePrefix}id'])!,
+      name: const StringType()
+          .mapFromDatabaseResponse(data['${effectivePrefix}name'])!,
+      description: const StringType()
+          .mapFromDatabaseResponse(data['${effectivePrefix}description']),
+    );
+  }
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String?>(description);
+    }
+    return map;
+  }
+
+  WorkoutsCompanion toCompanion(bool nullToAbsent) {
+    return WorkoutsCompanion(
+      id: Value(id),
+      name: Value(name),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+    );
+  }
+
+  factory WorkoutM.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WorkoutM(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      description: serializer.fromJson<String?>(json['description']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'description': serializer.toJson<String?>(description),
+    };
+  }
+
+  WorkoutM copyWith({int? id, String? name, String? description}) => WorkoutM(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        description: description ?? this.description,
+      );
+  @override
+  String toString() {
+    return (StringBuffer('WorkoutM(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('description: $description')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name, description);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WorkoutM &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.description == this.description);
+}
+
+class WorkoutsCompanion extends UpdateCompanion<WorkoutM> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<String?> description;
+  const WorkoutsCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.description = const Value.absent(),
+  });
+  WorkoutsCompanion.insert({
+    required int id,
+    required String name,
+    this.description = const Value.absent(),
+  })  : id = Value(id),
+        name = Value(name);
+  static Insertable<WorkoutM> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<String?>? description,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (description != null) 'description': description,
+    });
+  }
+
+  WorkoutsCompanion copyWith(
+      {Value<int>? id, Value<String>? name, Value<String?>? description}) {
+    return WorkoutsCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      description: description ?? this.description,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String?>(description.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WorkoutsCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('description: $description')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $WorkoutsTable extends Workouts with TableInfo<$WorkoutsTable, WorkoutM> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WorkoutsTable(this.attachedDatabase, [this._alias]);
+  final VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int?> id = GeneratedColumn<int?>(
+      'id', aliasedName, false,
+      type: const IntType(), requiredDuringInsert: true);
+  final VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String?> name = GeneratedColumn<String?>(
+      'name', aliasedName, false,
+      type: const StringType(), requiredDuringInsert: true);
+  final VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String?> description = GeneratedColumn<String?>(
+      'description', aliasedName, true,
+      type: const StringType(), requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [id, name, description];
+  @override
+  String get aliasedName => _alias ?? 'workouts';
+  @override
+  String get actualTableName => 'workouts';
+  @override
+  VerificationContext validateIntegrity(Insertable<WorkoutM> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => <GeneratedColumn>{};
+  @override
+  WorkoutM map(Map<String, dynamic> data, {String? tablePrefix}) {
+    return WorkoutM.fromData(data,
+        prefix: tablePrefix != null ? '$tablePrefix.' : null);
+  }
+
+  @override
+  $WorkoutsTable createAlias(String alias) {
+    return $WorkoutsTable(attachedDatabase, alias);
+  }
+}
+
+class WorkoutSessionM extends DataClass implements Insertable<WorkoutSessionM> {
+  final int id;
+  final int weekDay;
+  final int week;
+  final int? workoutId;
+  WorkoutSessionM(
+      {required this.id,
+      required this.weekDay,
+      required this.week,
+      this.workoutId});
+  factory WorkoutSessionM.fromData(Map<String, dynamic> data,
+      {String? prefix}) {
+    final effectivePrefix = prefix ?? '';
+    return WorkoutSessionM(
+      id: const IntType()
+          .mapFromDatabaseResponse(data['${effectivePrefix}id'])!,
+      weekDay: const IntType()
+          .mapFromDatabaseResponse(data['${effectivePrefix}week_day'])!,
+      week: const IntType()
+          .mapFromDatabaseResponse(data['${effectivePrefix}week'])!,
+      workoutId: const IntType()
+          .mapFromDatabaseResponse(data['${effectivePrefix}workout_id']),
+    );
+  }
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['week_day'] = Variable<int>(weekDay);
+    map['week'] = Variable<int>(week);
+    if (!nullToAbsent || workoutId != null) {
+      map['workout_id'] = Variable<int?>(workoutId);
+    }
+    return map;
+  }
+
+  WorkoutSessionsCompanion toCompanion(bool nullToAbsent) {
+    return WorkoutSessionsCompanion(
+      id: Value(id),
+      weekDay: Value(weekDay),
+      week: Value(week),
+      workoutId: workoutId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(workoutId),
+    );
+  }
+
+  factory WorkoutSessionM.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WorkoutSessionM(
+      id: serializer.fromJson<int>(json['id']),
+      weekDay: serializer.fromJson<int>(json['weekDay']),
+      week: serializer.fromJson<int>(json['week']),
+      workoutId: serializer.fromJson<int?>(json['workoutId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'weekDay': serializer.toJson<int>(weekDay),
+      'week': serializer.toJson<int>(week),
+      'workoutId': serializer.toJson<int?>(workoutId),
+    };
+  }
+
+  WorkoutSessionM copyWith(
+          {int? id, int? weekDay, int? week, int? workoutId}) =>
+      WorkoutSessionM(
+        id: id ?? this.id,
+        weekDay: weekDay ?? this.weekDay,
+        week: week ?? this.week,
+        workoutId: workoutId ?? this.workoutId,
+      );
+  @override
+  String toString() {
+    return (StringBuffer('WorkoutSessionM(')
+          ..write('id: $id, ')
+          ..write('weekDay: $weekDay, ')
+          ..write('week: $week, ')
+          ..write('workoutId: $workoutId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, weekDay, week, workoutId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WorkoutSessionM &&
+          other.id == this.id &&
+          other.weekDay == this.weekDay &&
+          other.week == this.week &&
+          other.workoutId == this.workoutId);
+}
+
+class WorkoutSessionsCompanion extends UpdateCompanion<WorkoutSessionM> {
+  final Value<int> id;
+  final Value<int> weekDay;
+  final Value<int> week;
+  final Value<int?> workoutId;
+  const WorkoutSessionsCompanion({
+    this.id = const Value.absent(),
+    this.weekDay = const Value.absent(),
+    this.week = const Value.absent(),
+    this.workoutId = const Value.absent(),
+  });
+  WorkoutSessionsCompanion.insert({
+    required int id,
+    required int weekDay,
+    required int week,
+    this.workoutId = const Value.absent(),
+  })  : id = Value(id),
+        weekDay = Value(weekDay),
+        week = Value(week);
+  static Insertable<WorkoutSessionM> custom({
+    Expression<int>? id,
+    Expression<int>? weekDay,
+    Expression<int>? week,
+    Expression<int?>? workoutId,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (weekDay != null) 'week_day': weekDay,
+      if (week != null) 'week': week,
+      if (workoutId != null) 'workout_id': workoutId,
+    });
+  }
+
+  WorkoutSessionsCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? weekDay,
+      Value<int>? week,
+      Value<int?>? workoutId}) {
+    return WorkoutSessionsCompanion(
+      id: id ?? this.id,
+      weekDay: weekDay ?? this.weekDay,
+      week: week ?? this.week,
+      workoutId: workoutId ?? this.workoutId,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (weekDay.present) {
+      map['week_day'] = Variable<int>(weekDay.value);
+    }
+    if (week.present) {
+      map['week'] = Variable<int>(week.value);
+    }
+    if (workoutId.present) {
+      map['workout_id'] = Variable<int?>(workoutId.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WorkoutSessionsCompanion(')
+          ..write('id: $id, ')
+          ..write('weekDay: $weekDay, ')
+          ..write('week: $week, ')
+          ..write('workoutId: $workoutId')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $WorkoutSessionsTable extends WorkoutSessions
+    with TableInfo<$WorkoutSessionsTable, WorkoutSessionM> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WorkoutSessionsTable(this.attachedDatabase, [this._alias]);
+  final VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int?> id = GeneratedColumn<int?>(
+      'id', aliasedName, false,
+      type: const IntType(), requiredDuringInsert: true);
+  final VerificationMeta _weekDayMeta = const VerificationMeta('weekDay');
+  @override
+  late final GeneratedColumn<int?> weekDay = GeneratedColumn<int?>(
+      'week_day', aliasedName, false,
+      type: const IntType(), requiredDuringInsert: true);
+  final VerificationMeta _weekMeta = const VerificationMeta('week');
+  @override
+  late final GeneratedColumn<int?> week = GeneratedColumn<int?>(
+      'week', aliasedName, false,
+      type: const IntType(), requiredDuringInsert: true);
+  final VerificationMeta _workoutIdMeta = const VerificationMeta('workoutId');
+  @override
+  late final GeneratedColumn<int?> workoutId = GeneratedColumn<int?>(
+      'workout_id', aliasedName, true,
+      type: const IntType(),
+      requiredDuringInsert: false,
+      $customConstraints: 'NULLABLE REFERENCES workouts(id)');
+  @override
+  List<GeneratedColumn> get $columns => [id, weekDay, week, workoutId];
+  @override
+  String get aliasedName => _alias ?? 'workout_sessions';
+  @override
+  String get actualTableName => 'workout_sessions';
+  @override
+  VerificationContext validateIntegrity(Insertable<WorkoutSessionM> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('week_day')) {
+      context.handle(_weekDayMeta,
+          weekDay.isAcceptableOrUnknown(data['week_day']!, _weekDayMeta));
+    } else if (isInserting) {
+      context.missing(_weekDayMeta);
+    }
+    if (data.containsKey('week')) {
+      context.handle(
+          _weekMeta, week.isAcceptableOrUnknown(data['week']!, _weekMeta));
+    } else if (isInserting) {
+      context.missing(_weekMeta);
+    }
+    if (data.containsKey('workout_id')) {
+      context.handle(_workoutIdMeta,
+          workoutId.isAcceptableOrUnknown(data['workout_id']!, _workoutIdMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => <GeneratedColumn>{};
+  @override
+  WorkoutSessionM map(Map<String, dynamic> data, {String? tablePrefix}) {
+    return WorkoutSessionM.fromData(data,
+        prefix: tablePrefix != null ? '$tablePrefix.' : null);
+  }
+
+  @override
+  $WorkoutSessionsTable createAlias(String alias) {
+    return $WorkoutSessionsTable(attachedDatabase, alias);
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(SqlTypeSystem.defaultInstance, e);
   _$AppDatabase.connect(DatabaseConnection c) : super.connect(c);
   late final $ExercisesTable exercises = $ExercisesTable(this);
+  late final $WorkoutsTable workouts = $WorkoutsTable(this);
+  late final $WorkoutSessionsTable workoutSessions =
+      $WorkoutSessionsTable(this);
   late final ExerciseDAO exerciseDAO = ExerciseDAO(this as AppDatabase);
   @override
   Iterable<TableInfo> get allTables => allSchemaEntities.whereType<TableInfo>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [exercises];
+  List<DatabaseSchemaEntity> get allSchemaEntities =>
+      [exercises, workouts, workoutSessions];
 }

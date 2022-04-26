@@ -21,19 +21,18 @@ class ExercisesRepository {
         .launchExercisesSync()
         .then((value) => print('Finished'))
         .catchError((_) => print('error'));
-    List<ExerciseM> exercises = nameFilter != null
-        ? await _db.exerciseDAO
-            .getPagedExercisesContainsName(PAGE_SIZE, page, nameFilter)
-        : await _db.exerciseDAO.getPagedExercises(PAGE_SIZE, page);
-
-    // TODO Temporal mapping
-    return exercises.map((e) => Exercise.fromJson(e.toJson())).toList();
+    return await (nameFilter != null
+            ? _db.exerciseDAO
+                .getPagedExercisesContainsName(PAGE_SIZE, page, nameFilter)
+            : _db.exerciseDAO.getPagedExercises(PAGE_SIZE, page))
+        .then((exercises) =>
+            exercises.map((e) => Exercise.fromModel(e)).toList());
   }
 
   Future<Exercise?> getByName(String name) async {
-    //TODO Temporal mapping
-    return _db.exerciseDAO.getByName(name).then(
-        (value) => value != null ? Exercise.fromJson(value.toJson()) : null);
+    return await _db.exerciseDAO
+        .getByName(name)
+        .then((value) => value != null ? Exercise.fromModel(value) : null);
   }
 
   Future<Exercise> createExercise(Exercise exercise) async {
@@ -47,12 +46,7 @@ class ExercisesRepository {
             id: Value(exerciseResponse.id!),
             description: Value(exerciseResponse.description)));
         return exerciseResponse;
-      }).then((exerciseResponse) =>
-              // TODO Rewrite this mapping onto something reusable
-              Exercise(
-                  id: exerciseResponse.id,
-                  name: exerciseResponse.name,
-                  description: exerciseResponse.description));
+      }).then((exerciseResponse) => Exercise.fromDto(exerciseResponse));
     } catch (e) {
       print(e.toString());
       throw e;
@@ -73,12 +67,7 @@ class ExercisesRepository {
                 name: Value(exerciseResponse.name!),
                 description: Value(exerciseResponse.description)));
         return exerciseResponse;
-      }).then((exerciseResponse) =>
-              // TODO Rewrite this mapping onto something reusable
-              Exercise(
-                  id: exerciseResponse.id,
-                  name: exerciseResponse.name,
-                  description: exerciseResponse.description));
+      }).then((exerciseResponse) => Exercise.fromDto(exerciseResponse));
     } catch (e) {
       print(e.toString());
       throw e;

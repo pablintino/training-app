@@ -1,4 +1,6 @@
 import 'package:equatable/equatable.dart';
+import 'package:training_app/database/database.dart';
+import 'package:training_app/networking/entities/exercise_dto.dart';
 
 class Exercise extends Equatable {
   final String? name;
@@ -7,16 +9,15 @@ class Exercise extends Equatable {
 
   Exercise({this.id, this.name, this.description});
 
-  Exercise.fromJson(Map<String, dynamic> json)
-      : id = json['id'],
-        name = json['name'],
-        description = json['description'];
+  Exercise.fromDto(ExerciseDto dto)
+      : id = dto.id,
+        name = dto.name,
+        description = dto.description;
 
-  Map toJson() => {
-        'id': id,
-        'name': name,
-        'description': description,
-      };
+  Exercise.fromModel(ExerciseM model)
+      : id = model.id,
+        name = model.name,
+        description = model.description;
 
   @override
   List<Object?> get props => [name, description, id];
