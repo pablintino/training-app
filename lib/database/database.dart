@@ -8,6 +8,8 @@ import 'package:training_app/database/daos/exercise_dao.dart';
 
 part 'database.g.dart';
 
+part 'database.tables.dart';
+
 @DriftDatabase(tables: [Exercises], daos: [ExerciseDAO])
 class AppDatabase extends _$AppDatabase {
   // we tell the database where to store the data with this constructor
@@ -31,15 +33,4 @@ LazyDatabase _openConnection() {
     final file = File(p.join(dbFolder.path, 'db.sqlite'));
     return NativeDatabase(file);
   });
-}
-
-@DataClassName('ExerciseM')
-class Exercises extends Table {
-  IntColumn get id => integer().autoIncrement()();
-
-  TextColumn get name => text()();
-
-  TextColumn get description => text().nullable()();
-
-  IntColumn get serverId => integer().nullable()();
 }

@@ -7,7 +7,7 @@ import 'package:drift/native.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-Future<DriftIsolate> _createDriftIsolate() async {
+Future<DriftIsolate> createDriftIsolate() async {
   final dir = await getApplicationDocumentsDirectory();
   final path = p.join(dir.path, 'db.sqlite');
   final receivePort = ReceivePort();
@@ -19,6 +19,12 @@ Future<DriftIsolate> _createDriftIsolate() async {
 
   // _startBackground will send the DriftIsolate to this ReceivePort
   return await receivePort.first as DriftIsolate;
+}
+
+DatabaseConnection isolateConnect(DriftIsolate isolate) {
+  return DatabaseConnection.delayed(() async {
+    return await isolate.connect();
+  }());
 }
 
 void _startBackground(_IsolateStartRequest request) {
@@ -33,13 +39,6 @@ void _startBackground(_IsolateStartRequest request) {
   );
   // inform the starting isolate about this, so that it can call .connect()
   request.sendDriftIsolate.send(driftIsolate);
-}
-
-DatabaseConnection createDriftIsolateAndConnect() {
-  return DatabaseConnection.delayed(() async {
-    final isolate = await _createDriftIsolate();
-    return await isolate.connect();
-  }());
 }
 
 // used to bundle the SendPort and the target path, since isolate entry point

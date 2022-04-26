@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 import 'package:training_app/app_config.dart';
 import 'package:training_app/models/workout_models.dart';
@@ -7,7 +8,7 @@ import 'package:training_app/models/workout_models.dart';
 class WorkoutRepository {
   static const int PAGE_SIZE = 10;
   static const String _WORKOUT_BASE_PATH = '/api/v1/workouts';
-  final _appConfig = AppConfigLoader().instance;
+  final _appConfig = GetIt.instance<AppConfig>();
 
   Future<List<Workout>> getWorkoutsByPage(int page, String? nameFilter) async {
     final String searchFilter =

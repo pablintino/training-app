@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -5,6 +6,8 @@ import 'package:training_app/app_config.dart';
 import 'package:training_app/app_routes.dart';
 import 'package:training_app/blocs/auth/auth_bloc.dart';
 import 'package:training_app/database/database_isolate.dart';
+import 'package:training_app/networking/clients.dart';
+import 'package:training_app/networking/network_sync_isolate.dart';
 import 'package:training_app/repositories/exercises_repository.dart';
 import 'package:training_app/repositories/user_auth_repository.dart';
 import 'package:training_app/repositories/workouts_repository.dart';
@@ -51,9 +54,18 @@ class MyApp extends StatelessWidget {
 }
 
 Future<void> setup() async {
-  await AppConfigLoader().init();
+  var appConfig = await AppConfigLoader.create();
+
+  GetIt.instance.registerSingleton<AppConfig>(appConfig);
+
+  final driftIsolate = await createDriftIsolate();
   GetIt.instance.registerSingleton<AppDatabase>(
-      AppDatabase.connect(createDriftIsolateAndConnect()));
+      AppDatabase.connect(isolateConnect(driftIsolate)));
+
+  GetIt.instance.registerSingleton<NetworkSyncIsolate>(
+      await createNetworkIsolate(driftIsolate));
+
+  GetIt.instance.registerSingleton<Dio>(createDioClient(appConfig));
   GetIt.instance.registerSingleton<ExercisesRepository>(ExercisesRepository());
   GetIt.instance.registerSingleton<WorkoutRepository>(WorkoutRepository());
   GetIt.instance.registerSingleton<UserAuthRepository>(UserAuthRepository());

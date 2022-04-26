@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_appauth/flutter_appauth.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:get_it/get_it.dart';
 import 'package:training_app/app_config.dart';
 import 'package:training_app/models/auth_models.dart';
 import 'package:http/http.dart' as http;
@@ -9,7 +10,7 @@ import 'package:http/http.dart' as http;
 class UserAuthRepository {
   final FlutterAppAuth _appAuth = FlutterAppAuth();
   final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
-  final _appConfig = AppConfigLoader().instance;
+  final _appConfig = GetIt.instance<AppConfig>();
   String? _userProfileUrl;
   String? _accessToken;
 
