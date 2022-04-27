@@ -5,13 +5,15 @@ import 'package:drift/native.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:training_app/database/daos/exercise_dao.dart';
+import 'package:training_app/database/daos/workout_dao.dart';
 
 part 'database.g.dart';
 
 part 'database.tables.dart';
 
 @DriftDatabase(
-    tables: [Exercises, Workouts, WorkoutSessions], daos: [ExerciseDAO])
+    tables: [Exercises, Workouts, WorkoutSessions, WorkoutItems, WorkoutSets],
+    daos: [ExerciseDAO, WorkoutDAO])
 class AppDatabase extends _$AppDatabase {
   // we tell the database where to store the data with this constructor
   AppDatabase() : super(_openConnection());

@@ -26,9 +26,8 @@ class WorkoutSessions extends Table {
 
   IntColumn get week => integer()();
 
-  IntColumn get workoutId => integer()
-      .nullable()
-      .customConstraint('NULLABLE REFERENCES workouts(id)')();
+  IntColumn get workoutId =>
+      integer().customConstraint('REFERENCES workouts(id) ON DELETE CASCADE')();
 }
 
 @DataClassName('WorkoutItemM')
@@ -50,8 +49,7 @@ class WorkoutItems extends Table {
   TextColumn get workModality => text().nullable()();
 
   IntColumn get workoutSessionId => integer()
-      .nullable()
-      .customConstraint('NULLABLE REFERENCES workout_sessions(id)')();
+      .customConstraint('REFERENCES workout_sessions(id) ON DELETE CASCADE')();
 }
 
 @DataClassName('WorkoutSetM')
@@ -69,8 +67,7 @@ class WorkoutSets extends Table {
   IntColumn get setExecutions => integer().nullable()();
 
   IntColumn get workoutItemId => integer()
-      .nullable()
-      .customConstraint('NULLABLE REFERENCES workout_items(id)')();
+      .customConstraint('REFERENCES workout_items(id) ON DELETE CASCADE')();
 
   IntColumn get exerciseId => integer()
       .nullable()
