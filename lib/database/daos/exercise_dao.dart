@@ -12,14 +12,14 @@ class ExerciseDAO extends DatabaseAccessor<AppDatabase>
   Future insertExercise(ExercisesCompanion exercise) =>
       into(exercises).insert(exercise);
 
-  Future<List<ExerciseM>> getAllExercises() =>
-      (select(exercises)..orderBy([(t) => OrderingTerm(expression: t.name)]))
-          .get();
+  Future<List<ExerciseM>> getAllExercises() => (select(exercises)
+        ..orderBy([(t) => OrderingTerm(expression: t.name.lower())]))
+      .get();
 
   Future<List<ExerciseM>> getPagedExercises(int limit, int offset) =>
       (select(exercises)
             ..limit(limit, offset: offset)
-            ..orderBy([(t) => OrderingTerm(expression: t.name)]))
+            ..orderBy([(t) => OrderingTerm(expression: t.name.lower())]))
           .get();
 
   Future<List<ExerciseM>> getPagedExercisesContainsName(

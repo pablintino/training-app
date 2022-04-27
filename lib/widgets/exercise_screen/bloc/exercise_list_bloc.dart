@@ -36,6 +36,11 @@ class ExerciseListBloc extends Bloc<ExerciseListEvent, ExerciseListState> {
       Emitter emit, ExercisesFetchEvent event) async {
     emit(StartedListLoadingState.fromState(state));
 
+    // Force DB sync
+    if (event.reload) {
+      await _exercisesRepository.sync();
+    }
+
     // On reload just grab the first page
     final pageNumber = !event.reload
         ? (state.exercises.length / ExercisesRepository.PAGE_SIZE).truncate()

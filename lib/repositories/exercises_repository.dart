@@ -15,12 +15,12 @@ class ExercisesRepository {
   final _networkIsolate = GetIt.instance<NetworkSyncIsolate>();
   final _exerciseClient = ExerciseClient(GetIt.instance<Dio>());
 
+  Future<void> sync() {
+    return _networkIsolate.launchExercisesSync();
+  }
+
   Future<List<Exercise>> getExercisesByPage(
       int page, String? nameFilter) async {
-    _networkIsolate
-        .launchExercisesSync()
-        .then((value) => print('Finished'))
-        .catchError((_) => print('error'));
     return await (nameFilter != null
             ? _db.exerciseDAO
                 .getPagedExercisesContainsName(PAGE_SIZE, page, nameFilter)
