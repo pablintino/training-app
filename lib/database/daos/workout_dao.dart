@@ -21,12 +21,7 @@ class WorkoutDAO extends DatabaseAccessor<AppDatabase> with _$WorkoutDAOMixin {
       into(workouts).insert(workoutsCompanion);
 
   Future updateWorkoutById(int id, WorkoutsCompanion companion) {
-    return (update(workouts)..where((t) => t.id.equals(id))).write(
-      WorkoutsCompanion(
-        name: companion.name,
-        description: companion.description,
-      ),
-    );
+    return (update(workouts)..where((t) => t.id.equals(id))).write(companion);
   }
 
   Future<WorkoutSessionM?> getWorkoutSessionById(int id) =>
@@ -38,13 +33,8 @@ class WorkoutDAO extends DatabaseAccessor<AppDatabase> with _$WorkoutDAOMixin {
       into(workoutSessions).insert(workoutSessionsCompanion);
 
   Future updateWorkoutSessionById(int id, WorkoutSessionsCompanion companion) {
-    return (update(workoutSessions)..where((t) => t.id.equals(id))).write(
-      WorkoutSessionsCompanion(
-        week: companion.week,
-        weekDay: companion.weekDay,
-        workoutId: companion.workoutId,
-      ),
-    );
+    return (update(workoutSessions)..where((t) => t.id.equals(id)))
+        .write(companion);
   }
 
   Future<WorkoutPhaseM?> getWorkoutPhaseById(int id) =>
@@ -54,13 +44,8 @@ class WorkoutDAO extends DatabaseAccessor<AppDatabase> with _$WorkoutDAOMixin {
       into(workoutPhases).insert(workoutPhasesCompanion);
 
   Future updateWorkoutPhaseById(int id, WorkoutPhasesCompanion companion) {
-    return (update(workoutPhases)..where((t) => t.id.equals(id))).write(
-      WorkoutPhasesCompanion(
-        name: companion.name,
-        sequence: companion.sequence,
-        workoutSessionId: companion.workoutSessionId,
-      ),
-    );
+    return (update(workoutPhases)..where((t) => t.id.equals(id)))
+        .write(companion);
   }
 
   Future<WorkoutItemM?> getWorkoutItemById(int id) =>
@@ -70,18 +55,8 @@ class WorkoutDAO extends DatabaseAccessor<AppDatabase> with _$WorkoutDAOMixin {
       into(workoutItems).insert(workoutItemsCompanion);
 
   Future updateWorkoutItemById(int id, WorkoutItemsCompanion companion) {
-    return (update(workoutItems)..where((t) => t.id.equals(id))).write(
-      WorkoutItemsCompanion(
-        name: companion.name,
-        sequence: companion.sequence,
-        rounds: companion.rounds,
-        restTimeSecs: companion.restTimeSecs,
-        timeCapSecs: companion.timeCapSecs,
-        workModality: companion.workModality,
-        workTimeSecs: companion.workTimeSecs,
-        workoutPhaseId: companion.workoutPhaseId,
-      ),
-    );
+    return (update(workoutItems)..where((t) => t.id.equals(id)))
+        .write(companion);
   }
 
   Future<WorkoutSetM?> getWorkoutSetById(int id) =>
@@ -91,16 +66,8 @@ class WorkoutDAO extends DatabaseAccessor<AppDatabase> with _$WorkoutDAOMixin {
       into(workoutSets).insert(workoutSetsCompanion);
 
   Future updateWorkoutSetById(int id, WorkoutSetsCompanion companion) {
-    return (update(workoutSets)..where((t) => t.id.equals(id))).write(
-      WorkoutSetsCompanion(
-          sequence: companion.sequence,
-          weight: companion.weight,
-          distance: companion.distance,
-          setExecutions: companion.setExecutions,
-          reps: companion.reps,
-          workoutItemId: companion.workoutItemId,
-          exerciseId: companion.exerciseId),
-    );
+    return (update(workoutSets)..where((t) => t.id.equals(id)))
+        .write(companion);
   }
 
   Future<int> deleteWorkoutById(int id) =>
@@ -146,26 +113,34 @@ class WorkoutDAO extends DatabaseAccessor<AppDatabase> with _$WorkoutDAOMixin {
 
             // TODO Fix this spaghetti
             if (!workoutsMap.containsKey(workout.id)) {
-              workoutsMap[workout.id] = JoinedWorkoutM(workout: workout);
+              workoutsMap[workout.id] = JoinedWorkoutM(
+                  workout: workout,
+                  sessions: List<JoinedWorkoutSessionM>.empty(growable: true));
             }
 
             if (session != null) {
               if (!sessionsMap.containsKey(session.id)) {
-                final joinedSession = JoinedWorkoutSessionM(session: session);
+                final joinedSession = JoinedWorkoutSessionM(
+                    session: session,
+                    phases: List<JoinedWorkoutPhaseM>.empty(growable: true));
                 sessionsMap[session.id] = joinedSession;
                 workoutsMap[workout.id]!.sessions.add(joinedSession);
               }
 
               if (phase != null) {
                 if (!phasesMap.containsKey(phase.id)) {
-                  final joinedPhase = JoinedWorkoutPhaseM(phase: phase);
+                  final joinedPhase = JoinedWorkoutPhaseM(
+                      phase: phase,
+                      items: List<JoinedWorkoutItemM>.empty(growable: true));
                   phasesMap[phase.id] = joinedPhase;
                   sessionsMap[session.id]!.phases.add(joinedPhase);
                 }
 
                 if (item != null) {
                   if (!itemsMap.containsKey(item.id)) {
-                    final joinedItem = JoinedWorkoutItemM(item: item);
+                    final joinedItem = JoinedWorkoutItemM(
+                        item: item,
+                        sets: List<WorkoutSetM>.empty(growable: true));
                     itemsMap[item.id] = joinedItem;
                     phasesMap[phase.id]!.items.add(joinedItem);
                   }

@@ -99,11 +99,10 @@ class ExercisesCompanion extends UpdateCompanion<ExerciseM> {
     this.description = const Value.absent(),
   });
   ExercisesCompanion.insert({
-    required int id,
+    this.id = const Value.absent(),
     required String name,
     this.description = const Value.absent(),
-  })  : id = Value(id),
-        name = Value(name);
+  }) : name = Value(name);
   static Insertable<ExerciseM> custom({
     Expression<int>? id,
     Expression<String>? name,
@@ -161,7 +160,7 @@ class $ExercisesTable extends Exercises
   @override
   late final GeneratedColumn<int?> id = GeneratedColumn<int?>(
       'id', aliasedName, false,
-      type: const IntType(), requiredDuringInsert: true);
+      type: const IntType(), requiredDuringInsert: false);
   final VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String?> name = GeneratedColumn<String?>(
@@ -186,8 +185,6 @@ class $ExercisesTable extends Exercises
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    } else if (isInserting) {
-      context.missing(_idMeta);
     }
     if (data.containsKey('name')) {
       context.handle(
@@ -205,7 +202,7 @@ class $ExercisesTable extends Exercises
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => <GeneratedColumn>{};
+  Set<GeneratedColumn> get $primaryKey => {id};
   @override
   ExerciseM map(Map<String, dynamic> data, {String? tablePrefix}) {
     return ExerciseM.fromData(data,
@@ -310,11 +307,10 @@ class WorkoutsCompanion extends UpdateCompanion<WorkoutM> {
     this.description = const Value.absent(),
   });
   WorkoutsCompanion.insert({
-    required int id,
+    this.id = const Value.absent(),
     required String name,
     this.description = const Value.absent(),
-  })  : id = Value(id),
-        name = Value(name);
+  }) : name = Value(name);
   static Insertable<WorkoutM> custom({
     Expression<int>? id,
     Expression<String>? name,
@@ -371,7 +367,7 @@ class $WorkoutsTable extends Workouts with TableInfo<$WorkoutsTable, WorkoutM> {
   @override
   late final GeneratedColumn<int?> id = GeneratedColumn<int?>(
       'id', aliasedName, false,
-      type: const IntType(), requiredDuringInsert: true);
+      type: const IntType(), requiredDuringInsert: false);
   final VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String?> name = GeneratedColumn<String?>(
@@ -396,8 +392,6 @@ class $WorkoutsTable extends Workouts with TableInfo<$WorkoutsTable, WorkoutM> {
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    } else if (isInserting) {
-      context.missing(_idMeta);
     }
     if (data.containsKey('name')) {
       context.handle(
@@ -415,7 +409,7 @@ class $WorkoutsTable extends Workouts with TableInfo<$WorkoutsTable, WorkoutM> {
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => <GeneratedColumn>{};
+  Set<GeneratedColumn> get $primaryKey => {id};
   @override
   WorkoutM map(Map<String, dynamic> data, {String? tablePrefix}) {
     return WorkoutM.fromData(data,
@@ -534,12 +528,11 @@ class WorkoutPhasesCompanion extends UpdateCompanion<WorkoutPhaseM> {
     this.workoutSessionId = const Value.absent(),
   });
   WorkoutPhasesCompanion.insert({
-    required int id,
+    this.id = const Value.absent(),
     required String name,
     required int sequence,
     required int workoutSessionId,
-  })  : id = Value(id),
-        name = Value(name),
+  })  : name = Value(name),
         sequence = Value(sequence),
         workoutSessionId = Value(workoutSessionId);
   static Insertable<WorkoutPhaseM> custom({
@@ -609,7 +602,7 @@ class $WorkoutPhasesTable extends WorkoutPhases
   @override
   late final GeneratedColumn<int?> id = GeneratedColumn<int?>(
       'id', aliasedName, false,
-      type: const IntType(), requiredDuringInsert: true);
+      type: const IntType(), requiredDuringInsert: false);
   final VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String?> name = GeneratedColumn<String?>(
@@ -641,8 +634,6 @@ class $WorkoutPhasesTable extends WorkoutPhases
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    } else if (isInserting) {
-      context.missing(_idMeta);
     }
     if (data.containsKey('name')) {
       context.handle(
@@ -668,7 +659,7 @@ class $WorkoutPhasesTable extends WorkoutPhases
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => <GeneratedColumn>{};
+  Set<GeneratedColumn> get $primaryKey => {id};
   @override
   WorkoutPhaseM map(Map<String, dynamic> data, {String? tablePrefix}) {
     return WorkoutPhaseM.fromData(data,
@@ -788,12 +779,11 @@ class WorkoutSessionsCompanion extends UpdateCompanion<WorkoutSessionM> {
     this.workoutId = const Value.absent(),
   });
   WorkoutSessionsCompanion.insert({
-    required int id,
+    this.id = const Value.absent(),
     required int weekDay,
     required int week,
     required int workoutId,
-  })  : id = Value(id),
-        weekDay = Value(weekDay),
+  })  : weekDay = Value(weekDay),
         week = Value(week),
         workoutId = Value(workoutId);
   static Insertable<WorkoutSessionM> custom({
@@ -863,7 +853,7 @@ class $WorkoutSessionsTable extends WorkoutSessions
   @override
   late final GeneratedColumn<int?> id = GeneratedColumn<int?>(
       'id', aliasedName, false,
-      type: const IntType(), requiredDuringInsert: true);
+      type: const IntType(), requiredDuringInsert: false);
   final VerificationMeta _weekDayMeta = const VerificationMeta('weekDay');
   @override
   late final GeneratedColumn<int?> weekDay = GeneratedColumn<int?>(
@@ -894,8 +884,6 @@ class $WorkoutSessionsTable extends WorkoutSessions
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    } else if (isInserting) {
-      context.missing(_idMeta);
     }
     if (data.containsKey('week_day')) {
       context.handle(_weekDayMeta,
@@ -919,7 +907,7 @@ class $WorkoutSessionsTable extends WorkoutSessions
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => <GeneratedColumn>{};
+  Set<GeneratedColumn> get $primaryKey => {id};
   @override
   WorkoutSessionM map(Map<String, dynamic> data, {String? tablePrefix}) {
     return WorkoutSessionM.fromData(data,
@@ -1131,7 +1119,7 @@ class WorkoutItemsCompanion extends UpdateCompanion<WorkoutItemM> {
     this.workoutPhaseId = const Value.absent(),
   });
   WorkoutItemsCompanion.insert({
-    required int id,
+    this.id = const Value.absent(),
     required String name,
     required int sequence,
     this.rounds = const Value.absent(),
@@ -1140,8 +1128,7 @@ class WorkoutItemsCompanion extends UpdateCompanion<WorkoutItemM> {
     this.workTimeSecs = const Value.absent(),
     this.workModality = const Value.absent(),
     required int workoutPhaseId,
-  })  : id = Value(id),
-        name = Value(name),
+  })  : name = Value(name),
         sequence = Value(sequence),
         workoutPhaseId = Value(workoutPhaseId);
   static Insertable<WorkoutItemM> custom({
@@ -1251,7 +1238,7 @@ class $WorkoutItemsTable extends WorkoutItems
   @override
   late final GeneratedColumn<int?> id = GeneratedColumn<int?>(
       'id', aliasedName, false,
-      type: const IntType(), requiredDuringInsert: true);
+      type: const IntType(), requiredDuringInsert: false);
   final VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String?> name = GeneratedColumn<String?>(
@@ -1322,8 +1309,6 @@ class $WorkoutItemsTable extends WorkoutItems
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    } else if (isInserting) {
-      context.missing(_idMeta);
     }
     if (data.containsKey('name')) {
       context.handle(
@@ -1377,7 +1362,7 @@ class $WorkoutItemsTable extends WorkoutItems
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => <GeneratedColumn>{};
+  Set<GeneratedColumn> get $primaryKey => {id};
   @override
   WorkoutItemM map(Map<String, dynamic> data, {String? tablePrefix}) {
     return WorkoutItemM.fromData(data,
@@ -1398,7 +1383,7 @@ class WorkoutSetM extends DataClass implements Insertable<WorkoutSetM> {
   final double? weight;
   final int? setExecutions;
   final int workoutItemId;
-  final int? exerciseId;
+  final int exerciseId;
   WorkoutSetM(
       {required this.id,
       required this.sequence,
@@ -1407,7 +1392,7 @@ class WorkoutSetM extends DataClass implements Insertable<WorkoutSetM> {
       this.weight,
       this.setExecutions,
       required this.workoutItemId,
-      this.exerciseId});
+      required this.exerciseId});
   factory WorkoutSetM.fromData(Map<String, dynamic> data, {String? prefix}) {
     final effectivePrefix = prefix ?? '';
     return WorkoutSetM(
@@ -1426,7 +1411,7 @@ class WorkoutSetM extends DataClass implements Insertable<WorkoutSetM> {
       workoutItemId: const IntType()
           .mapFromDatabaseResponse(data['${effectivePrefix}workout_item_id'])!,
       exerciseId: const IntType()
-          .mapFromDatabaseResponse(data['${effectivePrefix}exercise_id']),
+          .mapFromDatabaseResponse(data['${effectivePrefix}exercise_id'])!,
     );
   }
   @override
@@ -1447,9 +1432,7 @@ class WorkoutSetM extends DataClass implements Insertable<WorkoutSetM> {
       map['set_executions'] = Variable<int?>(setExecutions);
     }
     map['workout_item_id'] = Variable<int>(workoutItemId);
-    if (!nullToAbsent || exerciseId != null) {
-      map['exercise_id'] = Variable<int?>(exerciseId);
-    }
+    map['exercise_id'] = Variable<int>(exerciseId);
     return map;
   }
 
@@ -1467,9 +1450,7 @@ class WorkoutSetM extends DataClass implements Insertable<WorkoutSetM> {
           ? const Value.absent()
           : Value(setExecutions),
       workoutItemId: Value(workoutItemId),
-      exerciseId: exerciseId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(exerciseId),
+      exerciseId: Value(exerciseId),
     );
   }
 
@@ -1484,7 +1465,7 @@ class WorkoutSetM extends DataClass implements Insertable<WorkoutSetM> {
       weight: serializer.fromJson<double?>(json['weight']),
       setExecutions: serializer.fromJson<int?>(json['setExecutions']),
       workoutItemId: serializer.fromJson<int>(json['workoutItemId']),
-      exerciseId: serializer.fromJson<int?>(json['exerciseId']),
+      exerciseId: serializer.fromJson<int>(json['exerciseId']),
     );
   }
   @override
@@ -1498,7 +1479,7 @@ class WorkoutSetM extends DataClass implements Insertable<WorkoutSetM> {
       'weight': serializer.toJson<double?>(weight),
       'setExecutions': serializer.toJson<int?>(setExecutions),
       'workoutItemId': serializer.toJson<int>(workoutItemId),
-      'exerciseId': serializer.toJson<int?>(exerciseId),
+      'exerciseId': serializer.toJson<int>(exerciseId),
     };
   }
 
@@ -1561,7 +1542,7 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetM> {
   final Value<double?> weight;
   final Value<int?> setExecutions;
   final Value<int> workoutItemId;
-  final Value<int?> exerciseId;
+  final Value<int> exerciseId;
   const WorkoutSetsCompanion({
     this.id = const Value.absent(),
     this.sequence = const Value.absent(),
@@ -1573,17 +1554,17 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetM> {
     this.exerciseId = const Value.absent(),
   });
   WorkoutSetsCompanion.insert({
-    required int id,
+    this.id = const Value.absent(),
     required int sequence,
     this.reps = const Value.absent(),
     this.distance = const Value.absent(),
     this.weight = const Value.absent(),
     this.setExecutions = const Value.absent(),
     required int workoutItemId,
-    this.exerciseId = const Value.absent(),
-  })  : id = Value(id),
-        sequence = Value(sequence),
-        workoutItemId = Value(workoutItemId);
+    required int exerciseId,
+  })  : sequence = Value(sequence),
+        workoutItemId = Value(workoutItemId),
+        exerciseId = Value(exerciseId);
   static Insertable<WorkoutSetM> custom({
     Expression<int>? id,
     Expression<int>? sequence,
@@ -1592,7 +1573,7 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetM> {
     Expression<double?>? weight,
     Expression<int?>? setExecutions,
     Expression<int>? workoutItemId,
-    Expression<int?>? exerciseId,
+    Expression<int>? exerciseId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1614,7 +1595,7 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetM> {
       Value<double?>? weight,
       Value<int?>? setExecutions,
       Value<int>? workoutItemId,
-      Value<int?>? exerciseId}) {
+      Value<int>? exerciseId}) {
     return WorkoutSetsCompanion(
       id: id ?? this.id,
       sequence: sequence ?? this.sequence,
@@ -1652,7 +1633,7 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetM> {
       map['workout_item_id'] = Variable<int>(workoutItemId.value);
     }
     if (exerciseId.present) {
-      map['exercise_id'] = Variable<int?>(exerciseId.value);
+      map['exercise_id'] = Variable<int>(exerciseId.value);
     }
     return map;
   }
@@ -1683,7 +1664,7 @@ class $WorkoutSetsTable extends WorkoutSets
   @override
   late final GeneratedColumn<int?> id = GeneratedColumn<int?>(
       'id', aliasedName, false,
-      type: const IntType(), requiredDuringInsert: true);
+      type: const IntType(), requiredDuringInsert: false);
   final VerificationMeta _sequenceMeta = const VerificationMeta('sequence');
   @override
   late final GeneratedColumn<int?> sequence = GeneratedColumn<int?>(
@@ -1721,10 +1702,10 @@ class $WorkoutSetsTable extends WorkoutSets
   final VerificationMeta _exerciseIdMeta = const VerificationMeta('exerciseId');
   @override
   late final GeneratedColumn<int?> exerciseId = GeneratedColumn<int?>(
-      'exercise_id', aliasedName, true,
+      'exercise_id', aliasedName, false,
       type: const IntType(),
-      requiredDuringInsert: false,
-      $customConstraints: 'NULLABLE REFERENCES exercises(id)');
+      requiredDuringInsert: true,
+      $customConstraints: 'REFERENCES exercises(id)');
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -1747,8 +1728,6 @@ class $WorkoutSetsTable extends WorkoutSets
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    } else if (isInserting) {
-      context.missing(_idMeta);
     }
     if (data.containsKey('sequence')) {
       context.handle(_sequenceMeta,
@@ -1787,12 +1766,14 @@ class $WorkoutSetsTable extends WorkoutSets
           _exerciseIdMeta,
           exerciseId.isAcceptableOrUnknown(
               data['exercise_id']!, _exerciseIdMeta));
+    } else if (isInserting) {
+      context.missing(_exerciseIdMeta);
     }
     return context;
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => <GeneratedColumn>{};
+  Set<GeneratedColumn> get $primaryKey => {id};
   @override
   WorkoutSetM map(Map<String, dynamic> data, {String? tablePrefix}) {
     return WorkoutSetM.fromData(data,

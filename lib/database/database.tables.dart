@@ -7,6 +7,9 @@ class Exercises extends Table {
   TextColumn get name => text()();
 
   TextColumn get description => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }
 
 @DataClassName('WorkoutM')
@@ -16,6 +19,9 @@ class Workouts extends Table {
   TextColumn get name => text()();
 
   TextColumn get description => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }
 
 @DataClassName('WorkoutSessionM')
@@ -28,6 +34,9 @@ class WorkoutSessions extends Table {
 
   IntColumn get workoutId =>
       integer().customConstraint('REFERENCES workouts(id) ON DELETE CASCADE')();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }
 
 @DataClassName('WorkoutPhaseM')
@@ -40,6 +49,9 @@ class WorkoutPhases extends Table {
 
   IntColumn get workoutSessionId => integer()
       .customConstraint('REFERENCES workout_sessions(id) ON DELETE CASCADE')();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }
 
 @DataClassName('WorkoutItemM')
@@ -62,6 +74,9 @@ class WorkoutItems extends Table {
 
   IntColumn get workoutPhaseId => integer()
       .customConstraint('REFERENCES workout_phases(id) ON DELETE CASCADE')();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }
 
 @DataClassName('WorkoutSetM')
@@ -81,7 +96,9 @@ class WorkoutSets extends Table {
   IntColumn get workoutItemId => integer()
       .customConstraint('REFERENCES workout_items(id) ON DELETE CASCADE')();
 
-  IntColumn get exerciseId => integer()
-      .nullable()
-      .customConstraint('NULLABLE REFERENCES exercises(id)')();
+  IntColumn get exerciseId =>
+      integer().customConstraint('REFERENCES exercises(id)')();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }

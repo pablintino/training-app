@@ -78,7 +78,12 @@ class _DBSynchronizer {
   Future<void> loop() async {
     await for (final message in _commandPort) {
       if (message is _SyncRequest) {
-        await _handleSyncRequest(message);
+        try {
+          await _handleSyncRequest(message);
+        } catch (e) {
+          print('Exception handler called');
+        }
+        // TODO notify the caller if something gone wrong
         message.sendPort.send(true);
       } else if (message == null) {
         break;
@@ -139,7 +144,7 @@ class _DBSynchronizer {
 
     for (final remoteWorkout in serverWorkouts) {
       if (await _db.workoutDAO.getWorkoutById(remoteWorkout.id!) == null) {
-        _db.workoutDAO.insertWorkout(WorkoutsCompanion(
+        await _db.workoutDAO.insertWorkout(WorkoutsCompanion(
             id: Value(remoteWorkout.id!),
             name: Value(remoteWorkout.name!),
             description: Value(remoteWorkout.description)));
@@ -151,7 +156,7 @@ class _DBSynchronizer {
         .map((e) => Tuple2<int, WorkoutSessionDto>(element.id!, e)))) {
       if (await _db.workoutDAO.getWorkoutSessionById(remoteSession.item2.id!) ==
           null) {
-        _db.workoutDAO.insertWorkoutSession(WorkoutSessionsCompanion(
+        await _db.workoutDAO.insertWorkoutSession(WorkoutSessionsCompanion(
             id: Value(remoteSession.item2.id!),
             workoutId: Value(remoteSession.item1),
             weekDay: Value(remoteSession.item2.weekDay!),
@@ -165,7 +170,7 @@ class _DBSynchronizer {
             .map((e) => Tuple2<int, WorkoutPhaseDto>(element.id!, e)))) {
       if (await _db.workoutDAO.getWorkoutPhaseById(remotePhase.item2.id!) ==
           null) {
-        _db.workoutDAO.insertWorkoutPhase(WorkoutPhasesCompanion(
+        await _db.workoutDAO.insertWorkoutPhase(WorkoutPhasesCompanion(
             id: Value(remotePhase.item2.id!),
             sequence: Value(remotePhase.item2.sequence!),
             name: Value(remotePhase.item2.name!),
@@ -180,7 +185,7 @@ class _DBSynchronizer {
             .map((e) => Tuple2<int, WorkoutItemDto>(element.id!, e)))) {
       if (await _db.workoutDAO.getWorkoutItemById(remoteItem.item2.id!) ==
           null) {
-        _db.workoutDAO.insertWorkoutItem(WorkoutItemsCompanion(
+        await _db.workoutDAO.insertWorkoutItem(WorkoutItemsCompanion(
             id: Value(remoteItem.item2.id!),
             sequence: Value(remoteItem.item2.sequence!),
             workTimeSecs: Value(remoteItem.item2.workTimeSecs),
@@ -199,13 +204,13 @@ class _DBSynchronizer {
         .expand((element) => element.sets
             .map((e) => Tuple2<int, WorkoutSetDto>(element.id!, e)))) {
       if (await _db.workoutDAO.getWorkoutSetById(remoteSet.item2.id!) == null) {
-        _db.workoutDAO.insertWorkoutSet(WorkoutSetsCompanion(
+        await _db.workoutDAO.insertWorkoutSet(WorkoutSetsCompanion(
             id: Value(remoteSet.item2.id!),
             sequence: Value(remoteSet.item2.sequence!),
-            distance: Value(remoteSet.item2.distance!),
-            reps: Value(remoteSet.item2.reps!),
-            setExecutions: Value(remoteSet.item2.setExecutions!),
-            weight: Value(remoteSet.item2.weight!),
+            distance: Value(remoteSet.item2.distance),
+            reps: Value(remoteSet.item2.reps),
+            setExecutions: Value(remoteSet.item2.setExecutions),
+            weight: Value(remoteSet.item2.weight),
             exerciseId: Value(remoteSet.item2.exerciseId!),
             workoutItemId: Value(remoteSet.item1)));
       }
