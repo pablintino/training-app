@@ -1,25 +1,21 @@
 import 'package:dio/dio.dart';
-import 'package:training_app/app_config.dart';
+import 'package:get_it/get_it.dart';
 import 'package:training_app/networking/entities/exercise_dto.dart';
 import 'package:training_app/networking/entities/page_dto.dart';
 import 'package:training_app/networking/entities/workout_dtos.dart';
 
-Dio createDioClient(AppConfig appConfig) {
-  var dio = Dio();
-  dio.options.baseUrl = appConfig.apiUrl;
-  return dio;
-}
-
 class ExerciseClient {
   static const int PAGE_SIZE = 50;
 
-  final Dio _dio;
+  late Dio dio;
 
-  ExerciseClient(this._dio);
+  ExerciseClient({Dio? dio}) {
+    this.dio = dio ?? GetIt.instance<Dio>();
+  }
 
   Future<ExerciseDto> createExercise(ExerciseDto exerciseDto) async {
     try {
-      Response exerciseData = await _dio.post('/api/v1/exercises',
+      Response exerciseData = await dio.post('/api/v1/exercises',
           data: exerciseDto.toJson(),
           options: Options(headers: {
             'Accept': 'application/json',
@@ -33,7 +29,7 @@ class ExerciseClient {
 
   Future<ExerciseDto> updateExercise(int id, ExerciseDto exerciseDto) async {
     try {
-      Response exerciseData = await _dio.put('/api/v1/exercises/$id',
+      Response exerciseData = await dio.put('/api/v1/exercises/$id',
           data: exerciseDto.toJson(),
           options: Options(headers: {
             'Accept': 'application/json',
@@ -47,7 +43,7 @@ class ExerciseClient {
 
   Future<ExerciseDto> getExercise({required String id}) async {
     try {
-      Response exerciseData = await _dio.get('/api/v1/exercises/$id');
+      Response exerciseData = await dio.get('/api/v1/exercises/$id');
       return ExerciseDto.fromJson(exerciseData.data);
     } on DioError catch (e) {
       _handleError(e);
@@ -57,7 +53,7 @@ class ExerciseClient {
 
   Future<void> deleteExercise(int id) async {
     try {
-      await _dio.delete('/api/v1/exercises/$id');
+      await dio.delete('/api/v1/exercises/$id');
     } on DioError catch (e) {
       _handleError(e);
       throw e;
@@ -67,7 +63,7 @@ class ExerciseClient {
   Future<List<ExerciseDto>> getExercises({bool bulk = false}) async {
     try {
       if (bulk) {
-        Response exerciseData = await _dio.get('/api/v1/exercises');
+        Response exerciseData = await dio.get('/api/v1/exercises');
 
         return List<ExerciseDto>.from(PageDto.fromJson(exerciseData.data)
             .data
@@ -75,7 +71,7 @@ class ExerciseClient {
       } else {
         final exercises = List<ExerciseDto>.empty(growable: true);
         for (int pageIndex = 0;; pageIndex++) {
-          final page = await _dio
+          final page = await dio
               .get('/api/v1/exercises?page=$pageIndex&size=$PAGE_SIZE')
               .then((response) => PageDto.fromJson(response.data));
 
@@ -113,13 +109,15 @@ class ExerciseClient {
 class WorkoutClient {
   static const int PAGE_SIZE = 50;
 
-  final Dio _dio;
+  late Dio dio;
 
-  WorkoutClient(this._dio);
+  WorkoutClient({Dio? dio}) {
+    this.dio = dio ?? GetIt.instance<Dio>();
+  }
 
   Future<WorkoutDto> getWorkout(int id, {bool fat = false}) async {
     try {
-      Response exerciseData = await _dio.get('/api/v1/workouts/$id?fat=$fat');
+      Response exerciseData = await dio.get('/api/v1/workouts/$id?fat=$fat');
       return WorkoutDto.fromJson(exerciseData.data);
     } on DioError catch (e) {
       _handleError(e);
@@ -129,7 +127,7 @@ class WorkoutClient {
 
   Future<void> deleteWorkout(int id) async {
     try {
-      await _dio.delete('/api/v1/workouts/$id');
+      await dio.delete('/api/v1/workouts/$id');
     } on DioError catch (e) {
       _handleError(e);
       throw e;
@@ -140,7 +138,7 @@ class WorkoutClient {
       {bool bulk = false, bool fat = false}) async {
     try {
       if (bulk) {
-        Response workoutData = await _dio.get('/api/v1/workouts?fat=$fat');
+        Response workoutData = await dio.get('/api/v1/workouts?fat=$fat');
 
         return List<WorkoutDto>.from(PageDto.fromJson(workoutData.data)
             .data
@@ -148,7 +146,7 @@ class WorkoutClient {
       } else {
         final workouts = List<WorkoutDto>.empty(growable: true);
         for (int pageIndex = 0;; pageIndex++) {
-          final page = await _dio
+          final page = await dio
               .get('/api/v1/workouts?page=$pageIndex&size=$PAGE_SIZE&fat=$fat')
               .then((response) => PageDto.fromJson(response.data));
 

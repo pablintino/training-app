@@ -54,19 +54,42 @@ class MyApp extends StatelessWidget {
 }
 
 Future<void> setup() async {
-  var appConfig = await AppConfigLoader.create();
-
-  GetIt.instance.registerSingleton<AppConfig>(appConfig);
+  GetIt.instance
+      .registerSingletonAsync<AppConfig>(() async => AppConfigLoader.create());
 
   final driftIsolate = await createDriftIsolate();
-  GetIt.instance.registerSingleton<AppDatabase>(
-      AppDatabase.connect(isolateConnect(driftIsolate)));
+  GetIt.instance.registerSingletonAsync<AppDatabase>(() async => driftIsolate
+      .connect()
+      .then((connection) => AppDatabase.connect(connection)));
 
-  GetIt.instance.registerSingleton<NetworkSyncIsolate>(
-      await createNetworkIsolate(driftIsolate));
+  GetIt.instance.registerSingletonAsync<NetworkSyncIsolate>(
+      () async => createNetworkIsolate(driftIsolate));
 
-  GetIt.instance.registerSingleton<Dio>(createDioClient(appConfig));
-  GetIt.instance.registerSingleton<ExercisesRepository>(ExercisesRepository());
-  GetIt.instance.registerSingleton<WorkoutRepository>(WorkoutRepository());
-  GetIt.instance.registerSingleton<UserAuthRepository>(UserAuthRepository());
+  GetIt.instance.registerSingletonWithDependencies<Dio>(() {
+    var dio = Dio();
+    dio.options.baseUrl = GetIt.instance<AppConfig>().apiUrl;
+    return dio;
+  }, dependsOn: [AppConfig]);
+
+  GetIt.instance.registerSingletonWithDependencies<ExerciseClient>(
+      () => ExerciseClient(),
+      dependsOn: [Dio]);
+
+  GetIt.instance.registerSingletonWithDependencies<WorkoutClient>(
+      () => WorkoutClient(),
+      dependsOn: [Dio]);
+
+  GetIt.instance.registerSingletonWithDependencies<ExercisesRepository>(
+      () => ExercisesRepository(),
+      dependsOn: [ExerciseClient, AppConfig, NetworkSyncIsolate]);
+
+  GetIt.instance.registerSingletonWithDependencies<WorkoutRepository>(
+      () => WorkoutRepository(),
+      dependsOn: [WorkoutClient, AppConfig, NetworkSyncIsolate]);
+
+  GetIt.instance.registerSingletonWithDependencies<UserAuthRepository>(
+      () => UserAuthRepository(),
+      dependsOn: [AppConfig]);
+
+  await GetIt.instance.allReady();
 }
