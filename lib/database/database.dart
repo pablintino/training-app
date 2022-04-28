@@ -11,9 +11,17 @@ part 'database.g.dart';
 
 part 'database.tables.dart';
 
-@DriftDatabase(
-    tables: [Exercises, Workouts, WorkoutSessions, WorkoutItems, WorkoutSets],
-    daos: [ExerciseDAO, WorkoutDAO])
+@DriftDatabase(tables: [
+  Exercises,
+  Workouts,
+  WorkoutPhases,
+  WorkoutSessions,
+  WorkoutItems,
+  WorkoutSets
+], daos: [
+  ExerciseDAO,
+  WorkoutDAO
+])
 class AppDatabase extends _$AppDatabase {
   // we tell the database where to store the data with this constructor
   AppDatabase() : super(_openConnection());

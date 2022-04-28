@@ -428,6 +428,259 @@ class $WorkoutsTable extends Workouts with TableInfo<$WorkoutsTable, WorkoutM> {
   }
 }
 
+class WorkoutPhaseM extends DataClass implements Insertable<WorkoutPhaseM> {
+  final int id;
+  final String name;
+  final int sequence;
+  final int workoutSessionId;
+  WorkoutPhaseM(
+      {required this.id,
+      required this.name,
+      required this.sequence,
+      required this.workoutSessionId});
+  factory WorkoutPhaseM.fromData(Map<String, dynamic> data, {String? prefix}) {
+    final effectivePrefix = prefix ?? '';
+    return WorkoutPhaseM(
+      id: const IntType()
+          .mapFromDatabaseResponse(data['${effectivePrefix}id'])!,
+      name: const StringType()
+          .mapFromDatabaseResponse(data['${effectivePrefix}name'])!,
+      sequence: const IntType()
+          .mapFromDatabaseResponse(data['${effectivePrefix}sequence'])!,
+      workoutSessionId: const IntType().mapFromDatabaseResponse(
+          data['${effectivePrefix}workout_session_id'])!,
+    );
+  }
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    map['sequence'] = Variable<int>(sequence);
+    map['workout_session_id'] = Variable<int>(workoutSessionId);
+    return map;
+  }
+
+  WorkoutPhasesCompanion toCompanion(bool nullToAbsent) {
+    return WorkoutPhasesCompanion(
+      id: Value(id),
+      name: Value(name),
+      sequence: Value(sequence),
+      workoutSessionId: Value(workoutSessionId),
+    );
+  }
+
+  factory WorkoutPhaseM.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WorkoutPhaseM(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      sequence: serializer.fromJson<int>(json['sequence']),
+      workoutSessionId: serializer.fromJson<int>(json['workoutSessionId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'sequence': serializer.toJson<int>(sequence),
+      'workoutSessionId': serializer.toJson<int>(workoutSessionId),
+    };
+  }
+
+  WorkoutPhaseM copyWith(
+          {int? id, String? name, int? sequence, int? workoutSessionId}) =>
+      WorkoutPhaseM(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        sequence: sequence ?? this.sequence,
+        workoutSessionId: workoutSessionId ?? this.workoutSessionId,
+      );
+  @override
+  String toString() {
+    return (StringBuffer('WorkoutPhaseM(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('sequence: $sequence, ')
+          ..write('workoutSessionId: $workoutSessionId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name, sequence, workoutSessionId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WorkoutPhaseM &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.sequence == this.sequence &&
+          other.workoutSessionId == this.workoutSessionId);
+}
+
+class WorkoutPhasesCompanion extends UpdateCompanion<WorkoutPhaseM> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<int> sequence;
+  final Value<int> workoutSessionId;
+  const WorkoutPhasesCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.sequence = const Value.absent(),
+    this.workoutSessionId = const Value.absent(),
+  });
+  WorkoutPhasesCompanion.insert({
+    required int id,
+    required String name,
+    required int sequence,
+    required int workoutSessionId,
+  })  : id = Value(id),
+        name = Value(name),
+        sequence = Value(sequence),
+        workoutSessionId = Value(workoutSessionId);
+  static Insertable<WorkoutPhaseM> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<int>? sequence,
+    Expression<int>? workoutSessionId,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (sequence != null) 'sequence': sequence,
+      if (workoutSessionId != null) 'workout_session_id': workoutSessionId,
+    });
+  }
+
+  WorkoutPhasesCompanion copyWith(
+      {Value<int>? id,
+      Value<String>? name,
+      Value<int>? sequence,
+      Value<int>? workoutSessionId}) {
+    return WorkoutPhasesCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      sequence: sequence ?? this.sequence,
+      workoutSessionId: workoutSessionId ?? this.workoutSessionId,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (sequence.present) {
+      map['sequence'] = Variable<int>(sequence.value);
+    }
+    if (workoutSessionId.present) {
+      map['workout_session_id'] = Variable<int>(workoutSessionId.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WorkoutPhasesCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('sequence: $sequence, ')
+          ..write('workoutSessionId: $workoutSessionId')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $WorkoutPhasesTable extends WorkoutPhases
+    with TableInfo<$WorkoutPhasesTable, WorkoutPhaseM> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WorkoutPhasesTable(this.attachedDatabase, [this._alias]);
+  final VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int?> id = GeneratedColumn<int?>(
+      'id', aliasedName, false,
+      type: const IntType(), requiredDuringInsert: true);
+  final VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String?> name = GeneratedColumn<String?>(
+      'name', aliasedName, false,
+      type: const StringType(), requiredDuringInsert: true);
+  final VerificationMeta _sequenceMeta = const VerificationMeta('sequence');
+  @override
+  late final GeneratedColumn<int?> sequence = GeneratedColumn<int?>(
+      'sequence', aliasedName, false,
+      type: const IntType(), requiredDuringInsert: true);
+  final VerificationMeta _workoutSessionIdMeta =
+      const VerificationMeta('workoutSessionId');
+  @override
+  late final GeneratedColumn<int?> workoutSessionId = GeneratedColumn<int?>(
+      'workout_session_id', aliasedName, false,
+      type: const IntType(),
+      requiredDuringInsert: true,
+      $customConstraints: 'REFERENCES workout_sessions(id) ON DELETE CASCADE');
+  @override
+  List<GeneratedColumn> get $columns => [id, name, sequence, workoutSessionId];
+  @override
+  String get aliasedName => _alias ?? 'workout_phases';
+  @override
+  String get actualTableName => 'workout_phases';
+  @override
+  VerificationContext validateIntegrity(Insertable<WorkoutPhaseM> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('sequence')) {
+      context.handle(_sequenceMeta,
+          sequence.isAcceptableOrUnknown(data['sequence']!, _sequenceMeta));
+    } else if (isInserting) {
+      context.missing(_sequenceMeta);
+    }
+    if (data.containsKey('workout_session_id')) {
+      context.handle(
+          _workoutSessionIdMeta,
+          workoutSessionId.isAcceptableOrUnknown(
+              data['workout_session_id']!, _workoutSessionIdMeta));
+    } else if (isInserting) {
+      context.missing(_workoutSessionIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => <GeneratedColumn>{};
+  @override
+  WorkoutPhaseM map(Map<String, dynamic> data, {String? tablePrefix}) {
+    return WorkoutPhaseM.fromData(data,
+        prefix: tablePrefix != null ? '$tablePrefix.' : null);
+  }
+
+  @override
+  $WorkoutPhasesTable createAlias(String alias) {
+    return $WorkoutPhasesTable(attachedDatabase, alias);
+  }
+}
+
 class WorkoutSessionM extends DataClass implements Insertable<WorkoutSessionM> {
   final int id;
   final int weekDay;
@@ -688,7 +941,7 @@ class WorkoutItemM extends DataClass implements Insertable<WorkoutItemM> {
   final int? timeCapSecs;
   final int? workTimeSecs;
   final String? workModality;
-  final int workoutSessionId;
+  final int workoutPhaseId;
   WorkoutItemM(
       {required this.id,
       required this.name,
@@ -698,7 +951,7 @@ class WorkoutItemM extends DataClass implements Insertable<WorkoutItemM> {
       this.timeCapSecs,
       this.workTimeSecs,
       this.workModality,
-      required this.workoutSessionId});
+      required this.workoutPhaseId});
   factory WorkoutItemM.fromData(Map<String, dynamic> data, {String? prefix}) {
     final effectivePrefix = prefix ?? '';
     return WorkoutItemM(
@@ -718,8 +971,8 @@ class WorkoutItemM extends DataClass implements Insertable<WorkoutItemM> {
           .mapFromDatabaseResponse(data['${effectivePrefix}work_time_secs']),
       workModality: const StringType()
           .mapFromDatabaseResponse(data['${effectivePrefix}work_modality']),
-      workoutSessionId: const IntType().mapFromDatabaseResponse(
-          data['${effectivePrefix}workout_session_id'])!,
+      workoutPhaseId: const IntType()
+          .mapFromDatabaseResponse(data['${effectivePrefix}workout_phase_id'])!,
     );
   }
   @override
@@ -743,7 +996,7 @@ class WorkoutItemM extends DataClass implements Insertable<WorkoutItemM> {
     if (!nullToAbsent || workModality != null) {
       map['work_modality'] = Variable<String?>(workModality);
     }
-    map['workout_session_id'] = Variable<int>(workoutSessionId);
+    map['workout_phase_id'] = Variable<int>(workoutPhaseId);
     return map;
   }
 
@@ -766,7 +1019,7 @@ class WorkoutItemM extends DataClass implements Insertable<WorkoutItemM> {
       workModality: workModality == null && nullToAbsent
           ? const Value.absent()
           : Value(workModality),
-      workoutSessionId: Value(workoutSessionId),
+      workoutPhaseId: Value(workoutPhaseId),
     );
   }
 
@@ -782,7 +1035,7 @@ class WorkoutItemM extends DataClass implements Insertable<WorkoutItemM> {
       timeCapSecs: serializer.fromJson<int?>(json['timeCapSecs']),
       workTimeSecs: serializer.fromJson<int?>(json['workTimeSecs']),
       workModality: serializer.fromJson<String?>(json['workModality']),
-      workoutSessionId: serializer.fromJson<int>(json['workoutSessionId']),
+      workoutPhaseId: serializer.fromJson<int>(json['workoutPhaseId']),
     );
   }
   @override
@@ -797,7 +1050,7 @@ class WorkoutItemM extends DataClass implements Insertable<WorkoutItemM> {
       'timeCapSecs': serializer.toJson<int?>(timeCapSecs),
       'workTimeSecs': serializer.toJson<int?>(workTimeSecs),
       'workModality': serializer.toJson<String?>(workModality),
-      'workoutSessionId': serializer.toJson<int>(workoutSessionId),
+      'workoutPhaseId': serializer.toJson<int>(workoutPhaseId),
     };
   }
 
@@ -810,7 +1063,7 @@ class WorkoutItemM extends DataClass implements Insertable<WorkoutItemM> {
           int? timeCapSecs,
           int? workTimeSecs,
           String? workModality,
-          int? workoutSessionId}) =>
+          int? workoutPhaseId}) =>
       WorkoutItemM(
         id: id ?? this.id,
         name: name ?? this.name,
@@ -820,7 +1073,7 @@ class WorkoutItemM extends DataClass implements Insertable<WorkoutItemM> {
         timeCapSecs: timeCapSecs ?? this.timeCapSecs,
         workTimeSecs: workTimeSecs ?? this.workTimeSecs,
         workModality: workModality ?? this.workModality,
-        workoutSessionId: workoutSessionId ?? this.workoutSessionId,
+        workoutPhaseId: workoutPhaseId ?? this.workoutPhaseId,
       );
   @override
   String toString() {
@@ -833,14 +1086,14 @@ class WorkoutItemM extends DataClass implements Insertable<WorkoutItemM> {
           ..write('timeCapSecs: $timeCapSecs, ')
           ..write('workTimeSecs: $workTimeSecs, ')
           ..write('workModality: $workModality, ')
-          ..write('workoutSessionId: $workoutSessionId')
+          ..write('workoutPhaseId: $workoutPhaseId')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode => Object.hash(id, name, sequence, rounds, restTimeSecs,
-      timeCapSecs, workTimeSecs, workModality, workoutSessionId);
+      timeCapSecs, workTimeSecs, workModality, workoutPhaseId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -853,7 +1106,7 @@ class WorkoutItemM extends DataClass implements Insertable<WorkoutItemM> {
           other.timeCapSecs == this.timeCapSecs &&
           other.workTimeSecs == this.workTimeSecs &&
           other.workModality == this.workModality &&
-          other.workoutSessionId == this.workoutSessionId);
+          other.workoutPhaseId == this.workoutPhaseId);
 }
 
 class WorkoutItemsCompanion extends UpdateCompanion<WorkoutItemM> {
@@ -865,7 +1118,7 @@ class WorkoutItemsCompanion extends UpdateCompanion<WorkoutItemM> {
   final Value<int?> timeCapSecs;
   final Value<int?> workTimeSecs;
   final Value<String?> workModality;
-  final Value<int> workoutSessionId;
+  final Value<int> workoutPhaseId;
   const WorkoutItemsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -875,7 +1128,7 @@ class WorkoutItemsCompanion extends UpdateCompanion<WorkoutItemM> {
     this.timeCapSecs = const Value.absent(),
     this.workTimeSecs = const Value.absent(),
     this.workModality = const Value.absent(),
-    this.workoutSessionId = const Value.absent(),
+    this.workoutPhaseId = const Value.absent(),
   });
   WorkoutItemsCompanion.insert({
     required int id,
@@ -886,11 +1139,11 @@ class WorkoutItemsCompanion extends UpdateCompanion<WorkoutItemM> {
     this.timeCapSecs = const Value.absent(),
     this.workTimeSecs = const Value.absent(),
     this.workModality = const Value.absent(),
-    required int workoutSessionId,
+    required int workoutPhaseId,
   })  : id = Value(id),
         name = Value(name),
         sequence = Value(sequence),
-        workoutSessionId = Value(workoutSessionId);
+        workoutPhaseId = Value(workoutPhaseId);
   static Insertable<WorkoutItemM> custom({
     Expression<int>? id,
     Expression<String>? name,
@@ -900,7 +1153,7 @@ class WorkoutItemsCompanion extends UpdateCompanion<WorkoutItemM> {
     Expression<int?>? timeCapSecs,
     Expression<int?>? workTimeSecs,
     Expression<String?>? workModality,
-    Expression<int>? workoutSessionId,
+    Expression<int>? workoutPhaseId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -911,7 +1164,7 @@ class WorkoutItemsCompanion extends UpdateCompanion<WorkoutItemM> {
       if (timeCapSecs != null) 'time_cap_secs': timeCapSecs,
       if (workTimeSecs != null) 'work_time_secs': workTimeSecs,
       if (workModality != null) 'work_modality': workModality,
-      if (workoutSessionId != null) 'workout_session_id': workoutSessionId,
+      if (workoutPhaseId != null) 'workout_phase_id': workoutPhaseId,
     });
   }
 
@@ -924,7 +1177,7 @@ class WorkoutItemsCompanion extends UpdateCompanion<WorkoutItemM> {
       Value<int?>? timeCapSecs,
       Value<int?>? workTimeSecs,
       Value<String?>? workModality,
-      Value<int>? workoutSessionId}) {
+      Value<int>? workoutPhaseId}) {
     return WorkoutItemsCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
@@ -934,7 +1187,7 @@ class WorkoutItemsCompanion extends UpdateCompanion<WorkoutItemM> {
       timeCapSecs: timeCapSecs ?? this.timeCapSecs,
       workTimeSecs: workTimeSecs ?? this.workTimeSecs,
       workModality: workModality ?? this.workModality,
-      workoutSessionId: workoutSessionId ?? this.workoutSessionId,
+      workoutPhaseId: workoutPhaseId ?? this.workoutPhaseId,
     );
   }
 
@@ -965,8 +1218,8 @@ class WorkoutItemsCompanion extends UpdateCompanion<WorkoutItemM> {
     if (workModality.present) {
       map['work_modality'] = Variable<String?>(workModality.value);
     }
-    if (workoutSessionId.present) {
-      map['workout_session_id'] = Variable<int>(workoutSessionId.value);
+    if (workoutPhaseId.present) {
+      map['workout_phase_id'] = Variable<int>(workoutPhaseId.value);
     }
     return map;
   }
@@ -982,7 +1235,7 @@ class WorkoutItemsCompanion extends UpdateCompanion<WorkoutItemM> {
           ..write('timeCapSecs: $timeCapSecs, ')
           ..write('workTimeSecs: $workTimeSecs, ')
           ..write('workModality: $workModality, ')
-          ..write('workoutSessionId: $workoutSessionId')
+          ..write('workoutPhaseId: $workoutPhaseId')
           ..write(')'))
         .toString();
   }
@@ -1038,14 +1291,14 @@ class $WorkoutItemsTable extends WorkoutItems
   late final GeneratedColumn<String?> workModality = GeneratedColumn<String?>(
       'work_modality', aliasedName, true,
       type: const StringType(), requiredDuringInsert: false);
-  final VerificationMeta _workoutSessionIdMeta =
-      const VerificationMeta('workoutSessionId');
+  final VerificationMeta _workoutPhaseIdMeta =
+      const VerificationMeta('workoutPhaseId');
   @override
-  late final GeneratedColumn<int?> workoutSessionId = GeneratedColumn<int?>(
-      'workout_session_id', aliasedName, false,
+  late final GeneratedColumn<int?> workoutPhaseId = GeneratedColumn<int?>(
+      'workout_phase_id', aliasedName, false,
       type: const IntType(),
       requiredDuringInsert: true,
-      $customConstraints: 'REFERENCES workout_sessions(id) ON DELETE CASCADE');
+      $customConstraints: 'REFERENCES workout_phases(id) ON DELETE CASCADE');
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -1056,7 +1309,7 @@ class $WorkoutItemsTable extends WorkoutItems
         timeCapSecs,
         workTimeSecs,
         workModality,
-        workoutSessionId
+        workoutPhaseId
       ];
   @override
   String get aliasedName => _alias ?? 'workout_items';
@@ -1112,13 +1365,13 @@ class $WorkoutItemsTable extends WorkoutItems
           workModality.isAcceptableOrUnknown(
               data['work_modality']!, _workModalityMeta));
     }
-    if (data.containsKey('workout_session_id')) {
+    if (data.containsKey('workout_phase_id')) {
       context.handle(
-          _workoutSessionIdMeta,
-          workoutSessionId.isAcceptableOrUnknown(
-              data['workout_session_id']!, _workoutSessionIdMeta));
+          _workoutPhaseIdMeta,
+          workoutPhaseId.isAcceptableOrUnknown(
+              data['workout_phase_id']!, _workoutPhaseIdMeta));
     } else if (isInserting) {
-      context.missing(_workoutSessionIdMeta);
+      context.missing(_workoutPhaseIdMeta);
     }
     return context;
   }
@@ -1557,6 +1810,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase.connect(DatabaseConnection c) : super.connect(c);
   late final $ExercisesTable exercises = $ExercisesTable(this);
   late final $WorkoutsTable workouts = $WorkoutsTable(this);
+  late final $WorkoutPhasesTable workoutPhases = $WorkoutPhasesTable(this);
   late final $WorkoutSessionsTable workoutSessions =
       $WorkoutSessionsTable(this);
   late final $WorkoutItemsTable workoutItems = $WorkoutItemsTable(this);
@@ -1566,6 +1820,12 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   @override
   Iterable<TableInfo> get allTables => allSchemaEntities.whereType<TableInfo>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities =>
-      [exercises, workouts, workoutSessions, workoutItems, workoutSets];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+        exercises,
+        workouts,
+        workoutPhases,
+        workoutSessions,
+        workoutItems,
+        workoutSets
+      ];
 }

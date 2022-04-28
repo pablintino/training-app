@@ -30,6 +30,18 @@ class WorkoutSessions extends Table {
       integer().customConstraint('REFERENCES workouts(id) ON DELETE CASCADE')();
 }
 
+@DataClassName('WorkoutPhaseM')
+class WorkoutPhases extends Table {
+  IntColumn get id => integer()();
+
+  TextColumn get name => text()();
+
+  IntColumn get sequence => integer()();
+
+  IntColumn get workoutSessionId => integer()
+      .customConstraint('REFERENCES workout_sessions(id) ON DELETE CASCADE')();
+}
+
 @DataClassName('WorkoutItemM')
 class WorkoutItems extends Table {
   IntColumn get id => integer()();
@@ -48,8 +60,8 @@ class WorkoutItems extends Table {
 
   TextColumn get workModality => text().nullable()();
 
-  IntColumn get workoutSessionId => integer()
-      .customConstraint('REFERENCES workout_sessions(id) ON DELETE CASCADE')();
+  IntColumn get workoutPhaseId => integer()
+      .customConstraint('REFERENCES workout_phases(id) ON DELETE CASCADE')();
 }
 
 @DataClassName('WorkoutSetM')
