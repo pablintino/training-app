@@ -6,42 +6,51 @@ import 'package:drift/isolate.dart';
 import 'package:get_it/get_it.dart';
 import 'package:training_app/app_config.dart';
 import 'package:training_app/database/database.dart';
-import 'package:training_app/database/database_isolate.dart';
 import 'package:training_app/networking/clients.dart';
 import 'package:training_app/networking/database_synchronizer.dart';
 import 'package:training_app/utils/isolate_utils.dart';
 
 class NetworkSyncIsolate {
-  final ReceivePort receiverPort;
-  final SendPort isolatePort;
+  final ReceivePort _receiverPort;
+  final Isolate _isolate;
+  final SendPort _isolatePort;
 
-  NetworkSyncIsolate(this.receiverPort, this.isolatePort);
+  NetworkSyncIsolate(this._receiverPort, this._isolatePort, this._isolate);
 
-  Future<void> launchExercisesSync() {
-    return singleResponseFuture<bool>((port) => isolatePort
-        .send(DatabaseSyncRequest(DatabaseSyncRequestType.EXERCISES, port)));
-  }
+  Future<void> launchExercisesSync() =>
+      _launchSyncRequest(DatabaseSyncRequestType.EXERCISES);
 
-  Future<void> launchWorkoutsSync() {
-    return singleResponseFuture<bool>((port) => isolatePort
-        .send(DatabaseSyncRequest(DatabaseSyncRequestType.WORKOUTS, port)));
+  Future<void> launchWorkoutsSync() =>
+      _launchSyncRequest(DatabaseSyncRequestType.WORKOUTS);
+
+  Future<void> launchAllEntitiesSync() =>
+      _launchSyncRequest(DatabaseSyncRequestType.ALL);
+
+  Future<bool> _launchSyncRequest(DatabaseSyncRequestType requestType) {
+    return singleResponseFuture<bool>(
+        (port) => _isolatePort.send(DatabaseSyncRequest(requestType, port)));
   }
 
   terminate() {
-    isolatePort.send(null);
+    _isolatePort.send(null);
   }
 }
 
 Future<NetworkSyncIsolate> createNetworkIsolate(
     DriftIsolate driftIsolate) async {
-  final p = ReceivePort();
+  // App path can only be retrieved in main Isolate. Get it just before spawn
+  // and pass the path as argument
   final configPath = await AppConfigLoader.getPath();
-  return Isolate.spawn(
+
+  final p = ReceivePort();
+  return await Isolate.spawn(
           _entitiesSyncTask,
           _IsolateSpawnPayload(
               p.sendPort, driftIsolate.connectPort, configPath))
-      .then((value) async => await p.first as SendPort)
-      .then((value) => NetworkSyncIsolate(p, value));
+      .then((isolate) async {
+    final sendPort = await p.first as SendPort;
+    return NetworkSyncIsolate(p, sendPort, isolate);
+  });
 }
 
 Future<void> _entitiesSyncTask(_IsolateSpawnPayload initPayload) async {
@@ -70,6 +79,20 @@ Future<void> _isolateHandlingLoop(ReceivePort commandPort) async {
   }
 }
 
+Future<void> _runUnderIoCScope(_IsolateSpawnPayload initPayload,
+    ReceivePort commandPort, _AsyncHandlingCallback function) async {
+  _registerInversionOfControlInstances(initPayload);
+
+  await GetIt.instance.allReady();
+  final db = GetIt.instance<AppDatabase>();
+
+  try {
+    await function(commandPort);
+  } finally {
+    await db.close();
+  }
+}
+
 void _registerInversionOfControlInstances(_IsolateSpawnPayload initPayload) {
   GetIt.instance.registerSingletonAsync<AppDatabase>(() async =>
       DriftIsolate.fromConnectPort(initPayload.driftPort)
@@ -94,20 +117,6 @@ void _registerInversionOfControlInstances(_IsolateSpawnPayload initPayload) {
 
   GetIt.instance.registerSingletonWithDependencies(() => DatabaseSynchronizer(),
       dependsOn: [ExerciseClient, WorkoutClient, AppDatabase]);
-}
-
-Future<void> _runUnderIoCScope(_IsolateSpawnPayload initPayload,
-    ReceivePort commandPort, _AsyncHandlingCallback function) async {
-  _registerInversionOfControlInstances(initPayload);
-
-  await GetIt.instance.allReady();
-  final db = GetIt.instance<AppDatabase>();
-
-  try {
-    await function(commandPort);
-  } finally {
-    await db.close();
-  }
 }
 
 typedef _AsyncHandlingCallback = Future<void> Function(ReceivePort);

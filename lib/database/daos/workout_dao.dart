@@ -152,7 +152,6 @@ class WorkoutDAO extends DatabaseAccessor<AppDatabase> with _$WorkoutDAOMixin {
               }
             }
           }
-          print(rows);
           return workoutsMap.values.toList();
         });
   }

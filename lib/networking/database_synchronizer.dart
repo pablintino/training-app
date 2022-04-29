@@ -10,7 +10,7 @@ import 'package:training_app/networking/entities/exercise_dto.dart';
 import 'package:training_app/networking/entities/workout_dtos.dart';
 import 'package:tuple/tuple.dart';
 
-enum DatabaseSyncRequestType { EXERCISES, WORKOUTS }
+enum DatabaseSyncRequestType { EXERCISES, WORKOUTS, ALL }
 
 class DatabaseSyncRequest {
   final DatabaseSyncRequestType requestType;
@@ -35,11 +35,14 @@ class DatabaseSynchronizer {
 
   Future<void> handleSyncRequest(DatabaseSyncRequest request) async {
     if (request.requestType == DatabaseSyncRequestType.EXERCISES) {
-      return _handleExercisesSync();
+      await _handleExercisesSync();
     } else if (request.requestType == DatabaseSyncRequestType.WORKOUTS) {
-      return _handleWorkoutsSync();
+      await _handleWorkoutsSync();
+    } else if (request.requestType == DatabaseSyncRequestType.ALL) {
+      // Order is important. First exercises and after them their dependencies
+      await _handleExercisesSync();
+      await _handleWorkoutsSync();
     }
-    return null;
   }
 
   Future<void> _handleExercisesSync() async {
@@ -74,6 +77,8 @@ class DatabaseSynchronizer {
     final serverWorkouts =
         await workoutClient.getWorkouts(bulk: false, fat: true);
     final dbWorkouts = await db.workoutDAO.getAllJoinedWorkouts();
+
+    // Update workouts (and sub-entities) already present in DB
     for (final dbWorkout in dbWorkouts) {
       WorkoutDto? remoteWorkout = serverWorkouts
           .firstWhereOrNull((element) => element.id == dbWorkout.workout.id);
@@ -84,6 +89,16 @@ class DatabaseSynchronizer {
       }
     }
 
+    // Create new entities that are not in DB but in API
+    await _createNewServerWorkouts(serverWorkouts);
+    await _createNewServerWorkoutSessions(serverWorkouts);
+    await _createNewServerWorkoutPhases(serverWorkouts);
+    await _createNewServerWorkoutItems(serverWorkouts);
+    await _createNewServerWorkoutSets(serverWorkouts);
+  }
+
+  Future<void> _createNewServerWorkouts(
+      final List<WorkoutDto> serverWorkouts) async {
     for (final remoteWorkout in serverWorkouts) {
       if (await db.workoutDAO.getWorkoutById(remoteWorkout.id!) == null) {
         await db.workoutDAO.insertWorkout(WorkoutsCompanion(
@@ -92,7 +107,10 @@ class DatabaseSynchronizer {
             description: Value(remoteWorkout.description)));
       }
     }
+  }
 
+  Future<void> _createNewServerWorkoutSessions(
+      final List<WorkoutDto> serverWorkouts) async {
     for (final remoteSession in serverWorkouts.expand((element) => element
         .sessions
         .map((e) => Tuple2<int, WorkoutSessionDto>(element.id!, e)))) {
@@ -105,7 +123,10 @@ class DatabaseSynchronizer {
             week: Value(remoteSession.item2.week!)));
       }
     }
+  }
 
+  Future<void> _createNewServerWorkoutPhases(
+      final List<WorkoutDto> serverWorkouts) async {
     for (final remotePhase in serverWorkouts
         .expand((element) => element.sessions)
         .expand((element) => element.phases
@@ -119,7 +140,10 @@ class DatabaseSynchronizer {
             workoutSessionId: Value(remotePhase.item1)));
       }
     }
+  }
 
+  Future<void> _createNewServerWorkoutItems(
+      final List<WorkoutDto> serverWorkouts) async {
     for (final remoteItem in serverWorkouts
         .expand((element) => element.sessions)
         .expand((element) => element.phases)
@@ -138,7 +162,10 @@ class DatabaseSynchronizer {
             workoutPhaseId: Value(remoteItem.item1)));
       }
     }
+  }
 
+  Future<void> _createNewServerWorkoutSets(
+      final List<WorkoutDto> serverWorkouts) async {
     for (final remoteSet in serverWorkouts
         .expand((element) => element.sessions)
         .expand((element) => element.phases)
