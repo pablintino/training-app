@@ -259,11 +259,11 @@ class DatabaseSynchronizer {
 
     for (final dbSet in dbWorkoutItem.sets) {
       WorkoutSetDto? remoteSet = serverWorkoutItem.sets
-          .firstWhereOrNull((element) => element.id == dbSet.id);
+          .firstWhereOrNull((element) => element.id == dbSet.set.id);
       if (remoteSet == null) {
-        await db.workoutDAO.deleteWorkoutSetById(dbSet.id);
+        await db.workoutDAO.deleteWorkoutSetById(dbSet.set.id);
       } else {
-        await _handleDbWorkoutSetSync(dbSet, remoteSet);
+        await _handleDbWorkoutSetSync(dbSet.set, remoteSet);
       }
     }
   }

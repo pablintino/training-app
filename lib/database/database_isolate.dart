@@ -30,7 +30,8 @@ DatabaseConnection isolateConnect(DriftIsolate isolate) {
 void _startBackground(_IsolateStartRequest request) {
   // this is the entry point from the background isolate! Let's create
   // the database from the path we received
-  final executor = NativeDatabase(File(request.targetPath));
+  final executor =
+      NativeDatabase(File(request.targetPath), logStatements: true);
   // we're using DriftIsolate.inCurrent here as this method already runs on a
   // background isolate. If we used DriftIsolate.spawn, a third isolate would be
   // started which is not what we want!

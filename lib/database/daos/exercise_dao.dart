@@ -26,7 +26,8 @@ class ExerciseDAO extends DatabaseAccessor<AppDatabase>
           int limit, int offset, String name) =>
       (select(exercises)
             ..where((tbl) => tbl.name.containsCase(name, caseSensitive: false))
-            ..limit(limit, offset: offset))
+            ..limit(limit, offset: offset)
+            ..orderBy([(t) => OrderingTerm(expression: t.name.lower())]))
           .get();
 
   Future<ExerciseM?> getById(int id) =>

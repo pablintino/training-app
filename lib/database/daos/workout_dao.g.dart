@@ -12,4 +12,5 @@ mixin _$WorkoutDAOMixin on DatabaseAccessor<AppDatabase> {
   $WorkoutPhasesTable get workoutPhases => attachedDatabase.workoutPhases;
   $WorkoutItemsTable get workoutItems => attachedDatabase.workoutItems;
   $WorkoutSetsTable get workoutSets => attachedDatabase.workoutSets;
+  $ExercisesTable get exercises => attachedDatabase.exercises;
 }

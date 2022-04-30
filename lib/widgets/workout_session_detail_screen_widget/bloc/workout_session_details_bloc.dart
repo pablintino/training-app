@@ -27,7 +27,8 @@ class WorkoutSessionDetailsBloc
     await _workoutRepository
         .getWorkoutSession(event.sessionId, fat: true)
         .then((session) {
-      emit(SessionLoadedState(session));
+      //TODO Control what to do with null sessions (not found)
+      emit(SessionLoadedState(session!));
     }).catchError((err) {
       print("errrrrorrr");
     });

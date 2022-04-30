@@ -9,7 +9,7 @@ import 'package:training_app/networking/network_sync_isolate.dart';
 class ExercisesRepository {
   static const int PAGE_SIZE = 10;
 
-  late AppDatabase db;
+  late AppDatabase _db;
   late NetworkSyncIsolate networkSyncIsolate;
   late ExerciseClient exerciseClient;
 
@@ -17,7 +17,7 @@ class ExercisesRepository {
       {AppDatabase? db,
       ExerciseClient? exerciseClient,
       NetworkSyncIsolate? networkSyncIsolate}) {
-    this.db = db ?? GetIt.instance<AppDatabase>();
+    this._db = db ?? GetIt.instance<AppDatabase>();
     this.networkSyncIsolate =
         networkSyncIsolate ?? GetIt.instance<NetworkSyncIsolate>();
     this.exerciseClient = exerciseClient ?? GetIt.instance<ExerciseClient>();
@@ -30,15 +30,15 @@ class ExercisesRepository {
   Future<List<Exercise>> getExercisesByPage(
       int page, String? nameFilter) async {
     return await (nameFilter != null
-            ? db.exerciseDAO
+            ? _db.exerciseDAO
                 .getPagedExercisesContainsName(PAGE_SIZE, page, nameFilter)
-            : db.exerciseDAO.getPagedExercises(PAGE_SIZE, page))
+            : _db.exerciseDAO.getPagedExercises(PAGE_SIZE, page))
         .then((exercises) =>
             exercises.map((e) => Exercise.fromModel(e)).toList());
   }
 
   Future<Exercise?> getByName(String name) async {
-    return await db.exerciseDAO
+    return await _db.exerciseDAO
         .getByName(name)
         .then((value) => value != null ? Exercise.fromModel(value) : null);
   }
@@ -49,7 +49,7 @@ class ExercisesRepository {
           .createExercise(ExerciseDto(
               name: exercise.name, description: exercise.description))
           .then((exerciseResponse) async {
-        await db.exerciseDAO.insertExercise(ExercisesCompanion(
+        await _db.exerciseDAO.insertExercise(ExercisesCompanion(
             name: Value(exerciseResponse.name!),
             id: Value(exerciseResponse.id!),
             description: Value(exerciseResponse.description)));
@@ -69,7 +69,7 @@ class ExercisesRepository {
               ExerciseDto(
                   name: exercise.name, description: exercise.description))
           .then((exerciseResponse) async {
-        db.exerciseDAO.updateById(
+        _db.exerciseDAO.updateById(
             exerciseResponse.id!,
             ExercisesCompanion(
                 name: Value(exerciseResponse.name!),
@@ -85,7 +85,7 @@ class ExercisesRepository {
   Future<void> deleteExercise(int id) async {
     try {
       await exerciseClient.deleteExercise(id).then((_) async {
-        await db.exerciseDAO.deleteById(id);
+        await _db.exerciseDAO.deleteById(id);
       });
     } catch (e) {
       print(e.toString());

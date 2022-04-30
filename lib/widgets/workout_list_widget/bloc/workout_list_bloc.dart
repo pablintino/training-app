@@ -39,7 +39,7 @@ class WorkoutListBloc extends Bloc<WorkoutListEvent, WorkoutListState> {
         : 0;
 
     await _workoutRepository
-        .getWorkoutsByPage(pageNumber, state.searchFilter)
+        .getWorkoutsByPage(pageNumber, nameFilter: state.searchFilter)
         .then((retrievedWorkouts) {
       List<Workout> workouts = !event.reload
           ? (List.from(state.workouts)
@@ -90,7 +90,7 @@ class WorkoutListBloc extends Bloc<WorkoutListEvent, WorkoutListState> {
     emit(WorkoutListLoadingState.fromState(state));
 
     await _workoutRepository
-        .getWorkoutsByPage(0, filter)
+        .getWorkoutsByPage(0, nameFilter: filter)
         .then((retrievedWorkouts) {
       // Do not add old exercises from state.exercises
       emit(WorkoutListLoadingState.fromState(state,

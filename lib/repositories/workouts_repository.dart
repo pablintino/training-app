@@ -1,130 +1,65 @@
-import 'dart:convert';
-
 import 'package:get_it/get_it.dart';
-import 'package:http/http.dart' as http;
-import 'package:training_app/app_config.dart';
+import 'package:training_app/database/database.dart';
 import 'package:training_app/models/workout_models.dart';
+import 'package:training_app/networking/clients.dart';
 import 'package:training_app/networking/network_sync_isolate.dart';
 
 class WorkoutRepository {
   static const int PAGE_SIZE = 10;
-  static const String _WORKOUT_BASE_PATH = '/api/v1/workouts';
-  final _appConfig = GetIt.instance<AppConfig>();
-  final _networkIsolate = GetIt.instance<NetworkSyncIsolate>();
 
-  Future<List<Workout>> getWorkoutsByPage(int page, String? nameFilter) async {
-    await _networkIsolate
-        .launchWorkoutsSync()
-        .then((value) => print('ok'))
-        .catchError((_) => print('err!'));
+  late NetworkSyncIsolate _networkIsolate;
+  late WorkoutClient _workoutClient;
+  late AppDatabase _db;
 
-    final String searchFilter =
-        nameFilter != null ? '&filters=cti_name=$nameFilter' : '';
-    return _commonWorkoutRetrieval(Uri.parse(
-        '${_appConfig.apiUrl}$_WORKOUT_BASE_PATH?page=$page&size=$PAGE_SIZE&sort=name$searchFilter'));
+  WorkoutRepository(
+      {AppDatabase? db,
+      WorkoutClient? workoutClient,
+      NetworkSyncIsolate? networkSyncIsolate}) {
+    this._db = db ?? GetIt.instance<AppDatabase>();
+    this._networkIsolate =
+        networkSyncIsolate ?? GetIt.instance<NetworkSyncIsolate>();
+    this._workoutClient = workoutClient ?? GetIt.instance<WorkoutClient>();
   }
 
-  Future<Workout?> getByName(String name) async {
-    final workouts = await _commonWorkoutRetrieval(Uri.parse(
-        '${_appConfig.apiUrl}$_WORKOUT_BASE_PATH?filters=eq_name=$name'));
-    return workouts.isNotEmpty ? workouts[0] : null;
+  Future<List<Workout>> getWorkoutsByPage(int page,
+      {String? nameFilter}) async {
+    return await (nameFilter != null
+            ? _db.workoutDAO
+                .getPagedWorkoutsContainsName(PAGE_SIZE, page, nameFilter)
+            : _db.workoutDAO.getPagedWorkouts(PAGE_SIZE, page))
+        .then((workouts) =>
+            workouts.map((model) => Workout.fromModel(model)).toList());
   }
 
-  Future<List<Workout>> _commonWorkoutRetrieval(Uri uri) async {
-    try {
-      final response = await http.get(uri);
-      if (response.statusCode == 200) {
-        Iterable workoutList = json.decode(response.body)['data'];
-        return List<Workout>.from(
-            workoutList.map((model) => Workout.fromJson(model)));
-      }
-      throw 'Unexpected response retrieving workouts';
-    } catch (e) {
-      print(e.toString());
-      throw e;
-    }
+  Future<Workout?> getByName(String name) async {}
+
+  Future<WorkoutSession?> getWorkoutSession(int id, {bool fat = false}) async {
+    return await (fat
+        ? _db.workoutDAO.getJoinedSessionById(id).then((joinedWorkoutSession) =>
+            joinedWorkoutSession != null
+                ? WorkoutSession.fromJoinedModel(joinedWorkoutSession)
+                : null)
+        : _db.workoutDAO.getWorkoutSessionById(id).then((session) =>
+            session != null ? WorkoutSession.fromModel(session) : null));
   }
 
-  Future<WorkoutSession> getWorkoutSession(int id, {bool fat = false}) async {
-    try {
-      final response = await http.get(Uri.parse(
-          '${_appConfig.apiUrl}$_WORKOUT_BASE_PATH/sessions/$id?fat=$fat'));
-      if (response.statusCode == 200) {
-        return WorkoutSession.fromJson(json.decode(response.body));
-      }
-      throw 'Unexpected response retrieving workout session $id';
-    } catch (e) {
-      print(e.toString());
-      throw e;
-    }
-  }
-
-  Future<Workout> getWorkout(int id, {bool fat = false}) async {
-    try {
-      final response = await http.get(
-          Uri.parse('${_appConfig.apiUrl}$_WORKOUT_BASE_PATH/$id?fat=$fat'));
-      if (response.statusCode == 200) {
-        return Workout.fromJson(json.decode(response.body));
-      }
-      throw 'Unexpected response retrieving workout $id';
-    } catch (e) {
-      print(e.toString());
-      throw e;
-    }
+  Future<Workout?> getWorkout(int id, {bool fat = false}) async {
+    return await (fat
+        ? _db.workoutDAO.getJoinedWorkoutById(id).then((joinedWorkout) =>
+            joinedWorkout != null
+                ? Workout.fromJoinedModel(joinedWorkout)
+                : null)
+        : _db.workoutDAO.getWorkoutById(id).then(
+            (workout) => workout != null ? Workout.fromModel(workout) : null));
   }
 
   Future<Workout> createWorkout(Workout workout) async {
-    try {
-      final response = await http.post(
-        Uri.parse('${_appConfig.apiUrl}$_WORKOUT_BASE_PATH'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(workout),
-      );
-
-      if (response.statusCode == 200) {
-        return Workout.fromJson(json.decode(response.body));
-      }
-      throw 'Unexpected response creating new workout';
-    } catch (e) {
-      print(e.toString());
-      throw e;
-    }
+    return workout;
   }
 
   Future<Workout> updateWorkout(Workout workout) async {
-    try {
-      final response = await http.put(
-        Uri.parse('${_appConfig.apiUrl}$_WORKOUT_BASE_PATH/${workout.id}'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(workout),
-      );
-
-      if (response.statusCode == 200) {
-        return Workout.fromJson(json.decode(response.body));
-      }
-      throw 'Unexpected response creating updating workout ${workout.id}';
-    } catch (e) {
-      print(e.toString());
-      throw e;
-    }
+    return workout;
   }
 
-  Future<void> deleteWorkout(int id) async {
-    try {
-      final response = await http.delete(
-        Uri.parse('${_appConfig.apiUrl}/$_WORKOUT_BASE_PATH/$id'),
-      );
-
-      if (response.statusCode != 200) {
-        throw 'Unexpected response deleting workout';
-      }
-    } catch (e) {
-      print(e.toString());
-      throw e;
-    }
-  }
+  Future<void> deleteWorkout(int id) async {}
 }
