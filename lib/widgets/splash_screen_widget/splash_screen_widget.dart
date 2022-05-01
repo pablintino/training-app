@@ -1,9 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:training_app/app_routes.dart';
 import 'package:training_app/blocs/auth/auth_bloc.dart';
+import 'package:training_app/networking/network_sync_isolate.dart';
 
-class LoginScreenWidget extends StatelessWidget {
+class SplashScreenWidget extends StatelessWidget {
+  late NetworkSyncIsolate _networkSyncIsolate;
+
+  SplashScreenWidget({NetworkSyncIsolate? networkSyncIsolate}) {
+    this._networkSyncIsolate =
+        networkSyncIsolate ?? GetIt.instance<NetworkSyncIsolate>();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -11,8 +20,9 @@ class LoginScreenWidget extends StatelessWidget {
         body: BlocListener<AuthBloc, AuthState>(
           listener: (ctx, state) {
             if (state is AuthenticatedState) {
-              Navigator.of(ctx).pushNamedAndRemoveUntil(
-                  AppRoutes.HOME_SCREEN_ROUTE, (route) => false);
+              _networkSyncIsolate.launchAllEntitiesSync().then((value) =>
+                  Navigator.of(ctx).pushNamedAndRemoveUntil(
+                      AppRoutes.HOME_SCREEN_ROUTE, (route) => false));
             }
           },
           child: _buildLoginBody(),
@@ -21,9 +31,9 @@ class LoginScreenWidget extends StatelessWidget {
 
   Container _buildLoginBody() {
     return Container(
-      decoration: new BoxDecoration(
-        image: new DecorationImage(
-          image: new AssetImage("assets/images/login-background.jpg"),
+      decoration: const BoxDecoration(
+        image: const DecorationImage(
+          image: const AssetImage("assets/images/login-background.jpg"),
           fit: BoxFit.cover,
         ),
       ),
@@ -38,9 +48,7 @@ class LoginScreenWidget extends StatelessWidget {
               flex: 2,
               child: BlocBuilder<AuthBloc, AuthState>(
                 builder: (ctx, state) => Column(
-                  children: [
-                    _buildLoginButton(ctx, state is AuthenticatingState)
-                  ],
+                  children: [_buildLoginButton(ctx, state)],
                 ),
               )),
         ],
@@ -48,13 +56,13 @@ class LoginScreenWidget extends StatelessWidget {
     );
   }
 
-  Container _buildLoginButton(BuildContext ctx, bool isLoading) {
+  Container _buildLoginButton(BuildContext ctx, AuthState state) {
     return Container(
       height: 80,
       width: double.infinity,
       padding: const EdgeInsets.only(top: 25, left: 24, right: 24),
       child: ElevatedButton(
-        onPressed: !isLoading
+        onPressed: state is UnauthenticatedState
             ? () => BlocProvider.of<AuthBloc>(ctx).add(LaunchLoginAuthEvent())
             : null,
         style: ButtonStyle(
@@ -68,7 +76,7 @@ class LoginScreenWidget extends StatelessWidget {
           }),
         ),
         child: Text(
-          !isLoading ? 'Login' : 'Loading...',
+          state is UnauthenticatedState ? 'Login' : 'Loading...',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w700,
