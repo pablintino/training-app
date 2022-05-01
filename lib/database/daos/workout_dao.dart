@@ -182,7 +182,8 @@ class WorkoutDAO extends DatabaseAccessor<AppDatabase> with _$WorkoutDAOMixin {
           row.readTableOrNull(workoutItems),
           itemsMap,
           row.readTableOrNull(workoutSets),
-          row.readTableOrNull(exercises));
+          row.readTableOrNull(exercises),
+          workoutsMap[workout.id]);
     }
     return workoutsMap.values.toList();
   }
@@ -201,7 +202,8 @@ class WorkoutDAO extends DatabaseAccessor<AppDatabase> with _$WorkoutDAOMixin {
           row.readTableOrNull(workoutItems),
           itemsMap,
           row.readTableOrNull(workoutSets),
-          row.readTableOrNull(exercises));
+          row.readTableOrNull(exercises),
+          null);
     }
     return sessionsMap.values.toList();
   }
@@ -214,13 +216,17 @@ class WorkoutDAO extends DatabaseAccessor<AppDatabase> with _$WorkoutDAOMixin {
       item,
       Map<int, JoinedWorkoutItemM> itemsMap,
       set,
-      exercise) {
+      exercise,
+      JoinedWorkoutM? parentWorkout) {
     if (session != null) {
       if (!sessionsMap.containsKey(session.id)) {
         final joinedSession = JoinedWorkoutSessionM(
             session: session,
             phases: List<JoinedWorkoutPhaseM>.empty(growable: true));
         sessionsMap[session.id] = joinedSession;
+        if (parentWorkout != null) {
+          parentWorkout.sessions.add(joinedSession);
+        }
       }
 
       if (phase != null) {

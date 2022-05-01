@@ -21,6 +21,10 @@ class WorkoutRepository {
     this._workoutClient = workoutClient ?? GetIt.instance<WorkoutClient>();
   }
 
+  Future<void> sync() {
+    return _networkIsolate.launchWorkoutsSync();
+  }
+
   Future<List<Workout>> getWorkoutsByPage(int page,
       {String? nameFilter}) async {
     return await (nameFilter != null
@@ -30,8 +34,6 @@ class WorkoutRepository {
         .then((workouts) =>
             workouts.map((model) => Workout.fromModel(model)).toList());
   }
-
-  Future<Workout?> getByName(String name) async {}
 
   Future<WorkoutSession?> getWorkoutSession(int id, {bool fat = false}) async {
     return await (fat

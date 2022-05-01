@@ -38,6 +38,11 @@ class WorkoutListBloc extends Bloc<WorkoutListEvent, WorkoutListState> {
         ? (state.workouts.length / WorkoutRepository.PAGE_SIZE).truncate()
         : 0;
 
+    // Force DB sync
+    if (event.reload) {
+      await _workoutRepository.sync();
+    }
+
     await _workoutRepository
         .getWorkoutsByPage(pageNumber, nameFilter: state.searchFilter)
         .then((retrievedWorkouts) {
