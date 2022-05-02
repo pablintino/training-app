@@ -7,18 +7,17 @@ class ApiSecurityProvider {
   static const String APP_PROPERTY_REFRESH_TOKEN = "refresh_token";
   late FlutterAppAuth _appAuth;
   late FlutterSecureStorage _secureStorage;
-  final bool _canLogin;
-  final Function(TokenUpdateData)? _onTokenRefresh;
+  final bool _isMainIsolate;
+  Function(TokenUpdateData)? _onTokenRefresh;
   late AppConfig _appConfig;
   String? _accessToken;
+  String? _refreshToken;
 
-  ApiSecurityProvider(bool canLogin,
+  ApiSecurityProvider(bool isMainIsolate,
       {AppConfig? appConfig,
       FlutterAppAuth? appAuth,
-      FlutterSecureStorage? secureStorage,
-      Function(TokenUpdateData)? onTokenRefresh})
-      : _canLogin = canLogin,
-        _onTokenRefresh = onTokenRefresh {
+      FlutterSecureStorage? secureStorage})
+      : _isMainIsolate = isMainIsolate {
     this._appConfig = appConfig ?? GetIt.instance<AppConfig>();
     this._appAuth = appAuth ?? GetIt.instance<FlutterAppAuth>();
     this._secureStorage =
@@ -30,7 +29,7 @@ class ApiSecurityProvider {
       return _accessToken!;
     }
 
-    final refreshToken = await _getRefreshToken();
+    final refreshToken = await _getUpdateRefreshToken();
     final TokenResponse? response = await _appAuth.token(TokenRequest(
       _appConfig.authClientId,
       _appConfig.authCallback,
@@ -48,16 +47,26 @@ class ApiSecurityProvider {
     throw 'Login process has failed';
   }
 
-  Future<String> _getRefreshToken() async {
-    final String? storedRefreshToken =
-        await _secureStorage.read(key: APP_PROPERTY_REFRESH_TOKEN);
-    if (storedRefreshToken == null && !_canLogin) {
-      throw "Cannot perform login and no refresh-token available";
-    } else if (storedRefreshToken == null) {
-      final tokenPair = await _login();
-      return tokenPair.refreshToken!;
+  Future<String> _getUpdateRefreshToken() async {
+    if (_refreshToken != null) {
+      return _refreshToken!;
+    } else if (_isMainIsolate) {
+      // Main isolate gather token from secure storage
+      String? storedRefreshToken =
+          await _secureStorage.read(key: APP_PROPERTY_REFRESH_TOKEN);
+      if (storedRefreshToken != null) {
+        _refreshToken = storedRefreshToken;
+        return storedRefreshToken;
+      }
+    } else {
+      // Non main isolate with no refresh token set
+      throw "Cannot perform login in non main isolate and no refresh-token available";
     }
-    return storedRefreshToken;
+
+    // If this is reached a re-login is needed
+    final tokenPair = await _login();
+    _refreshToken = tokenPair.refreshToken!;
+    return _refreshToken!;
   }
 
   Future<TokenUpdateData> _login() async {
@@ -93,8 +102,15 @@ class ApiSecurityProvider {
   Future<void> externallySetTokens(
       String? accessToken, String? refreshToken) async {
     this._accessToken = _accessToken;
-    await _secureStorage.write(
-        key: APP_PROPERTY_REFRESH_TOKEN, value: refreshToken);
+    this._refreshToken = refreshToken;
+    if (_isMainIsolate) {
+      await _secureStorage.write(
+          key: APP_PROPERTY_REFRESH_TOKEN, value: refreshToken);
+    }
+  }
+
+  void setOnTokenRefresh(Function(TokenUpdateData) onTokenRefresh) {
+    this._onTokenRefresh = onTokenRefresh;
   }
 
   Future<void> logout() async {
