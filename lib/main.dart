@@ -1,11 +1,14 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_appauth/flutter_appauth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:training_app/app_config.dart';
 import 'package:training_app/app_routes.dart';
 import 'package:training_app/blocs/auth/auth_bloc.dart';
 import 'package:training_app/database/database_isolate.dart';
+import 'package:training_app/networking/api_security_provider.dart';
 import 'package:training_app/networking/clients.dart';
 import 'package:training_app/networking/network_sync_isolate.dart';
 import 'package:training_app/repositories/exercises_repository.dart';
@@ -31,7 +34,7 @@ class MyApp extends StatelessWidget {
         providers: [
           BlocProvider(
               create: (BuildContext context) =>
-                  AuthBloc()..add(InitAppAuthEvent())),
+                  AuthBloc()..add(LaunchLoginAuthEvent())),
         ],
         child: MaterialApp(
           title: 'Pablintino Training App',
@@ -63,13 +66,18 @@ Future<void> setup() async {
       .then((connection) => AppDatabase.connect(connection)));
 
   GetIt.instance.registerSingletonAsync<NetworkSyncIsolate>(
-      () async => createNetworkIsolate(driftIsolate));
+      () async => NetworkSyncIsolate.createIsolate(driftIsolate));
 
   GetIt.instance.registerSingletonWithDependencies<Dio>(() {
     var dio = Dio();
     dio.options.baseUrl = GetIt.instance<AppConfig>().apiUrl;
     return dio;
   }, dependsOn: [AppConfig]);
+
+  GetIt.instance.registerSingletonWithDependencies<ApiSecurityProvider>(
+      () => ApiSecurityProvider(true,
+          appAuth: FlutterAppAuth(), secureStorage: FlutterSecureStorage()),
+      dependsOn: [AppConfig]);
 
   GetIt.instance.registerSingletonWithDependencies<ExerciseClient>(
       () => ExerciseClient(),
@@ -89,7 +97,7 @@ Future<void> setup() async {
 
   GetIt.instance.registerSingletonWithDependencies<UserAuthRepository>(
       () => UserAuthRepository(),
-      dependsOn: [AppConfig]);
+      dependsOn: [AppConfig, ApiSecurityProvider]);
 
   await GetIt.instance.allReady();
 }
