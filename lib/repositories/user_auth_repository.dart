@@ -1,77 +1,34 @@
 import 'dart:convert';
 
-import 'package:flutter_appauth/flutter_appauth.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:get_it/get_it.dart';
 import 'package:training_app/app_config.dart';
 import 'package:training_app/models/auth_models.dart';
 import 'package:http/http.dart' as http;
+import 'package:training_app/networking/api_security_provider.dart';
 
 class UserAuthRepository {
-  final FlutterAppAuth _appAuth = FlutterAppAuth();
-  final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
-  final _appConfig = AppConfigLoader().instance;
+  late AppConfig _appConfig;
+  late ApiSecurityProvider _apiSecurityProvider;
   String? _userProfileUrl;
-  String? _accessToken;
 
-  String? get token => _accessToken;
-
-  Future<UserInfo> launchLogin() async {
-    final AuthorizationTokenResponse? response =
-        await _appAuth.authorizeAndExchangeCode(
-      AuthorizationTokenRequest(
-          _appConfig.authClientId, _appConfig.authCallback,
-          issuer: _appConfig.authEndpoint,
-          scopes: <String>['offline_access', 'openid', 'profile', 'email'],
-          allowInsecureConnections: true,
-          promptValues: ['login'],
-          preferEphemeralSession: true),
-    );
-    if (response != null && response.accessToken != null) {
-      await _secureStorage.write(
-          key: 'refresh_token', value: response.refreshToken);
-      _accessToken = response.accessToken!;
-      return await getUserDetails();
-    }
-    throw 'Login process has failed';
-  }
-
-  Future<UserInfo> performInitialLogin() async {
-    final String? storedRefreshToken =
-        await _secureStorage.read(key: 'refresh_token');
-    if (storedRefreshToken == null) {
-      return launchLogin();
-    }
-
-    final TokenResponse? response = await _appAuth.token(TokenRequest(
-      _appConfig.authClientId,
-      _appConfig.authCallback,
-      issuer: _appConfig.authEndpoint,
-      refreshToken: storedRefreshToken,
-    ));
-    if (response != null && response.accessToken != null) {
-      _accessToken = response.accessToken!;
-      return await getUserDetails();
-    }
-    throw 'Login process has failed';
-  }
-
-  Future<void> logout() async {
-    try {
-      await _secureStorage.delete(key: 'refresh_token');
-    } finally {
-      _accessToken = null;
-    }
+  UserAuthRepository(
+      {ApiSecurityProvider? apiSecurityProvider, AppConfig? appConfig}) {
+    this._apiSecurityProvider =
+        apiSecurityProvider ?? GetIt.instance<ApiSecurityProvider>();
+    this._appConfig = appConfig ?? GetIt.instance<AppConfig>();
   }
 
   Future<UserInfo> getUserDetails() async {
-    final String? userProfileEndpoint = await getUserProfileUrl();
+    final String? userProfileEndpoint = await _getUserProfileUrl();
     if (userProfileEndpoint == null) {
       throw 'User profile endpoint cannot be determined';
     }
 
+    final accessToken = await _apiSecurityProvider.getAccessToken();
+
     final http.Response response = await http.get(
       Uri.parse(userProfileEndpoint),
-      headers: <String, String>{'Authorization': 'Bearer $_accessToken'},
+      headers: <String, String>{'Authorization': 'Bearer $accessToken'},
     );
 
     if (response.statusCode == 200) {
@@ -81,7 +38,7 @@ class UserAuthRepository {
     }
   }
 
-  Future<String?> getUserProfileUrl() async {
+  Future<String?> _getUserProfileUrl() async {
     if (_userProfileUrl != null) {
       return _userProfileUrl;
     }

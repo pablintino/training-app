@@ -165,11 +165,11 @@ class _PhaseContainerWidget extends StatelessWidget {
     }
     if (workoutItem.workTimeSecs != null) {
       itemDetails =
-          itemDetails + '\nTime work: ${workoutItem.workTimeSecs} (secs)';
+          itemDetails + '\nWork time: ${workoutItem.workTimeSecs} (secs)';
     }
     if (workoutItem.restTimeSecs != null) {
       itemDetails =
-          itemDetails + '\nTime rest: ${workoutItem.restTimeSecs} (secs)';
+          itemDetails + '\nRest time: ${workoutItem.restTimeSecs} (secs)';
     }
     if (workoutItem.workModality != null &&
         workoutItem.workModality!.isNotEmpty) {

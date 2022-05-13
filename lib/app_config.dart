@@ -21,28 +21,14 @@ class AppConfig {
 }
 
 class AppConfigLoader {
-  static final AppConfigLoader _singleton = AppConfigLoader._internal();
-
-  factory AppConfigLoader() {
-    return _singleton;
-  }
-
-  AppConfigLoader._internal();
-
-  AppConfig? _config;
-
-  AppConfig get instance {
-    if (_config == null) {
-      throw 'Config loader not initialized';
-    }
-    return _config!;
-  }
-
-  Future<void> init() async {
-    // load the json file
-    final configContents = await rootBundle.loadString(
+  static Future<String> getPath() async {
+    return await rootBundle.loadString(
       'assets/config/dev.json',
     );
-    _config = AppConfig.fromJson(jsonDecode(configContents));
+  }
+
+  static Future<AppConfig> create({String? path}) async {
+    // load the json file
+    return AppConfig.fromJson(jsonDecode(path ?? await getPath()));
   }
 }

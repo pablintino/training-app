@@ -1,56 +1,60 @@
-import 'dart:convert';
-
-import 'package:http/http.dart' as http;
-import 'package:training_app/app_config.dart';
+import 'package:drift/drift.dart';
+import 'package:get_it/get_it.dart';
+import 'package:training_app/database/database.dart';
 import 'package:training_app/models/exercises_models.dart';
+import 'package:training_app/networking/clients.dart';
+import 'package:training_app/networking/entities/exercise_dto.dart';
+import 'package:training_app/networking/network_sync_isolate.dart';
 
 class ExercisesRepository {
   static const int PAGE_SIZE = 10;
-  final _appConfig = AppConfigLoader().instance;
+
+  late AppDatabase _db;
+  late NetworkSyncIsolate networkSyncIsolate;
+  late ExerciseClient exerciseClient;
+
+  ExercisesRepository(
+      {AppDatabase? db,
+      ExerciseClient? exerciseClient,
+      NetworkSyncIsolate? networkSyncIsolate}) {
+    this._db = db ?? GetIt.instance<AppDatabase>();
+    this.networkSyncIsolate =
+        networkSyncIsolate ?? GetIt.instance<NetworkSyncIsolate>();
+    this.exerciseClient = exerciseClient ?? GetIt.instance<ExerciseClient>();
+  }
+
+  Future<void> sync() {
+    return networkSyncIsolate.launchExercisesSync();
+  }
 
   Future<List<Exercise>> getExercisesByPage(
       int page, String? nameFilter) async {
-    final String searchFilter =
-        nameFilter != null ? '&filters=cti_name=$nameFilter' : '';
-    return _commonExercisesRetrieval(Uri.parse(
-        '${_appConfig.apiUrl}/api/v1/exercises?page=$page&size=$PAGE_SIZE&sort=name$searchFilter'));
+    return await (nameFilter != null
+            ? _db.exerciseDAO
+                .getPagedExercisesContainsName(PAGE_SIZE, page, nameFilter)
+            : _db.exerciseDAO.getPagedExercises(PAGE_SIZE, page))
+        .then((exercises) =>
+            exercises.map((e) => Exercise.fromModel(e)).toList());
   }
 
   Future<Exercise?> getByName(String name) async {
-    final exercises = await _commonExercisesRetrieval(Uri.parse(
-        '${_appConfig.apiUrl}/api/v1/exercises?filters=eq_name=$name'));
-    return exercises.isNotEmpty ? exercises[0] : null;
-  }
-
-  Future<List<Exercise>> _commonExercisesRetrieval(Uri uri) async {
-    try {
-      final response = await http.get(uri);
-      if (response.statusCode == 200) {
-        Iterable exercisesList = json.decode(response.body)['data'];
-        return List<Exercise>.from(
-            exercisesList.map((model) => Exercise.fromJson(model)));
-      }
-      throw 'Unexpected response retrieving exercises';
-    } catch (e) {
-      print(e.toString());
-      throw e;
-    }
+    return await _db.exerciseDAO
+        .getByName(name)
+        .then((value) => value != null ? Exercise.fromModel(value) : null);
   }
 
   Future<Exercise> createExercise(Exercise exercise) async {
     try {
-      final response = await http.post(
-        Uri.parse('${_appConfig.apiUrl}/api/v1/exercises'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(exercise),
-      );
-
-      if (response.statusCode == 200) {
-        return Exercise.fromJson(json.decode(response.body));
-      }
-      throw 'Unexpected response creating new exercise';
+      return await exerciseClient
+          .createExercise(ExerciseDto(
+              name: exercise.name, description: exercise.description))
+          .then((exerciseResponse) async {
+        await _db.exerciseDAO.insertExercise(ExercisesCompanion(
+            name: Value(exerciseResponse.name!),
+            id: Value(exerciseResponse.id!),
+            description: Value(exerciseResponse.description)));
+        return exerciseResponse;
+      }).then((exerciseResponse) => Exercise.fromDto(exerciseResponse));
     } catch (e) {
       print(e.toString());
       throw e;
@@ -59,18 +63,19 @@ class ExercisesRepository {
 
   Future<Exercise> updateExercise(Exercise exercise) async {
     try {
-      final response = await http.put(
-        Uri.parse('${_appConfig.apiUrl}/api/v1/exercises/${exercise.id}'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(exercise),
-      );
-
-      if (response.statusCode == 200) {
-        return Exercise.fromJson(json.decode(response.body));
-      }
-      throw 'Unexpected response creating updating exercise ${exercise.id}';
+      return await exerciseClient
+          .updateExercise(
+              exercise.id!,
+              ExerciseDto(
+                  name: exercise.name, description: exercise.description))
+          .then((exerciseResponse) async {
+        _db.exerciseDAO.updateById(
+            exerciseResponse.id!,
+            ExercisesCompanion(
+                name: Value(exerciseResponse.name!),
+                description: Value(exerciseResponse.description)));
+        return exerciseResponse;
+      }).then((exerciseResponse) => Exercise.fromDto(exerciseResponse));
     } catch (e) {
       print(e.toString());
       throw e;
@@ -79,13 +84,9 @@ class ExercisesRepository {
 
   Future<void> deleteExercise(int id) async {
     try {
-      final response = await http.delete(
-        Uri.parse('${_appConfig.apiUrl}/api/v1/exercises/$id'),
-      );
-
-      if (response.statusCode != 200) {
-        throw 'Unexpected response deleting exercise';
-      }
+      await exerciseClient.deleteExercise(id).then((_) async {
+        await _db.exerciseDAO.deleteById(id);
+      });
     } catch (e) {
       print(e.toString());
       throw e;

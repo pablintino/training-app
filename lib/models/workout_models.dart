@@ -1,4 +1,6 @@
 import 'package:equatable/equatable.dart';
+import 'package:training_app/database/database.dart';
+import 'package:training_app/database/join_entities.dart';
 import 'package:training_app/models/exercises_models.dart';
 
 class Workout extends Equatable {
@@ -9,19 +11,19 @@ class Workout extends Equatable {
 
   Workout({this.id, this.name, this.description, this.sessions = const []});
 
-  Workout.fromJson(Map<String, dynamic> json)
-      : id = json['id'],
-        name = json['name'],
-        description = json['description'],
-        sessions = List<WorkoutSession>.from(
-            (json['sessions'] ?? []).map((i) => WorkoutSession.fromJson(i)));
+  Workout.fromModel(WorkoutM workout)
+      : id = workout.id,
+        name = workout.name,
+        description = workout.description,
+        sessions = [];
 
-  Map toJson() => {
-        'id': id,
-        'name': name,
-        'description': description,
-        // TODO SESSIONS
-      };
+  Workout.fromJoinedModel(JoinedWorkoutM joinedModel)
+      : id = joinedModel.workout.id,
+        name = joinedModel.workout.name,
+        description = joinedModel.workout.description,
+        sessions = joinedModel.sessions
+            .map((session) => WorkoutSession.fromJoinedModel(session))
+            .toList();
 
   @override
   List<Object?> get props => [name, description, id, sessions];
@@ -35,19 +37,19 @@ class WorkoutSession extends Equatable {
 
   WorkoutSession({this.id, this.week, this.weekDay, this.phases = const []});
 
-  WorkoutSession.fromJson(Map<String, dynamic> json)
-      : id = json['id'],
-        week = json['week'],
-        weekDay = json['weekDay'],
-        phases = List<WorkoutPhase>.from(
-            (json['phases'] ?? []).map((i) => WorkoutPhase.fromJson(i)));
+  WorkoutSession.fromJoinedModel(JoinedWorkoutSessionM joinedModel)
+      : id = joinedModel.session.id,
+        week = joinedModel.session.week,
+        weekDay = joinedModel.session.weekDay,
+        phases = joinedModel.phases
+            .map((phase) => WorkoutPhase.fromJoinedModel(phase))
+            .toList();
 
-  Map toJson() => {
-        'id': id,
-        'weekDay': weekDay,
-        'week': week,
-        // TODO PHASES
-      };
+  WorkoutSession.fromModel(WorkoutSessionM session)
+      : id = session.id,
+        week = session.week,
+        weekDay = session.weekDay,
+        phases = [];
 
   @override
   List<Object?> get props => [weekDay, week, id, phases];
@@ -61,19 +63,13 @@ class WorkoutPhase extends Equatable {
 
   WorkoutPhase({this.id, this.name, this.sequence, this.items = const []});
 
-  WorkoutPhase.fromJson(Map<String, dynamic> json)
-      : id = json['id'],
-        sequence = json['sequence'],
-        name = json['name'],
-        items = List<WorkoutItem>.from(
-            (json['items'] ?? []).map((i) => WorkoutItem.fromJson(i)));
-
-  Map toJson() => {
-        'id': id,
-        'sequence': sequence,
-        'name': name,
-        // TODO ITEMS
-      };
+  WorkoutPhase.fromJoinedModel(JoinedWorkoutPhaseM joinedModel)
+      : id = joinedModel.phase.id,
+        name = joinedModel.phase.name,
+        sequence = joinedModel.phase.sequence,
+        items = joinedModel.items
+            .map((item) => WorkoutItem.fromJoinedModel(item))
+            .toList();
 
   @override
   List<Object?> get props => [name, sequence, id, items];
@@ -101,29 +97,18 @@ class WorkoutItem extends Equatable {
       this.sequence,
       this.sets = const []});
 
-  WorkoutItem.fromJson(Map<String, dynamic> json)
-      : id = json['id'],
-        sequence = json['sequence'],
-        name = json['name'],
-        rounds = json['rounds'],
-        restTimeSecs = json['restTimeSecs'],
-        timeCapSecs = json['timeCapSecs'],
-        workTimeSecs = json['workTimeSecs'],
-        workModality = json['workModality'],
-        sets = List<WorkoutSet>.from(
-            (json['sets'] ?? []).map((i) => WorkoutSet.fromJson(i)));
-
-  Map toJson() => {
-        'id': id,
-        'sequence': sequence,
-        'name': name,
-        'rounds': rounds,
-        'restTimeSecs': restTimeSecs,
-        'timeCapSecs': timeCapSecs,
-        'workTimeSecs': workTimeSecs,
-        'workModality': workModality,
-        // TODO SETS
-      };
+  WorkoutItem.fromJoinedModel(JoinedWorkoutItemM joinedModel)
+      : id = joinedModel.item.id,
+        name = joinedModel.item.name,
+        sequence = joinedModel.item.sequence,
+        rounds = joinedModel.item.rounds,
+        workTimeSecs = joinedModel.item.workTimeSecs,
+        workModality = joinedModel.item.workModality,
+        restTimeSecs = joinedModel.item.restTimeSecs,
+        timeCapSecs = joinedModel.item.timeCapSecs,
+        sets = joinedModel.sets
+            .map((set) => WorkoutSet.fromJoinedModel(set))
+            .toList();
 
   @override
   List<Object?> get props => [
@@ -156,30 +141,18 @@ class WorkoutSet extends Equatable {
       this.setExecutions,
       this.sequence,
       this.id,
-      this.exercise,
-      this.exerciseId});
+      this.exerciseId,
+      this.exercise});
 
-  WorkoutSet.fromJson(Map<String, dynamic> json)
-      : id = json['id'],
-        sequence = json['sequence'],
-        reps = json['reps'],
-        distance = json['distance'],
-        weight = json['weight'],
-        exerciseId = json['exerciseId']?['id'] ?? json['exercise']?['id'],
-        exercise = json.containsKey('exercise')
-            ? Exercise.fromJson(json['exercise'])
-            : null,
-        setExecutions = json['setExecutions'];
-
-  Map toJson() => {
-        'id': id,
-        'sequence': sequence,
-        'distance': distance,
-        'weight': weight,
-        'setExecutions': setExecutions,
-        'exerciseId': exerciseId,
-        'reps': reps,
-      };
+  WorkoutSet.fromJoinedModel(JoinedWorkoutSetM joinedModel)
+      : id = joinedModel.set.id,
+        sequence = joinedModel.set.sequence,
+        reps = joinedModel.set.reps,
+        weight = joinedModel.set.weight,
+        distance = joinedModel.set.distance,
+        setExecutions = joinedModel.set.setExecutions,
+        exerciseId = joinedModel.exercise.id,
+        exercise = Exercise.fromModel(joinedModel.exercise);
 
   @override
   List<Object?> get props => [
@@ -190,5 +163,6 @@ class WorkoutSet extends Equatable {
         weight,
         exerciseId,
         exercise,
+        setExecutions
       ];
 }

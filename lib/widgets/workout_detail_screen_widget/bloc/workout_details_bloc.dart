@@ -27,7 +27,8 @@ class WorkoutDetailsBloc
     await _workoutRepository
         .getWorkout(event.workoutId, fat: true)
         .then((workout) {
-      emit(WorkoutLoadedState(workout));
+      //TODO Check when workout is null
+      emit(WorkoutLoadedState(workout!));
     }).catchError((err) {
       print("errrrrorrr");
     });
