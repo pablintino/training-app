@@ -67,7 +67,7 @@ class _WorkoutListWidgetState extends State<WorkoutListWidget> {
     final bloc = BlocProvider.of<WorkoutListBloc>(context);
     if (state is WorkoutListItemModifiedState &&
         state.type == ModificationType.creation) {
-      // Remember: This add works online once per build call
+      // Remember: This add works only once per build call
       WidgetsBinding.instance!.addPostFrameCallback((_) =>
           _scrollController.scrollToIndex(state.modifiedIndex,
               duration: Duration(seconds: 1),

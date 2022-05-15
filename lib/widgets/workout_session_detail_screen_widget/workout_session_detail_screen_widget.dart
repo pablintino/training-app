@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:training_app/models/workout_models.dart';
+import 'package:training_app/utils/known_constants.dart';
 import 'package:training_app/widgets/custom_height_rect_clipper.dart';
 import 'package:training_app/widgets/workout_session_detail_screen_widget/bloc/workout_session_details_bloc.dart';
 import 'package:training_app/widgets/workout_session_detail_screen_widget/workout_phases_list_widget.dart';
@@ -79,7 +80,7 @@ class WorkoutSessionScreenWidget extends StatelessWidget {
       List<String> tabs,
       bool innerBoxIsScrolled) {
     final headerText = state is SessionLoadedState
-        ? 'Session: ${_getDayName(state.workoutSession.weekDay)} ${state.workoutSession.week ?? ''}'
+        ? 'Session: ${getDayNameFromInt(state.workoutSession.weekDay)} ${state.workoutSession.week ?? ''}'
         : null;
     return [
       SliverAppBar(
@@ -116,25 +117,7 @@ class WorkoutSessionScreenWidget extends StatelessWidget {
     ];
   }
 
-  static String _getDayName(int? day) {
-    switch (day) {
-      case 0:
-        return 'Monday';
-      case 1:
-        return 'Tuesday';
-      case 2:
-        return 'Wednesday';
-      case 3:
-        return 'Thursday';
-      case 4:
-        return 'Friday';
-      case 5:
-        return 'Saturday';
-      case 6:
-        return 'Sunday';
-    }
-    return '';
-  }
+
 }
 
 class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {

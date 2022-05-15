@@ -71,19 +71,9 @@ class _PhaseContainerWidget extends StatelessWidget {
   }
 
   Widget _buildItemList(BuildContext context, List<WorkoutItem> workoutItems) {
-    bool editMode = false;
-    return editMode
-        ? ReorderableListView.builder(
-            onReorder: (int oldIndex, int newIndex) {},
-            scrollDirection: Axis.vertical,
-            shrinkWrap: true,
-            itemBuilder: (BuildContext context, int index) =>
-                _buildItem(context, workoutItems[index]),
-            itemCount: workoutItems.length,
-          )
-        : Column(
-            children: workoutItems.map((e) => _buildItem(context, e)).toList(),
-          );
+    return Column(
+      children: workoutItems.map((e) => _buildItem(context, e)).toList(),
+    );
   }
 
   Widget _buildItem(BuildContext context, WorkoutItem workoutItem) {
@@ -91,38 +81,22 @@ class _PhaseContainerWidget extends StatelessWidget {
       key: Key('${workoutItem.id!}'),
       padding: EdgeInsets.symmetric(vertical: 0),
       child: Card(
-        //shape: RoundedRectangleBorder(
-        //  borderRadius: BorderRadius.circular(5),
-        //side: BorderSide(
-        //color: Colors.black,
-        //),
-        //),
         elevation: 2,
-        //shadowColor: Colors.red,
         child: Column(
           children: [
             Container(
-              //height: 40,
               child: ListTileTheme(
                 tileColor: Theme.of(context).primaryColor.withOpacity(0.3),
                 child: ListTile(
-                  //leading: const Icon(Icons.flight_land),
                   title: Text(
                     workoutItem.name ?? 'No name',
                     style: TextStyle(
                       fontSize: 15,
-                      //COLOR DEL TEXTO TITULO
-                      //color: Colors.blueAccent,
                     ),
                   ),
-                  //subtitle: Text(
-                  //  'Sub Title',
-                  //),
-                  //trailing: const Icon(Icons.drag_indicator),
                 ),
               ),
             ),
-            //Divider(),
             _buildItemDetails(context, workoutItem)
           ],
         ),
@@ -192,8 +166,8 @@ class _PhaseContainerWidget extends StatelessWidget {
     sortedSets.sort((a, b) => ((a.sequence != null && b.sequence != null)
         ? (a.sequence! - b.sequence!)
         : 0));
-    int rows = 0;
-    int index = 0;
+    var rows = 0;
+    var index = 0;
     while (index < sortedSets.length) {
       int lastEquals = _getLastEqualExerciseIndex(sortedSets, index);
       final exerciseExecutionsDetails = [
@@ -207,9 +181,8 @@ class _PhaseContainerWidget extends StatelessWidget {
       //Update index
       if (lastEquals + 1 == index) {
         break;
-      } else {
-        index = lastEquals + 1;
       }
+      index = lastEquals + 1;
       rows++;
     }
     return exercisesWidgets;

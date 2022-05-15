@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 
 class TwoLettersIcon extends StatelessWidget {
-  TwoLettersIcon(this.name);
+  TwoLettersIcon(this.name, {this.factor = 1.0});
 
   /// The text that will be used for the icon. It is truncated to 2 characters.
   final String name;
+  final double factor;
 
   String getName() {
-    if (name != null && name.length != 0) {
+    if (name.length != 0) {
       if (name.length > 2) {
         return name.substring(0, 2).toUpperCase();
       } else
@@ -62,16 +63,18 @@ class TwoLettersIcon extends StatelessWidget {
     return new Container(
         decoration: new BoxDecoration(
           color: getColorByName(),
-          borderRadius: new BorderRadius.circular(55.0),
+          borderRadius: new BorderRadius.circular(55.0 * factor),
         ),
-        padding: new EdgeInsets.all(4.0),
-        height: 55.0,
-        width: 55.0,
+        padding: new EdgeInsets.all(4.0 * factor),
+        height: 55.0 * factor,
+        width: 55.0 * factor,
         child: Center(
           child: Text(
             getName(),
             style: TextStyle(
-                fontWeight: FontWeight.w400, color: Colors.white, fontSize: 22),
+                fontWeight: FontWeight.w400,
+                color: Colors.white,
+                fontSize: 22 * factor),
           ),
         ));
   }

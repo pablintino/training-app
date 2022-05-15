@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:training_app/app_routes.dart';
 import 'package:training_app/models/workout_models.dart';
+import 'package:training_app/utils/known_constants.dart';
 import 'package:training_app/widgets/two_letters_icon.dart';
 import 'package:training_app/widgets/workout_detail_screen_widget/bloc/workout_details_bloc.dart';
 import 'package:training_app/widgets/workout_session_detail_screen_widget/workout_session_detail_screen_widget.dart';
@@ -47,23 +48,12 @@ class WorkoutDetailsScreenWidget extends StatelessWidget {
       floating: true,
       pinned: true,
       flexibleSpace: FlexibleSpaceBar(
-        //titlePadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
         background: Image.network(
           'https://source.unsplash.com/random?monochromatic+dark',
           fit: BoxFit.cover,
         ),
         title: Text(state.workout.name!),
-        //centerTitle: true,
       ),
-      //title: const Text('Session'),
-      // leading: IconButton(
-      //   icon: Icon(Icons.arrow_back),
-      //   onPressed: () => Navigator.pop(context),
-      // ),
-      //actions: [
-      //  Icon(Icons.settings),
-      //  SizedBox(width: 12),
-      //],
     );
   }
 
@@ -109,7 +99,7 @@ class WorkoutDetailsScreenWidget extends StatelessWidget {
                   textAlign: TextAlign.left,
                 ),
               )
-            : Container(),  // TODO Review a better way
+            : Container(), // TODO Review a better way
         PreferredSize(
           preferredSize:
               Size(double.infinity, MediaQuery.of(context).size.height / 6),
@@ -167,19 +157,12 @@ class _WeekSessionsCardWidgetState extends State<_WeekSessionsCardWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final ButtonStyle flatButtonStyle = TextButton.styleFrom(
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(4.0)),
-      ),
-    );
     return Padding(
       padding: const EdgeInsets.all(5.0),
       child: ExpansionTileCard(
-        leading: TwoLettersIcon('${widget.weekSessions.elementAt(0).week}'),
         initialElevation: 5.0,
         elevation: 5.0,
         title: Text('Week ${widget.weekSessions.elementAt(0).week}'),
-        //subtitle: Text('I expand, too!'),
         children: <Widget>[
           Divider(
             thickness: 1.0,
@@ -190,50 +173,10 @@ class _WeekSessionsCardWidgetState extends State<_WeekSessionsCardWidget> {
             child: Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: 16.0,
-                vertical: 8.0,
+                vertical: 4.0,
               ),
               child: _buildList(context),
             ),
-          ),
-          ButtonBar(
-            alignment: MainAxisAlignment.spaceAround,
-            buttonHeight: 52.0,
-            buttonMinWidth: 90.0,
-            children: <Widget>[
-              TextButton(
-                style: flatButtonStyle,
-                onPressed: () {
-                  cardA.currentState?.collapse();
-                },
-                child: Column(
-                  children: <Widget>[
-                    const Icon(Icons.delete, color: Colors.red),
-                    const Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2.0),
-                    ),
-                    const Text(
-                      'Close',
-                      style: TextStyle(color: Colors.red),
-                    ),
-                  ],
-                ),
-              ),
-              TextButton(
-                style: flatButtonStyle,
-                onPressed: () {
-                  cardA.currentState?.toggleExpansion();
-                },
-                child: Column(
-                  children: <Widget>[
-                    Icon(Icons.add),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2.0),
-                    ),
-                    Text('Add'),
-                  ],
-                ),
-              ),
-            ],
           ),
         ],
       ),
@@ -241,45 +184,26 @@ class _WeekSessionsCardWidgetState extends State<_WeekSessionsCardWidget> {
   }
 
   Widget _buildList(BuildContext buildContext) {
-    return ReorderableListView.builder(
-      onReorder: (int oldIndex, int newIndex) {
-        setState(() {
-          if (oldIndex < newIndex) {
-            newIndex -= 1;
-          }
-          final WorkoutSession session = widget.weekSessions.removeAt(oldIndex);
-          widget.weekSessions.insert(newIndex, session);
-        });
-      },
-      scrollDirection: Axis.vertical,
+    return ListView.builder(
       shrinkWrap: true,
       itemBuilder: (BuildContext context, int index) {
-        return Padding(
+        final sessionDay =
+            getDayNameFromInt(widget.weekSessions.elementAt(index).weekDay);
+        return Container(
           key: Key('$index'),
-          padding: EdgeInsets.symmetric(vertical: 0),
           child: Card(
-            //shape: RoundedRectangleBorder(
-            //  borderRadius: BorderRadius.circular(5),
-            //side: BorderSide(
-            //color: Colors.black,
-            //),
-            //),
-            elevation: 2,
-            //shadowColor: Colors.red,
+            elevation: 3,
             child: ListTile(
-              //leading: const Icon(Icons.flight_land),
+              leading: TwoLettersIcon(
+                sessionDay,
+                factor: 0.7,
+              ),
               title: Text(
-                'Day ${widget.weekSessions.elementAt(index).weekDay}',
+                sessionDay,
                 style: TextStyle(
                   fontSize: 15,
-                  //COLOR DEL TEXTO TITULO
-                  //color: Colors.blueAccent,
                 ),
               ),
-              //subtitle: Text(
-              //  'Sub Title',
-              //),
-              trailing: const Icon(Icons.drag_indicator),
               onTap: () {
                 Navigator.pushNamed(
                     context, AppRoutes.WORKOUTS_SESSIONS_DETAILS_SCREEN_ROUTE,
