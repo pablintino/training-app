@@ -48,10 +48,29 @@ class _WorkoutListWidgetState extends State<WorkoutListWidget> {
       Expanded(
         child: BlocConsumer<WorkoutListBloc, WorkoutListState>(
           listener: (ctx, state) => _onStateChange(ctx, state),
-          builder: (ctx, state) => _buildList(ctx, state),
+          builder: (ctx, state) => Stack(
+            children: [
+              _buildList(ctx, state),
+              _buildCreateButton(),
+            ],
+          ),
         ),
       )
     ]));
+  }
+
+  Positioned _buildCreateButton() {
+    return Positioned(
+      right: 20,
+      bottom: 20,
+      child: Align(
+        alignment: Alignment.bottomRight,
+        child: FloatingActionButton(
+          child: Icon(Icons.add),
+          onPressed: () {},
+        ),
+      ),
+    );
   }
 
   void _onStateChange(BuildContext context, WorkoutListState state) {

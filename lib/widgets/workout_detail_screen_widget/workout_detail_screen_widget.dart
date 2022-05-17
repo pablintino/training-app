@@ -158,7 +158,7 @@ class _WeekSessionsCardWidgetState extends State<_WeekSessionsCardWidget> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(5.0),
+      padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
       child: ExpansionTileCard(
         initialElevation: 5.0,
         elevation: 5.0,
@@ -168,15 +168,12 @@ class _WeekSessionsCardWidgetState extends State<_WeekSessionsCardWidget> {
             thickness: 1.0,
             height: 1.0,
           ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 4.0,
-              ),
-              child: _buildList(context),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 10.0,
+              vertical: 5.0,
             ),
+            child: _buildList(context),
           ),
         ],
       ),
@@ -184,37 +181,46 @@ class _WeekSessionsCardWidgetState extends State<_WeekSessionsCardWidget> {
   }
 
   Widget _buildList(BuildContext buildContext) {
-    return ListView.builder(
-      shrinkWrap: true,
-      itemBuilder: (BuildContext context, int index) {
-        final sessionDay =
-            getDayNameFromInt(widget.weekSessions.elementAt(index).weekDay);
-        return Container(
-          key: Key('$index'),
-          child: Card(
-            elevation: 3,
-            child: ListTile(
-              leading: TwoLettersIcon(
-                sessionDay,
-                factor: 0.7,
-              ),
-              title: Text(
-                sessionDay,
-                style: TextStyle(
-                  fontSize: 15,
+    return ScrollConfiguration(
+        behavior: _ClampingScrollBehavior(),
+        child: ListView.builder(
+          padding: EdgeInsets.zero,
+          shrinkWrap: true,
+          itemBuilder: (BuildContext context, int index) {
+            final sessionDay =
+                getDayNameFromInt(widget.weekSessions.elementAt(index).weekDay);
+            return Container(
+              key: Key('$index'),
+              child: Card(
+                elevation: 3,
+                child: ListTile(
+                  leading: TwoLettersIcon(
+                    sessionDay,
+                    factor: 0.7,
+                  ),
+                  title: Text(
+                    sessionDay,
+                    style: TextStyle(
+                      fontSize: 15,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pushNamed(context,
+                        AppRoutes.WORKOUTS_SESSIONS_DETAILS_SCREEN_ROUTE,
+                        arguments: WorkoutSessionScreenWidgetArguments(
+                            widget.weekSessions.elementAt(index).id!));
+                  },
                 ),
               ),
-              onTap: () {
-                Navigator.pushNamed(
-                    context, AppRoutes.WORKOUTS_SESSIONS_DETAILS_SCREEN_ROUTE,
-                    arguments: WorkoutSessionScreenWidgetArguments(
-                        widget.weekSessions.elementAt(index).id!));
-              },
-            ),
-          ),
-        );
-      },
-      itemCount: widget.weekSessions.length,
-    );
+            );
+          },
+          itemCount: widget.weekSessions.length,
+        ));
   }
+}
+
+class _ClampingScrollBehavior extends ScrollBehavior {
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) =>
+      ClampingScrollPhysics();
 }
