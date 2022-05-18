@@ -14,26 +14,44 @@ class WorkoutScreenWidgetArguments {
   WorkoutScreenWidgetArguments(this.workoutId);
 }
 
-class WorkoutDetailsScreenWidget extends StatelessWidget {
+class WorkoutDetailsScreenWidget extends StatefulWidget {
   const WorkoutDetailsScreenWidget({Key? key}) : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() => _WorkoutDetailsScreenWidgetState();
+}
+
+class _WorkoutDetailsScreenWidgetState
+    extends State<WorkoutDetailsScreenWidget> {
+  final ScrollController _scroller = ScrollController();
+  final _scrollViewKey = GlobalKey();
+
+  @override
+  void dispose() {
+    _scroller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)!.settings.arguments
         as WorkoutScreenWidgetArguments;
     return Scaffold(
-        //appBar: AppBar(title: const Text(_title)),
         body: BlocProvider<WorkoutDetailsBloc>(
       create: (_) =>
           WorkoutDetailsBloc()..add(LoadWorkoutEvent(args.workoutId)),
       child: BlocBuilder<WorkoutDetailsBloc, WorkoutDetailsState>(
           builder: (ctx, state) => state is WorkoutLoadedState
-              ? CustomScrollView(
-                  slivers: [
-                    _getAppBar(ctx, state),
-                    ..._buildBody(ctx, state),
-                  ],
-                )
+              ? _createScrollListener(
+                  CustomScrollView(
+                    key: _scrollViewKey,
+                    controller: _scroller,
+                    slivers: [
+                      _getAppBar(ctx, state),
+                      ..._buildBody(ctx, state, _scroller),
+                    ],
+                  ),
+                  state)
               : const Center(
                   child: Text('No data'),
                 )),
@@ -57,7 +75,8 @@ class WorkoutDetailsScreenWidget extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildBody(BuildContext context, WorkoutLoadedState state) {
+  List<Widget> _buildBody(BuildContext context, WorkoutLoadedState state,
+      ScrollController _scroller) {
     Map<int, List<WorkoutSession>> groupedSessions = {};
     for (WorkoutSession workoutSession in state.workout.sessions) {
       if (!groupedSessions.containsKey(workoutSession.week)) {
@@ -135,17 +154,49 @@ class WorkoutDetailsScreenWidget extends StatelessWidget {
       SliverList(
           delegate: SliverChildBuilderDelegate(
         (_, idx) => _WeekSessionsCardWidget(
-            groupedSessions[groupedSessions.keys.elementAt(idx)]!),
+            groupedSessions[groupedSessions.keys.elementAt(idx)]!, _scroller),
         childCount: groupedSessions.keys.length,
-      ))
+      )),
+      if (state.isDragging)
+        SliverToBoxAdapter(
+          child: SizedBox(child: Container(), height: 100),
+        )
     ];
+  }
+
+  Widget _createScrollListener(Widget child, WorkoutLoadedState state) {
+    return Listener(
+      child: child,
+      onPointerMove: (PointerMoveEvent event) {
+        if (!state.isDragging) {
+          return;
+        }
+
+        RenderBox render =
+            _scrollViewKey.currentContext?.findRenderObject() as RenderBox;
+        Offset position = render.localToGlobal(Offset.zero);
+
+        const detectedRange = 100;
+        const moveDistance = 3;
+        if (event.position.dy < position.dy + detectedRange) {
+          var to = _scroller.offset - moveDistance;
+          to = (to < 0) ? 0 : to;
+          _scroller.jumpTo(to);
+        }
+        if (event.position.dy >
+            position.dy + render.size.height - detectedRange) {
+          _scroller.jumpTo(_scroller.offset + moveDistance);
+        }
+      },
+    );
   }
 }
 
 class _WeekSessionsCardWidget extends StatefulWidget {
   final List<WorkoutSession> weekSessions;
+  final ScrollController scroller;
 
-  const _WeekSessionsCardWidget(this.weekSessions, {Key? key})
+  const _WeekSessionsCardWidget(this.weekSessions, this.scroller, {Key? key})
       : super(key: key);
 
   @override
@@ -153,8 +204,6 @@ class _WeekSessionsCardWidget extends StatefulWidget {
 }
 
 class _WeekSessionsCardWidgetState extends State<_WeekSessionsCardWidget> {
-  final GlobalKey<ExpansionTileCardState> cardA = new GlobalKey();
-
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -181,41 +230,96 @@ class _WeekSessionsCardWidgetState extends State<_WeekSessionsCardWidget> {
   }
 
   Widget _buildList(BuildContext buildContext) {
+    final week = widget.weekSessions.elementAt(0).week!;
     return ScrollConfiguration(
         behavior: _ClampingScrollBehavior(),
         child: ListView.builder(
           padding: EdgeInsets.zero,
           shrinkWrap: true,
           itemBuilder: (BuildContext context, int index) {
-            final sessionDay =
-                getDayNameFromInt(widget.weekSessions.elementAt(index).weekDay);
-            return Container(
-              key: Key('$index'),
-              child: Card(
-                elevation: 3,
-                child: ListTile(
-                  leading: TwoLettersIcon(
-                    sessionDay,
-                    factor: 0.7,
-                  ),
-                  title: Text(
-                    sessionDay,
-                    style: TextStyle(
-                      fontSize: 15,
-                    ),
-                  ),
-                  onTap: () {
-                    Navigator.pushNamed(context,
-                        AppRoutes.WORKOUTS_SESSIONS_DETAILS_SCREEN_ROUTE,
-                        arguments: WorkoutSessionScreenWidgetArguments(
-                            widget.weekSessions.elementAt(index).id!));
-                  },
-                ),
-              ),
-            );
+            if (index % 2 == 0) {
+              return _buildDragTargets(context, index, week);
+            } else {
+              return _buildDraggableSessionItem(buildContext,
+                  widget.weekSessions.elementAt((index - 1) ~/ 2));
+            }
           },
-          itemCount: widget.weekSessions.length,
+          itemCount: widget.weekSessions.length * 2 + 1,
         ));
+  }
+
+  Widget _buildDragTargets(BuildContext context, int index, int week) {
+    return DragTarget<WorkoutSession>(
+//      builder responsible to build a widget based on whether there is an item being dropped or not
+      builder: (context, candidates, rejects) {
+        return candidates.length > 0
+            ? _buildDraggableSessionItem(context, candidates[0]!)
+            : Container(
+                width: 5,
+                height: 5,
+              );
+      },
+//      condition on to accept the item or not
+      //onWillAccept: (value)=>!listA.contains(value),
+      onWillAccept: (value) => true,
+//      what to do when an item is accepted
+      onAccept: (value) {
+        print('test');
+        // setState(() {
+        //  listA.insert(index + 1, value);
+        //  listB.remove(value);
+        //  });
+      },
+    );
+  }
+
+  Widget _buildDraggableSessionItem(
+      BuildContext buildContext, WorkoutSession session) {
+    final sessionDay = getDayNameFromInt(session.weekDay);
+    final bloc = BlocProvider.of<WorkoutDetailsBloc>(context);
+    // LayoutBuilder needed to pass width to child
+    return LayoutBuilder(
+      builder: (context, constraints) => LongPressDraggable<WorkoutSession>(
+        data: session,
+        onDragStarted: () => bloc.add(UpdateDraggingStateEvent(true)),
+        onDragEnd: (details) => bloc.add(UpdateDraggingStateEvent(false)),
+        onDraggableCanceled: (velocity, offset) =>
+            bloc.add(UpdateDraggingStateEvent(false)),
+        feedback: Container(
+          width: constraints.maxWidth,
+          child: _buildSessionCard(sessionDay, session),
+        ),
+        childWhenDragging: Card(
+          elevation: 2,
+          color: Colors.grey.shade50,
+          child: ListTile(),
+        ),
+        child: _buildSessionCard(sessionDay, session),
+      ),
+    );
+  }
+
+  Card _buildSessionCard(String sessionDay, WorkoutSession session) {
+    return Card(
+      elevation: 3,
+      child: ListTile(
+        leading: TwoLettersIcon(
+          sessionDay,
+          factor: 0.7,
+        ),
+        title: Text(
+          sessionDay,
+          style: TextStyle(
+            fontSize: 15,
+          ),
+        ),
+        onTap: () {
+          Navigator.pushNamed(
+              context, AppRoutes.WORKOUTS_SESSIONS_DETAILS_SCREEN_ROUTE,
+              arguments: WorkoutSessionScreenWidgetArguments(session.id!));
+        },
+      ),
+    );
   }
 }
 

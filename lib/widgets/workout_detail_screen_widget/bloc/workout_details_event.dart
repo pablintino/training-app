@@ -12,3 +12,12 @@ class LoadWorkoutEvent extends WorkoutDetailsEvent {
   @override
   List<Object?> get props => [workoutId];
 }
+
+class UpdateDraggingStateEvent extends WorkoutDetailsEvent {
+  final bool isDragging;
+
+  UpdateDraggingStateEvent(this.isDragging);
+
+  @override
+  List<Object?> get props => [isDragging];
+}

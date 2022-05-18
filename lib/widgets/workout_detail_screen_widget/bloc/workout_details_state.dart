@@ -11,9 +11,20 @@ class WorkoutDetailsInitial extends WorkoutDetailsState {
 
 class WorkoutLoadedState extends WorkoutDetailsState {
   final Workout workout;
+  final bool isDragging;
 
-  WorkoutLoadedState(this.workout);
+  WorkoutLoadedState({required this.workout, required this.isDragging});
+
+  static WorkoutLoadedState fromState(
+    WorkoutLoadedState state, {
+    workout,
+    isDragging,
+  }) {
+    return WorkoutLoadedState(
+        workout: workout ?? state.workout,
+        isDragging: isDragging ?? state.isDragging);
+  }
 
   @override
-  List<Object?> get props => [workout];
+  List<Object?> get props => [workout, isDragging];
 }

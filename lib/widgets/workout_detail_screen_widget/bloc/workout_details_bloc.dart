@@ -18,6 +18,8 @@ class WorkoutDetailsBloc
       : _workoutRepository = GetIt.instance<WorkoutRepository>(),
         super(WorkoutDetailsInitial()) {
     on<LoadWorkoutEvent>((event, emit) => _handleLoadWorkoutEvent(emit, event));
+    on<UpdateDraggingStateEvent>(
+        (event, emit) => _handleDraggingUpdateEvent(emit, event));
   }
 
   Future<void> _handleLoadWorkoutEvent(
@@ -28,9 +30,18 @@ class WorkoutDetailsBloc
         .getWorkout(event.workoutId, fat: true)
         .then((workout) {
       //TODO Check when workout is null
-      emit(WorkoutLoadedState(workout!));
+      emit(WorkoutLoadedState(workout: workout!, isDragging: false));
     }).catchError((err) {
       print("errrrrorrr");
     });
+  }
+
+  Future<void> _handleDraggingUpdateEvent(
+      Emitter emit, UpdateDraggingStateEvent event) async {
+    // On reload just grab the first page
+    if (state is WorkoutLoadedState) {
+      emit(WorkoutLoadedState.fromState(state as WorkoutLoadedState,
+          isDragging: event.isDragging));
+    }
   }
 }
