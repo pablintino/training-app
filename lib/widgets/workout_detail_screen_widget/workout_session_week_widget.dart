@@ -47,7 +47,7 @@ class WorkoutSessionWeekWidget extends StatelessWidget {
 
   Widget _buildList(BuildContext buildContext) {
     return ScrollConfiguration(
-        behavior: _ClampingScrollBehavior(),
+        behavior: const _ClampingScrollBehavior(),
         child: ListView.builder(
           padding: EdgeInsets.zero,
           shrinkWrap: true,
@@ -131,7 +131,7 @@ class WorkoutSessionWeekWidget extends StatelessWidget {
         ),
         title: Text(
           sessionDay,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 15,
           ),
         ),
@@ -142,6 +142,8 @@ class WorkoutSessionWeekWidget extends StatelessWidget {
 }
 
 class _ClampingScrollBehavior extends ScrollBehavior {
+  const _ClampingScrollBehavior();
+
   @override
   ScrollPhysics getScrollPhysics(BuildContext context) =>
       ClampingScrollPhysics();

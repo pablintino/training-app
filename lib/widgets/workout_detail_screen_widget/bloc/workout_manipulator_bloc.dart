@@ -7,6 +7,7 @@ import 'package:training_app/models/workout_models.dart';
 import 'package:training_app/repositories/workouts_repository.dart';
 import 'package:training_app/utils/form_utils.dart';
 import 'package:training_app/utils/streams.dart';
+import 'package:training_app/widgets/workout_list_widget/bloc/workout_list_bloc.dart';
 
 part 'workout_manipulator_event.dart';
 
@@ -22,8 +23,9 @@ class _WorkoutFormFields {
 class WorkoutManipulatorBloc
     extends Bloc<WorkoutManipulatorEvent, WorkoutManipulatorState> {
   final WorkoutRepository _workoutRepository;
+  final WorkoutListBloc workoutListBloc;
 
-  WorkoutManipulatorBloc()
+  WorkoutManipulatorBloc(this.workoutListBloc)
       : _workoutRepository = GetIt.instance<WorkoutRepository>(),
         super(WorkoutManipulatorInitialState()) {
     on<LoadWorkoutEvent>((event, emit) => _handleLoadWorkoutEvent(emit, event));
@@ -96,6 +98,7 @@ class WorkoutManipulatorBloc
           await __performSave(validationResult, currentState).then((workout) {
             emit(WorkoutManipulatorLoadedState.fromState(currentState,
                 workout: workout));
+            workoutListBloc.add(ModifiedOrCreatedWorkoutEvent(workout));
           }).catchError((error, stackTrace) {
             emit(WorkoutManipulatorErrorState.fromState(
                 currentState, error.toString()));

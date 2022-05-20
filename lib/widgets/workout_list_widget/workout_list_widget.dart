@@ -135,7 +135,7 @@ class _WorkoutListWidgetState extends State<WorkoutListWidget> {
                     onClick: (id) {
                       Navigator.pushNamed(context,
                           AppRoutes.WORKOUTS_WORKOUT_DETAILS_SCREEN_ROUTE,
-                          arguments: WorkoutScreenWidgetArguments(id));
+                          arguments: WorkoutScreenWidgetArguments(id, bloc));
                     },
                   )),
               itemCount: state.workouts.length,

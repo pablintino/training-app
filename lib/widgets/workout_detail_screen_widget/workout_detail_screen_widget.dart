@@ -4,13 +4,15 @@ import 'package:training_app/app_routes.dart';
 import 'package:training_app/utils/form_utils.dart';
 import 'package:training_app/widgets/workout_detail_screen_widget/bloc/workout_manipulator_bloc.dart';
 import 'package:training_app/models/workout_models.dart';
+import 'package:training_app/widgets/workout_list_widget/bloc/workout_list_bloc.dart';
 import 'package:training_app/widgets/workout_session_detail_screen_widget/workout_session_detail_screen_widget.dart';
 import 'package:training_app/widgets/workout_detail_screen_widget/workout_session_week_widget.dart';
 
 class WorkoutScreenWidgetArguments {
   final int workoutId;
+  final WorkoutListBloc workoutListBloc;
 
-  WorkoutScreenWidgetArguments(this.workoutId);
+  WorkoutScreenWidgetArguments(this.workoutId, this.workoutListBloc);
 }
 
 class WorkoutDetailsScreenWidget extends StatefulWidget {
@@ -43,8 +45,8 @@ class _WorkoutDetailsScreenWidgetState
         as WorkoutScreenWidgetArguments;
     return Scaffold(
         body: BlocProvider<WorkoutManipulatorBloc>(
-      create: (_) =>
-          WorkoutManipulatorBloc()..add(LoadWorkoutEvent(args.workoutId)),
+      create: (_) => WorkoutManipulatorBloc(args.workoutListBloc)
+        ..add(LoadWorkoutEvent(args.workoutId)),
       child: BlocConsumer<WorkoutManipulatorBloc, WorkoutManipulatorState>(
           listener: (ctx, state) {
             if (state is WorkoutManipulatorErrorState) {
