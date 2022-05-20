@@ -151,7 +151,6 @@ class ExerciseManipulationBloc
 
   Future<StringField> _updateNameField(
       OnGoingExerciseManipulationState currentState, String? value) async {
-    StringField nameField;
     if (value == null || value.isEmpty) {
       return StringField.createInvalidFrom(
           currentState.exerciseName, ValidationError.empty,

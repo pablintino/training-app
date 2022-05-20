@@ -39,9 +39,8 @@ class ApiSecurityProvider {
 
     if (response != null && response.accessToken != null) {
       _accessToken = response.accessToken!;
-      if (_onTokenRefresh != null) {
-        _onTokenRefresh!(TokenUpdateData(response.accessToken!, refreshToken));
-      }
+      _onTokenRefresh?.call(TokenUpdateData(_accessToken, refreshToken));
+
       return this._accessToken!;
     }
     throw 'Login process has failed';
@@ -89,9 +88,7 @@ class ApiSecurityProvider {
       _accessToken = response.accessToken;
       final tokenPair =
           TokenUpdateData(response.accessToken!, response.refreshToken!);
-      if (_onTokenRefresh != null) {
-        _onTokenRefresh!(tokenPair);
-      }
+      _onTokenRefresh?.call(tokenPair);
       return tokenPair;
     }
     throw 'Login process has failed';
@@ -116,10 +113,9 @@ class ApiSecurityProvider {
   Future<void> logout() async {
     try {
       await _secureStorage.delete(key: 'refresh_token');
-      if (_onTokenRefresh != null) {
-        _onTokenRefresh!(TokenUpdateData(null, null));
-      }
+      _onTokenRefresh?.call(TokenUpdateData(null, null));
     } finally {
+      _refreshToken = null;
       _accessToken = null;
     }
   }

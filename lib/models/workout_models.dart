@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:training_app/database/database.dart';
 import 'package:training_app/database/join_entities.dart';
 import 'package:training_app/models/exercises_models.dart';
+import 'package:training_app/networking/entities/workout_dtos.dart';
 
 class Workout extends Equatable {
   final String? name;
@@ -23,6 +24,14 @@ class Workout extends Equatable {
         description = joinedModel.workout.description,
         sessions = joinedModel.sessions
             .map((session) => WorkoutSession.fromJoinedModel(session))
+            .toList();
+
+  Workout.fromDto(WorkoutDto dto)
+      : id = dto.id,
+        name = dto.name,
+        description = dto.description,
+        sessions = dto.sessions
+            .map((session) => WorkoutSession.fromDto(session))
             .toList();
 
   @override
@@ -51,6 +60,13 @@ class WorkoutSession extends Equatable {
         weekDay = session.weekDay,
         phases = [];
 
+  WorkoutSession.fromDto(WorkoutSessionDto dto)
+      : id = dto.id,
+        week = dto.week,
+        weekDay = dto.weekDay,
+        phases =
+            dto.phases.map((phase) => WorkoutPhase.fromDto(phase)).toList();
+
   @override
   List<Object?> get props => [weekDay, week, id, phases];
 }
@@ -70,6 +86,12 @@ class WorkoutPhase extends Equatable {
         items = joinedModel.items
             .map((item) => WorkoutItem.fromJoinedModel(item))
             .toList();
+
+  WorkoutPhase.fromDto(WorkoutPhaseDto dto)
+      : id = dto.id,
+        name = dto.name,
+        sequence = dto.sequence,
+        items = dto.items.map((item) => WorkoutItem.fromDto(item)).toList();
 
   @override
   List<Object?> get props => [name, sequence, id, items];
@@ -109,6 +131,17 @@ class WorkoutItem extends Equatable {
         sets = joinedModel.sets
             .map((set) => WorkoutSet.fromJoinedModel(set))
             .toList();
+
+  WorkoutItem.fromDto(WorkoutItemDto dto)
+      : id = dto.id,
+        name = dto.name,
+        sequence = dto.sequence,
+        rounds = dto.rounds,
+        workTimeSecs = dto.workTimeSecs,
+        workModality = dto.workModality,
+        restTimeSecs = dto.restTimeSecs,
+        timeCapSecs = dto.timeCapSecs,
+        sets = dto.sets.map((set) => WorkoutSet.fromDto(set)).toList();
 
   @override
   List<Object?> get props => [
@@ -153,6 +186,16 @@ class WorkoutSet extends Equatable {
         setExecutions = joinedModel.set.setExecutions,
         exerciseId = joinedModel.exercise.id,
         exercise = Exercise.fromModel(joinedModel.exercise);
+
+  WorkoutSet.fromDto(WorkoutSetDto dto)
+      : id = dto.id,
+        sequence = dto.sequence,
+        reps = dto.reps,
+        weight = dto.weight,
+        distance = dto.distance,
+        setExecutions = dto.setExecutions,
+        exerciseId = dto.exerciseId,
+        exercise = null;
 
   @override
   List<Object?> get props => [

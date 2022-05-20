@@ -1,12 +1,11 @@
-import 'package:expansion_tile_card/expansion_tile_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:training_app/app_routes.dart';
-import 'package:training_app/blocs/workout_manipulator/workout_manipulator_bloc.dart';
+import 'package:training_app/utils/form_utils.dart';
+import 'package:training_app/widgets/workout_detail_screen_widget/bloc/workout_manipulator_bloc.dart';
 import 'package:training_app/models/workout_models.dart';
-import 'package:training_app/utils/known_constants.dart';
-import 'package:training_app/widgets/two_letters_icon.dart';
 import 'package:training_app/widgets/workout_session_detail_screen_widget/workout_session_detail_screen_widget.dart';
+import 'package:training_app/widgets/workout_detail_screen_widget/workout_session_week_widget.dart';
 
 class WorkoutScreenWidgetArguments {
   final int workoutId;
@@ -26,6 +25,12 @@ class _WorkoutDetailsScreenWidgetState
   final ScrollController _scroller = ScrollController();
   final _scrollViewKey = GlobalKey();
 
+  final FocusNode _nameFocusNode = FocusNode();
+  final FocusNode _descriptionFocusNode = FocusNode();
+
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+
   @override
   void dispose() {
     _scroller.dispose();
@@ -40,43 +45,122 @@ class _WorkoutDetailsScreenWidgetState
         body: BlocProvider<WorkoutManipulatorBloc>(
       create: (_) =>
           WorkoutManipulatorBloc()..add(LoadWorkoutEvent(args.workoutId)),
-      child: BlocBuilder<WorkoutManipulatorBloc, WorkoutManipulatorState>(
+      child: BlocConsumer<WorkoutManipulatorBloc, WorkoutManipulatorState>(
+          listener: (ctx, state) {
+            if (state is WorkoutManipulatorErrorState) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(state.error),
+                duration: Duration(seconds: 2),
+              ));
+            } else if (state is WorkoutManipulatorEditingState) {
+              if (!state.workoutName.dirty) {
+                _nameController.text = state.workoutName.value ?? '';
+              }
+              if (!state.workoutDescription.dirty) {
+                _descriptionController.text =
+                    state.workoutDescription.value ?? '';
+              }
+            } else if (state is WorkoutManipulatorLoadedState) {
+              _descriptionController.text = state.workout.description ?? '';
+              _nameController.text = state.workout.name ?? '';
+            }
+          },
           builder: (ctx, state) => state is WorkoutManipulatorLoadedState
-              ? _createScrollListener(
-                  CustomScrollView(
-                    key: _scrollViewKey,
-                    controller: _scroller,
-                    slivers: [
-                      _getAppBar(ctx, state),
-                      ..._buildBody(ctx, state, _scroller),
-                    ],
-                  ),
-                  state)
+              ? _buildScrollView(ctx, state)
               : const Center(
                   child: Text('No data'),
                 )),
     ));
   }
 
-  SliverAppBar _getAppBar(BuildContext context, WorkoutManipulatorLoadedState state) {
+  SliverAppBar _buildAppBar(
+      BuildContext context, WorkoutManipulatorLoadedState state) {
+    final bloc = BlocProvider.of<WorkoutManipulatorBloc>(context);
     return SliverAppBar(
       automaticallyImplyLeading: true,
       backgroundColor: Theme.of(context).primaryColor,
-      expandedHeight: 150,
+      expandedHeight: 125,
       floating: true,
       pinned: true,
-      flexibleSpace: FlexibleSpaceBar(
-        background: Image.network(
-          'https://source.unsplash.com/random?monochromatic+dark',
-          fit: BoxFit.cover,
-        ),
-        title: Text(state.workout.name!),
+      //flexibleSpace: FlexibleSpaceBar(
+      //  background: Image.network(
+      //    'https://source.unsplash.com/random?monochromatic+dark',
+      //    fit: BoxFit.cover,
+      //  ),
+      //  title: Text(state.workout.name!),
+      flexibleSpace: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: <Widget>[
+          Container(
+            width: 300,
+            child: FlexibleSpaceBar(title: Text(state.workout.name!)),
+          ),
+          Spacer(),
+          IconButton(
+            color: Colors.white,
+            icon: Icon(state is WorkoutManipulatorEditingState
+                ? Icons.save
+                : Icons.edit),
+            onPressed: () => bloc.add(state is WorkoutManipulatorEditingState
+                ? SaveWorkoutEditionEvent()
+                : StartWorkoutEditionEvent()),
+          )
+        ],
       ),
     );
   }
 
-  List<Widget> _buildBody(BuildContext context, WorkoutManipulatorLoadedState state,
-      ScrollController _scroller) {
+  List<Widget> _buildBody(BuildContext context,
+      WorkoutManipulatorLoadedState state, ScrollController _scroller) {
+    final groupedSessions = _groupSessionByWeek(state);
+    final bloc = BlocProvider.of<WorkoutManipulatorBloc>(context);
+    return [
+      SliverList(
+          delegate: SliverChildListDelegate([
+        _buildWorkoutNameField(state, bloc),
+        _buildWorkoutDescriptionField(state, bloc),
+        _buildSessionsSeparator(context),
+      ])),
+      SliverList(
+          delegate: SliverChildBuilderDelegate(
+        (_, idx) => WorkoutSessionWeekWidget(
+          groupedSessions[groupedSessions.keys.elementAt(idx)]!,
+          state is WorkoutManipulatorEditingState,
+          onDragStatusChange: (isDragging) =>
+              bloc.add(SetSessionDraggingEvent(true)),
+          onTap: (session) => Navigator.pushNamed(
+              context, AppRoutes.WORKOUTS_SESSIONS_DETAILS_SCREEN_ROUTE,
+              arguments: WorkoutSessionScreenWidgetArguments(session.id!)),
+        ),
+        childCount: groupedSessions.keys.length,
+      )),
+
+      // This SizedBox helps drag&drop at the bottom of the screen
+      if (state is WorkoutManipulatorEditingState)
+        SliverToBoxAdapter(
+          child: Container(
+            height: 100,
+            child: Center(
+              child: RawMaterialButton(
+                onPressed: () {},
+                elevation: 2.0,
+                fillColor: Theme.of(context).primaryColor,
+                child: Icon(
+                  Icons.add,
+                  size: 30.0,
+                  color: Colors.white,
+                ),
+                padding: EdgeInsets.all(15.0),
+                shape: CircleBorder(),
+              ),
+            ),
+          ),
+        )
+    ];
+  }
+
+  Map<int, List<WorkoutSession>> _groupSessionByWeek(
+      WorkoutManipulatorLoadedState state) {
     Map<int, List<WorkoutSession>> groupedSessions = {};
     for (WorkoutSession workoutSession in state.workout.sessions) {
       if (!groupedSessions.containsKey(workoutSession.week)) {
@@ -85,109 +169,152 @@ class _WorkoutDetailsScreenWidgetState
       }
       groupedSessions[workoutSession.week!]!.add(workoutSession);
     }
-
-    return [
-      SliverList(
-          delegate: SliverChildListDelegate([
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 10),
-          child: TextFormField(
-            enabled: false,
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              hintText: state.workout.name!,
-            ),
-            initialValue: state.workout.name!,
-            style: TextStyle(fontSize: 25.0),
-            textAlign: TextAlign.left,
-          ),
-        ),
-        state.workout.description != null
-            ? Padding(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 0, horizontal: 10),
-                child: TextFormField(
-                  enabled: false,
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    hintText: state.workout.description,
-                  ),
-                  initialValue: state.workout.description,
-                  style: TextStyle(fontSize: 15.0),
-                  maxLines: 3,
-                  textAlign: TextAlign.left,
-                ),
-              )
-            : Container(), // TODO Review a better way
-        PreferredSize(
-          preferredSize:
-              Size(double.infinity, MediaQuery.of(context).size.height / 6),
-          child: Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: Column(
-              children: [
-                Container(
-                  alignment: AlignmentDirectional.topStart,
-                  child: Text(
-                    'Sessions',
-                    style: TextStyle(fontSize: 18.0),
-                    textAlign: TextAlign.left,
-                  ),
-                ),
-                Row(
-                  children: [
-                    Container(
-                      width: MediaQuery.of(context).size.width - 50,
-                      child: Divider(
-                        thickness: 1,
-                        color: Colors.blue.withOpacity(0.5),
-                      ),
-                    ),
-                    Expanded(child: Container())
-                  ],
-                )
-              ],
-            ),
-          ),
-        ),
-      ])),
-      SliverList(
-          delegate: SliverChildBuilderDelegate(
-        (_, idx) => _WeekSessionsCardWidget(
-            groupedSessions[groupedSessions.keys.elementAt(idx)]!, _scroller),
-        childCount: groupedSessions.keys.length,
-      )),
-      if (state.isDragging)
-        SliverToBoxAdapter(
-          child: SizedBox(child: Container(), height: 100),
-        )
-    ];
+    return groupedSessions;
   }
 
-  Widget _createScrollListener(Widget child, WorkoutManipulatorLoadedState state) {
-    return Listener(
-      child: child,
-      onPointerMove: (PointerMoveEvent event) {
-        if (!state.isDragging) {
-          return;
-        }
+  Widget _buildWorkoutDescriptionField(WorkoutManipulatorLoadedState state,
+      WorkoutManipulatorBloc workoutManipulatorBloc) {
+    final isEditing = state is WorkoutManipulatorEditingState;
+    return state.workout.description != null ||
+            state is WorkoutManipulatorEditingState
+        ? Padding(
+            padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 10),
+            child: TextFormField(
+              enabled: state is WorkoutManipulatorEditingState,
+              controller: _descriptionController,
+              focusNode: _descriptionFocusNode,
+              onChanged: (value) => workoutManipulatorBloc
+                  .add(DescriptionInputUpdateEvent(value)),
+              decoration: !isEditing
+                  ? InputDecoration(
+                      border: InputBorder.none,
+                      hintText: state.workout.name!,
+                      errorText: _getDescriptionValidationError(state))
+                  : InputDecoration(
+                      errorText: _getDescriptionValidationError(state)),
+              style: TextStyle(fontSize: 15.0),
+              maxLines: 3,
+              textAlign: TextAlign.left,
+            ),
+          )
+        : Container();
+  }
 
-        RenderBox render =
-            _scrollViewKey.currentContext?.findRenderObject() as RenderBox;
-        Offset position = render.localToGlobal(Offset.zero);
-
-        const detectedRange = 100;
-        const moveDistance = 3;
-        if (event.position.dy < position.dy + detectedRange) {
-          var to = _scroller.offset - moveDistance;
-          to = (to < 0) ? 0 : to;
-          _scroller.jumpTo(to);
-        }
-        if (event.position.dy >
-            position.dy + render.size.height - detectedRange) {
-          _scroller.jumpTo(_scroller.offset + moveDistance);
-        }
-      },
+  Widget _buildSessionsSeparator(BuildContext context) {
+    return PreferredSize(
+      preferredSize:
+          Size(double.infinity, MediaQuery.of(context).size.height / 6),
+      child: Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: Column(
+          children: [
+            Container(
+              alignment: AlignmentDirectional.topStart,
+              child: Text(
+                'Sessions',
+                style: TextStyle(fontSize: 18.0),
+                textAlign: TextAlign.left,
+              ),
+            ),
+            Row(
+              children: [
+                Container(
+                  width: MediaQuery.of(context).size.width - 50,
+                  child: Divider(
+                    thickness: 1,
+                    color: Colors.blue.withOpacity(0.5),
+                  ),
+                ),
+                Expanded(child: Container())
+              ],
+            )
+          ],
+        ),
+      ),
     );
+  }
+
+  Padding _buildWorkoutNameField(WorkoutManipulatorLoadedState state,
+      WorkoutManipulatorBloc workoutManipulatorBloc) {
+    final isEditing = state is WorkoutManipulatorEditingState;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 10),
+      child: TextFormField(
+        enabled: isEditing,
+        controller: _nameController,
+        focusNode: _nameFocusNode,
+        onChanged: (value) =>
+            workoutManipulatorBloc.add(NameInputUpdateEvent(value)),
+        decoration: !isEditing
+            ? InputDecoration(
+                border: InputBorder.none,
+                hintText: state.workout.name!,
+                errorText: _getNameValidationError(state))
+            : InputDecoration(errorText: _getNameValidationError(state)),
+        style: TextStyle(fontSize: 25.0),
+        textAlign: TextAlign.left,
+      ),
+    );
+  }
+
+  Widget _buildScrollView(
+      BuildContext buildContext, WorkoutManipulatorLoadedState state) {
+    final scrollView = CustomScrollView(
+      key: _scrollViewKey,
+      controller: _scroller,
+      slivers: [
+        _buildAppBar(buildContext, state),
+        ..._buildBody(buildContext, state, _scroller),
+      ],
+    );
+    return state is WorkoutManipulatorEditingState
+        ? Listener(
+            child: scrollView,
+            onPointerMove: (PointerMoveEvent event) {
+              if (!state.isDragging) {
+                return;
+              }
+
+              RenderBox render = _scrollViewKey.currentContext
+                  ?.findRenderObject() as RenderBox;
+              Offset position = render.localToGlobal(Offset.zero);
+
+              const detectedRange = 100;
+              const moveDistance = 3;
+              if (event.position.dy < position.dy + detectedRange) {
+                var to = _scroller.offset - moveDistance;
+                to = (to < 0) ? 0 : to;
+                _scroller.jumpTo(to);
+              }
+              if (event.position.dy >
+                  position.dy + render.size.height - detectedRange) {
+                _scroller.jumpTo(_scroller.offset + moveDistance);
+              }
+            },
+          )
+        : scrollView;
+  }
+
+  String? _getNameValidationError(WorkoutManipulatorState state) {
+    ValidationError? validationError =
+        state is WorkoutManipulatorEditingState && state.workoutName.dirty
+            ? state.workoutName.status
+            : null;
+    return validationError == null
+        ? null
+        : (validationError == ValidationError.empty
+            ? 'Workout name cannot be empty'
+            : 'Workout name already exists');
+  }
+
+  String? _getDescriptionValidationError(WorkoutManipulatorState state) {
+    ValidationError? validationError =
+        state is WorkoutManipulatorEditingState &&
+                state.workoutDescription.dirty
+            ? state.workoutDescription.status
+            : null;
+    return validationError != null && validationError == ValidationError.empty
+        ? 'Workout description cannot be empty'
+        : null;
   }
 }

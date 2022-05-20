@@ -20,6 +20,10 @@ class WorkoutDAO extends DatabaseAccessor<AppDatabase> with _$WorkoutDAOMixin {
   Future<WorkoutM?> getWorkoutById(int id) =>
       (select(workouts)..where((t) => t.id.equals(id))).getSingleOrNull();
 
+  Future<WorkoutM?> getByName(String name) =>
+      (select(workouts)..where((tbl) => tbl.name.equals(name)))
+          .getSingleOrNull();
+
   Future insertWorkout(WorkoutsCompanion workoutsCompanion) =>
       into(workouts).insert(workoutsCompanion);
 
