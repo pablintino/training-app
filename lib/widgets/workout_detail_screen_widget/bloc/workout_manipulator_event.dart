@@ -27,6 +27,17 @@ class SaveWorkoutEditionEvent extends WorkoutManipulatorEvent {
   List<Object?> get props => [];
 }
 
+class DragSessionWorkoutEditionEvent extends WorkoutManipulatorEvent {
+  final WorkoutSession session;
+  final int targetWeek;
+  final int targetDay;
+
+  DragSessionWorkoutEditionEvent(this.session, this.targetWeek, this.targetDay);
+
+  @override
+  List<Object?> get props => [session, targetDay, targetWeek];
+}
+
 class NameInputUpdateEvent extends WorkoutManipulatorEvent {
   final String? nameValue;
 

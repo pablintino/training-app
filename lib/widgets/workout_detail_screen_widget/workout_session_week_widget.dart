@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:expansion_tile_card/expansion_tile_card.dart';
 import 'package:flutter/material.dart';
 import 'package:training_app/models/workout_models.dart';
@@ -7,12 +8,14 @@ import 'package:training_app/widgets/two_letters_icon.dart';
 class WorkoutSessionWeekWidget extends StatelessWidget {
   final List<WorkoutSession> weekSessions;
   final Function(bool)? onDragStatusChange;
-  final Function(WorkoutSession?)? onDragAccept;
-  final Function(WorkoutSession?)? onDragShouldAccept;
+  final Function(WorkoutSession, int week, int day)? onDragAccept;
+  final Function(WorkoutSession?, int week, int day)? onDragShouldAccept;
   final Function(WorkoutSession)? onTap;
   final bool enableDragAndDrop;
+  final int week;
 
-  const WorkoutSessionWeekWidget(this.weekSessions, this.enableDragAndDrop,
+  const WorkoutSessionWeekWidget(
+      this.weekSessions, this.enableDragAndDrop, this.week,
       {Key? key,
       this.onDragStatusChange,
       this.onDragAccept,
@@ -27,6 +30,7 @@ class WorkoutSessionWeekWidget extends StatelessWidget {
       child: ExpansionTileCard(
         initialElevation: 5.0,
         elevation: 5.0,
+        initiallyExpanded: enableDragAndDrop,
         title: Text('Week ${weekSessions.elementAt(0).week}'),
         children: <Widget>[
           const Divider(
@@ -49,34 +53,25 @@ class WorkoutSessionWeekWidget extends StatelessWidget {
     return ScrollConfiguration(
         behavior: const _ClampingScrollBehavior(),
         child: ListView.builder(
-          padding: EdgeInsets.zero,
-          shrinkWrap: true,
-          itemBuilder: enableDragAndDrop
-              ? _dragAndDropItemBuilder
-              : _staticListItemBuilder,
-          // When drag&drop is enable drop targets must be added, hence the *2 + 1
-          // To preserve positions and avoid see tiles changing positions (drag
-          // targets are 1px height but its noticeable) "dummy" containers are
-          // used when drag and drop is disabled too
-          itemCount: weekSessions.length * 2 + 1,
-        ));
+            padding: EdgeInsets.zero,
+            shrinkWrap: true,
+            itemBuilder: enableDragAndDrop
+                ? _dragAndDropItemBuilder
+                : _staticListItemBuilder,
+            // If editing total elements are the total number of days in a week
+            itemCount: enableDragAndDrop ? 7 : weekSessions.length));
   }
 
   Widget _dragAndDropItemBuilder(BuildContext context, int index) {
-    return index % 2 == 0
+    final sessionForIndex =
+        weekSessions.firstWhereOrNull((element) => element.weekDay == index);
+    return sessionForIndex == null
         ? _buildDragTargets(context, index)
-        : _buildDraggableSessionItem(
-            context, weekSessions.elementAt((index - 1) ~/ 2));
+        : _buildDraggableSessionItem(context, sessionForIndex);
   }
 
   Widget _staticListItemBuilder(BuildContext context, int index) {
-    return index % 2 == 0
-        // Empty container of the same size of drag&drop targets
-        ? Container(
-            height: 1,
-            width: 50,
-          )
-        : _buildSessionCard(context, weekSessions.elementAt((index - 1) ~/ 2));
+    return _buildSessionCard(context, weekSessions.elementAt(index));
   }
 
   Widget _buildDragTargets(BuildContext context, int index) {
@@ -84,16 +79,28 @@ class WorkoutSessionWeekWidget extends StatelessWidget {
 //      builder responsible to build a widget based on whether there is an item being dropped or not
       builder: (context, candidates, rejects) {
         return candidates.length > 0
-            ? _buildDraggableSessionItem(context, candidates[0]!)
-            : Container(
-                width: 50,
-                height: 1,
+            ? _buildSessionCard(context, candidates[0]!, weekDayOverride: index)
+            : Card(
+                elevation: 1,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(2)),
+                ),
+                child: ListTile(
+                  title: Center(
+                    child: Text(
+                      getDayNameFromInt(index),
+                      style: TextStyle(
+                          color: Colors.grey, fontStyle: FontStyle.italic),
+                    ),
+                  ),
+                ),
               );
       },
 //      condition on to accept the item or not
-      onWillAccept: (value) => onDragShouldAccept?.call(value) ?? false,
+      onWillAccept: (value) =>
+          onDragShouldAccept?.call(value, week, index) ?? false,
 //      what to do when an item is accepted
-      onAccept: (value) => onDragAccept?.call(value),
+      onAccept: (value) => onDragAccept?.call(value, week, index),
     );
   }
 
@@ -105,6 +112,7 @@ class WorkoutSessionWeekWidget extends StatelessWidget {
         data: session,
         onDragStarted: () => onDragStatusChange?.call(true),
         onDragEnd: (_) => onDragStatusChange?.call(false),
+        onDragCompleted: () => onDragStatusChange?.call(false),
         onDraggableCanceled: (_, __) => onDragStatusChange?.call(false),
         feedback: Container(
           width: constraints.maxWidth,
@@ -120,8 +128,9 @@ class WorkoutSessionWeekWidget extends StatelessWidget {
     );
   }
 
-  Card _buildSessionCard(BuildContext buildContext, WorkoutSession session) {
-    final sessionDay = getDayNameFromInt(session.weekDay);
+  Card _buildSessionCard(BuildContext buildContext, WorkoutSession session,
+      {int? weekDayOverride}) {
+    final sessionDay = getDayNameFromInt(weekDayOverride ?? session.weekDay);
     return Card(
       elevation: 3,
       child: ListTile(

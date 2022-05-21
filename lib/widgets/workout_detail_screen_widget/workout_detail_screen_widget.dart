@@ -48,31 +48,33 @@ class _WorkoutDetailsScreenWidgetState
       create: (_) => WorkoutManipulatorBloc(args.workoutListBloc)
         ..add(LoadWorkoutEvent(args.workoutId)),
       child: BlocConsumer<WorkoutManipulatorBloc, WorkoutManipulatorState>(
-          listener: (ctx, state) {
-            if (state is WorkoutManipulatorErrorState) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(state.error),
-                duration: Duration(seconds: 2),
-              ));
-            } else if (state is WorkoutManipulatorEditingState) {
-              if (!state.workoutName.dirty) {
-                _nameController.text = state.workoutName.value ?? '';
-              }
-              if (!state.workoutDescription.dirty) {
-                _descriptionController.text =
-                    state.workoutDescription.value ?? '';
-              }
-            } else if (state is WorkoutManipulatorLoadedState) {
-              _descriptionController.text = state.workout.description ?? '';
-              _nameController.text = state.workout.name ?? '';
-            }
-          },
+          listener: _stateChangeListener,
           builder: (ctx, state) => state is WorkoutManipulatorLoadedState
               ? _buildScrollView(ctx, state)
               : const Center(
                   child: Text('No data'),
                 )),
     ));
+  }
+
+  void _stateChangeListener(
+      BuildContext context, WorkoutManipulatorState state) {
+    if (state is WorkoutManipulatorErrorState) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(state.error),
+        duration: Duration(seconds: 2),
+      ));
+    } else if (state is WorkoutManipulatorEditingState) {
+      if (!state.workoutName.dirty) {
+        _nameController.text = state.workoutName.value ?? '';
+      }
+      if (!state.workoutDescription.dirty) {
+        _descriptionController.text = state.workoutDescription.value ?? '';
+      }
+    } else if (state is WorkoutManipulatorLoadedState) {
+      _descriptionController.text = state.workout.description ?? '';
+      _nameController.text = state.workout.name ?? '';
+    }
   }
 
   SliverAppBar _buildAppBar(
@@ -128,11 +130,15 @@ class _WorkoutDetailsScreenWidgetState
         (_, idx) => WorkoutSessionWeekWidget(
           groupedSessions[groupedSessions.keys.elementAt(idx)]!,
           state is WorkoutManipulatorEditingState,
+          idx,
           onDragStatusChange: (isDragging) =>
               bloc.add(SetSessionDraggingEvent(true)),
           onTap: (session) => Navigator.pushNamed(
               context, AppRoutes.WORKOUTS_SESSIONS_DETAILS_SCREEN_ROUTE,
               arguments: WorkoutSessionScreenWidgetArguments(session.id!)),
+          onDragShouldAccept: (_, __, ___) => true,
+          onDragAccept: (session, week, day) =>
+              bloc.add(DragSessionWorkoutEditionEvent(session, week, day)),
         ),
         childCount: groupedSessions.keys.length,
       )),
@@ -165,12 +171,22 @@ class _WorkoutDetailsScreenWidgetState
       WorkoutManipulatorLoadedState state) {
     Map<int, List<WorkoutSession>> groupedSessions = {};
     for (WorkoutSession workoutSession in state.workout.sessions) {
-      if (!groupedSessions.containsKey(workoutSession.week)) {
+      final sessionToAdd = state is WorkoutManipulatorEditingState &&
+              state.movedSessions.containsKey(workoutSession.id)
+          ? state.movedSessions[workoutSession.id]!
+          : workoutSession;
+
+      if (!groupedSessions.containsKey(sessionToAdd.week)) {
         // TODO Review !
-        groupedSessions[workoutSession.week!] = [];
+        groupedSessions[sessionToAdd.week!] = [];
       }
-      groupedSessions[workoutSession.week!]!.add(workoutSession);
+      groupedSessions[sessionToAdd.week!]!.add(sessionToAdd);
     }
+
+    // Sort by day
+    groupedSessions.forEach(
+        (_, sessions) => sessions.sort((a, b) => a.weekDay! - b.weekDay!));
+
     return groupedSessions;
   }
 

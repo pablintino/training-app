@@ -31,24 +31,28 @@ class WorkoutManipulatorEditingState extends WorkoutManipulatorLoadedState {
   final bool isDragging;
   final StringField workoutName;
   final StringField workoutDescription;
+  final Map<int, WorkoutSession> movedSessions;
 
   WorkoutManipulatorEditingState(
       {required Workout workout,
       required this.isDragging,
       required this.workoutName,
-      required this.workoutDescription})
+      required this.workoutDescription,
+      required this.movedSessions})
       : super(workout: workout);
 
   WorkoutManipulatorEditingState copyWith(
       {StringField? workoutName,
       StringField? workoutDescription,
       bool? isDraggingSession,
-      Workout? workout}) {
+      Workout? workout,
+      Map<int, WorkoutSession>? movedSessions}) {
     return WorkoutManipulatorEditingState(
         workoutName: workoutName ?? this.workoutName,
         workoutDescription: workoutDescription ?? this.workoutDescription,
         isDragging: isDraggingSession ?? this.isDragging,
-        workout: workout ?? this.workout);
+        workout: workout ?? this.workout,
+        movedSessions: movedSessions ?? this.movedSessions);
   }
 
   static WorkoutManipulatorEditingState fromLoadedState(
@@ -60,12 +64,18 @@ class WorkoutManipulatorEditingState extends WorkoutManipulatorLoadedState {
         workoutName: StringField(value: (workout ?? state.workout).name),
         workoutDescription:
             StringField(value: (workout ?? state.workout).description),
-        isDragging: isDragging ?? false);
+        isDragging: isDragging ?? false,
+        movedSessions: Map());
   }
 
   @override
-  List<Object?> get props =>
-      [isDragging, workoutName, workoutDescription, ...super.props];
+  List<Object?> get props => [
+        isDragging,
+        workoutName,
+        workoutDescription,
+        movedSessions,
+        ...super.props
+      ];
 }
 
 class WorkoutManipulatorErrorState extends WorkoutManipulatorEditingState {
@@ -75,12 +85,14 @@ class WorkoutManipulatorErrorState extends WorkoutManipulatorEditingState {
       {required Workout workout,
       required bool isDragging,
       required StringField workoutName,
-      required StringField workoutDescription})
+      required StringField workoutDescription,
+      required Map<int, WorkoutSession> movedSessions})
       : super(
             workoutName: workoutName,
             workoutDescription: workoutDescription,
             isDragging: isDragging,
-            workout: workout);
+            workout: workout,
+            movedSessions: movedSessions);
 
   static WorkoutManipulatorErrorState fromState(
       WorkoutManipulatorEditingState state, String errorMessage,
@@ -89,7 +101,8 @@ class WorkoutManipulatorErrorState extends WorkoutManipulatorEditingState {
         workoutName: state.workoutName,
         workoutDescription: state.workoutDescription,
         workout: workout ?? state.workout,
-        isDragging: state.isDragging);
+        isDragging: state.isDragging,
+        movedSessions: state.movedSessions);
   }
 
   @override

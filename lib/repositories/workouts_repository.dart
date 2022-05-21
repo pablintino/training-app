@@ -70,10 +70,8 @@ class WorkoutRepository {
   Future<Workout> updateWorkout(Workout workout) async {
     try {
       return await _workoutClient
-          .updateWorkout(
-          workout.id!,
-          WorkoutDto(
-              name: workout.name, description: workout.description))
+          .updateWorkout(workout.id!,
+              WorkoutDto(name: workout.name, description: workout.description))
           .then((workoutResponse) async {
         _db.workoutDAO.updateWorkoutById(
             workoutResponse.id!,
@@ -82,6 +80,31 @@ class WorkoutRepository {
                 description: Value(workoutResponse.description)));
         return workoutResponse;
       }).then((workoutResponse) => Workout.fromDto(workoutResponse));
+    } catch (e) {
+      print(e.toString());
+      throw e;
+    }
+  }
+
+  Future<WorkoutSession> updateWorkoutSession(
+      WorkoutSession workoutSession) async {
+    try {
+      return await _workoutClient
+          .updateWorkoutSession(
+              workoutSession.id!,
+              WorkoutSessionDto(
+                  id: workoutSession.id,
+                  weekDay: workoutSession.weekDay,
+                  week: workoutSession.week))
+          .then((workoutSessionResponse) async {
+        _db.workoutDAO.updateWorkoutSessionById(
+            workoutSessionResponse.id!,
+            WorkoutSessionsCompanion(
+                weekDay: Value(workoutSessionResponse.weekDay!),
+                week: Value(workoutSessionResponse.week!)));
+        return workoutSessionResponse;
+      }).then((workoutSessionResponse) =>
+              WorkoutSession.fromDto(workoutSessionResponse));
     } catch (e) {
       print(e.toString());
       throw e;

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:get_it/get_it.dart';
 import 'package:training_app/models/workout_models.dart';
@@ -35,6 +36,8 @@ class WorkoutManipulatorBloc
         (event, emit) => _handleStartWorkoutEditionEvent(emit));
     on<SaveWorkoutEditionEvent>(
         (event, emit) => _handleSaveWorkoutEditionEvent(emit));
+    on<DragSessionWorkoutEditionEvent>(
+        (event, emit) => _handleDragSessionWorkoutEditionEvent(emit, event));
     on<DescriptionInputUpdateEvent>(
         (event, emit) => _handleDescriptionInputEvent(event, emit),
         transformer:
@@ -57,6 +60,36 @@ class WorkoutManipulatorBloc
     }).catchError((err) {
       print("errrrrorrr");
     });
+  }
+
+  Future<void> _handleDragSessionWorkoutEditionEvent(
+      Emitter emit, DragSessionWorkoutEditionEvent event) async {
+    if (state is WorkoutManipulatorEditingState) {
+      final currentState = state as WorkoutManipulatorEditingState;
+
+      final originalSession = currentState.workout.sessions
+          .firstWhereOrNull((element) => element.id == event.session.id);
+      final newMap = Map<int, WorkoutSession>.from(currentState.movedSessions);
+
+      // If nothing changed just skip
+      if (originalSession == null ||
+          (originalSession.weekDay == event.targetDay &&
+              originalSession.week == event.targetWeek)) {
+        // One thing before skipping. If the session is dragged back to its original
+        // position it can be removed from the moved map
+        if (originalSession != null &&
+            currentState.movedSessions.containsKey(event.session.id)) {
+          newMap.remove(event.session.id);
+        }
+      } else {
+        newMap[event.session.id!] = WorkoutSession(
+            id: event.session.id,
+            phases: event.session.phases,
+            week: event.targetWeek,
+            weekDay: event.targetDay);
+      }
+      emit(currentState.copyWith(movedSessions: newMap));
+    }
   }
 
   Future<void> _handleSessionDraggingEvent(
@@ -82,7 +115,8 @@ class WorkoutManipulatorBloc
 
       // If form is untouched just skip all logic
       if (!currentState.workoutName.dirty &&
-          !currentState.workoutDescription.dirty) {
+          !currentState.workoutDescription.dirty &&
+          currentState.movedSessions.length == 0) {
         emit(WorkoutManipulatorLoadedState.fromState(currentState));
         return;
       }
@@ -122,7 +156,15 @@ class WorkoutManipulatorBloc
             id: currentState.workout?.id!,
             name: validationResult.name.value,
             description: validationResult.description.value))
-        .then((value) => _workoutRepository.getWorkout(value.id!, fat: true))
+        .then((value) async {
+      for (final modifiedSession in currentState.movedSessions.entries) {
+        await _workoutRepository.updateWorkoutSession(WorkoutSession(
+            id: modifiedSession.value.id,
+            week: modifiedSession.value.week,
+            weekDay: modifiedSession.value.weekDay));
+      }
+      return _workoutRepository.getWorkout(value.id!, fat: true);
+    })
         // Force ! cast as it should exist
         .then((value) => value!);
   }

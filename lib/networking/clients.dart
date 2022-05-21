@@ -148,6 +148,22 @@ class WorkoutClient {
     }
   }
 
+  Future<WorkoutSessionDto> updateWorkoutSession(
+      int id, WorkoutSessionDto workoutSessionDto) async {
+    try {
+      Response workoutSessionData =
+          await dio.put('/api/v1/workouts/sessions/$id',
+              data: workoutSessionDto.toJson(),
+              options: Options(headers: {
+                'Accept': 'application/json',
+              }));
+      return WorkoutSessionDto.fromJson(workoutSessionData.data);
+    } on DioError catch (e) {
+      _handleError(e);
+      throw e;
+    }
+  }
+
   Future<List<WorkoutDto>> getWorkouts(
       {bool bulk = false, bool fat = false}) async {
     try {
