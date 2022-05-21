@@ -130,7 +130,7 @@ class _WorkoutDetailsScreenWidgetState
         (_, idx) => WorkoutSessionWeekWidget(
           groupedSessions[groupedSessions.keys.elementAt(idx)]!,
           state is WorkoutManipulatorEditingState,
-          idx,
+          groupedSessions.keys.elementAt(idx),
           onDragStatusChange: (isDragging) =>
               bloc.add(SetSessionDraggingEvent(true)),
           onTap: (session) => Navigator.pushNamed(
