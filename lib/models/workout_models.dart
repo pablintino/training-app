@@ -67,6 +67,16 @@ class WorkoutSession extends Equatable {
         phases =
             dto.phases.map((phase) => WorkoutPhase.fromDto(phase)).toList();
 
+  WorkoutSession copyWith(
+      {int? id, int? week, int? weekDay, List<WorkoutPhase>? phases}) {
+    return WorkoutSession(
+      id: id ?? this.id,
+      week: week ?? this.week,
+      weekDay: weekDay ?? this.weekDay,
+      phases: phases ?? this.phases,
+    );
+  }
+
   @override
   List<Object?> get props => [weekDay, week, id, phases];
 }
@@ -92,6 +102,16 @@ class WorkoutPhase extends Equatable {
         name = dto.name,
         sequence = dto.sequence,
         items = dto.items.map((item) => WorkoutItem.fromDto(item)).toList();
+
+  WorkoutPhase copyWith(
+      {int? id, String? name, int? sequence, List<WorkoutItem>? items}) {
+    return WorkoutPhase(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      sequence: sequence ?? this.sequence,
+      items: items ?? this.items,
+    );
+  }
 
   @override
   List<Object?> get props => [name, sequence, id, items];

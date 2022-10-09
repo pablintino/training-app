@@ -86,28 +86,34 @@ class _WorkoutDetailsScreenWidgetState
       expandedHeight: 125,
       floating: true,
       pinned: true,
-      //flexibleSpace: FlexibleSpaceBar(
-      //  background: Image.network(
-      //    'https://source.unsplash.com/random?monochromatic+dark',
-      //    fit: BoxFit.cover,
-      //  ),
-      //  title: Text(state.workout.name!),
-      flexibleSpace: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
+      flexibleSpace: Stack(
         children: <Widget>[
-          Container(
-            width: 300,
-            child: FlexibleSpaceBar(title: Text(state.workout.name!)),
+          Positioned.fill(
+            child: Image.network(
+              'https://source.unsplash.com/random?monochromatic+dark',
+              fit: BoxFit.cover,
+            ),
           ),
-          Spacer(),
-          IconButton(
-            color: Colors.white,
-            icon: Icon(state is WorkoutManipulatorEditingState
-                ? Icons.save
-                : Icons.edit),
-            onPressed: () => bloc.add(state is WorkoutManipulatorEditingState
-                ? SaveWorkoutEditionEvent()
-                : StartWorkoutEditionEvent()),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Container(
+                width: 300,
+                child: FlexibleSpaceBar(title: Text(state.workout.name!)),
+              ),
+              Expanded(child: Container()),
+              IconButton(
+                color: Colors.white,
+                icon: Icon(state is WorkoutManipulatorEditingState
+                    ? Icons.save
+                    : Icons.edit),
+                onPressed: () => bloc.add(
+                    state is WorkoutManipulatorEditingState
+                        ? SaveWorkoutEditionEvent()
+                        : StartWorkoutEditionEvent()),
+              )
+            ],
           )
         ],
       ),
@@ -135,7 +141,8 @@ class _WorkoutDetailsScreenWidgetState
               bloc.add(SetSessionDraggingEvent(true)),
           onTap: (session) => Navigator.pushNamed(
               context, AppRoutes.WORKOUTS_SESSIONS_DETAILS_SCREEN_ROUTE,
-              arguments: WorkoutSessionScreenWidgetArguments(session.id!)),
+              arguments: WorkoutSessionScreenWidgetArguments(
+                  session.id!, state is WorkoutManipulatorEditingState)),
           onDragShouldAccept: (_, __, ___) => true,
           onDragAccept: (session, week, day) =>
               bloc.add(DragSessionWorkoutEditionEvent(session, week, day)),

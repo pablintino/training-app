@@ -2,145 +2,160 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:training_app/models/workout_models.dart';
 import 'package:training_app/utils/known_constants.dart';
-import 'package:training_app/widgets/custom_height_rect_clipper.dart';
-import 'package:training_app/widgets/workout_session_detail_screen_widget/bloc/workout_session_details_bloc.dart';
-import 'package:training_app/widgets/workout_session_detail_screen_widget/workout_phases_list_widget.dart';
+import 'package:training_app/widgets/workout_session_detail_screen_widget/bloc/workout_session_manipulator_bloc.dart';
+import 'package:training_app/widgets/workout_session_detail_screen_widget/workout_phase_widget.dart';
+import 'package:training_app/widgets/workout_session_detail_screen_widget/workout_session_reoder_phases_widget.dart';
 
 class WorkoutSessionScreenWidgetArguments {
   final int sessionId;
+  final bool initEditMode;
 
-  WorkoutSessionScreenWidgetArguments(this.sessionId);
+  WorkoutSessionScreenWidgetArguments(this.sessionId, this.initEditMode);
 }
 
-class WorkoutSessionScreenWidget extends StatelessWidget {
+class WorkoutSessionScreenWidget extends StatefulWidget {
+  const WorkoutSessionScreenWidget({Key? key}) : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() => _WorkoutSessionScreenWidgetState();
+}
+
+class _WorkoutSessionScreenWidgetState
+    extends State<WorkoutSessionScreenWidget> {
+  final ScrollController _scroller = ScrollController();
+  final _scrollViewKey = GlobalKey();
+
   @override
   Widget build(BuildContext context) {
-    final List<String> _tabs = <String>['Phases', 'Media'];
     final args = ModalRoute.of(context)!.settings.arguments
         as WorkoutSessionScreenWidgetArguments;
     return Scaffold(
         body: SafeArea(
-      child: BlocProvider<WorkoutSessionDetailsBloc>(
-        create: (_) =>
-            WorkoutSessionDetailsBloc()..add(LoadSessionEvent(args.sessionId)),
-        child:
-            BlocBuilder<WorkoutSessionDetailsBloc, WorkoutSessionDetailsState>(
-                builder: (ctx, state) => DefaultTabController(
-                    length: 2,
-                    child: NestedScrollView(
-                      // controller: _scrollController,
-                      headerSliverBuilder:
-                          (scrollContext, innerBoxIsScrolled) => _getAppBar(
-                              scrollContext, state, _tabs, innerBoxIsScrolled),
-                      body: _buildBody(context, state),
-                    ))),
+      child: BlocProvider<WorkoutSessionManipulatorBloc>(
+        create: (_) => WorkoutSessionManipulatorBloc()
+          ..add(LoadSessionEvent(args.sessionId, args.initEditMode)),
+        child: BlocBuilder<WorkoutSessionManipulatorBloc,
+                WorkoutSessionManipulatorState>(
+            builder: (ctx, state) =>
+                state is WorkoutSessionManipulatorLoadedState
+                    ? _buildScrollView(ctx, state)
+                    : const Center(
+                        child: Text('No data'),
+                      )),
       ),
     ));
   }
 
-  Widget _buildBody(BuildContext context, WorkoutSessionDetailsState state) {
-    double baseClipHeight = MediaQuery.of(context).size.height -
-        (kToolbarHeight + MediaQuery.of(context).padding.top);
-    if (state is SessionLoadedState) {
-      return ClipRect(
-        clipper: CustomHeightClipper(
-          baseClipHeight - 46,
-        ), // 46 is the default tabbar height
-        child: _buildTabBar(state),
-      );
-    }
-    return ClipRect(
-      clipper: CustomHeightClipper(
-        baseClipHeight,
-      ),
-      child: Center(
-        child: Text('No data'),
-      ),
-    );
-  }
-
-  TabBarView _buildTabBar(SessionLoadedState state) {
-    final sortedList = List<WorkoutPhase>.from(state.workoutSession.phases);
-    sortedList.sort((a, b) => ((a.sequence != null && b.sequence != null)
-        ? (a.sequence! - b.sequence!)
-        : 0));
-    return TabBarView(
-      children: [
-        WorkoutPhasesListWidget(state.workoutSession.phases),
-        Center(
-          child: Text('Other section'),
-        )
+  Widget _buildScrollView(
+      BuildContext buildContext, WorkoutSessionManipulatorLoadedState state) {
+    return CustomScrollView(
+      key: _scrollViewKey,
+      controller: _scroller,
+      slivers: [
+        _buildAppBar(buildContext, state),
+        ..._buildBody(buildContext, state),
       ],
     );
   }
 
-  List<Widget> _getAppBar(
-      BuildContext context,
-      WorkoutSessionDetailsState state,
-      List<String> tabs,
-      bool innerBoxIsScrolled) {
-    final headerText = state is SessionLoadedState
-        ? 'Session: ${getDayNameFromInt(state.workoutSession.weekDay)} ${state.workoutSession.week ?? ''}'
-        : null;
+  List<Widget> _buildBody(
+      BuildContext context, WorkoutSessionManipulatorLoadedState state) {
+    // Todo, improve
+    final ordererdPhases =
+        List<WorkoutPhase>.from(state.workoutSession.phases, growable: true);
+    if (state is WorkoutSessionManipulatorEditingState) {
+      for (final movedKv in state.movedPhases.entries) {
+        final index =
+            ordererdPhases.indexWhere((element) => element.id == movedKv.key);
+        if (index >= 0) {
+          ordererdPhases.removeAt(index);
+          ordererdPhases.add(movedKv.value);
+        }
+      }
+    }
+    ordererdPhases.sort((a, b) => a.sequence!.compareTo(b.sequence!));
+
+    final bloc = BlocProvider.of<WorkoutSessionManipulatorBloc>(context);
     return [
-      SliverAppBar(
-        automaticallyImplyLeading: true,
-        backgroundColor: Theme.of(context).primaryColor,
-        expandedHeight: 100,
-        pinned: true,
-        flexibleSpace: FlexibleSpaceBar(
-          //titlePadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-          background: Image.network(
-            'https://source.unsplash.com/random?monochromatic+dark',
-            fit: BoxFit.cover,
-          ),
-          title: Text(headerText ?? ''),
-          centerTitle: true,
-        ),
-      ),
-      if (state is SessionLoadedState)
-        SliverPersistentHeader(
-          delegate: _SliverAppBarDelegate(
-            TabBar(
-              labelColor: Colors.black87,
-              unselectedLabelColor: Colors.grey,
-              // These are the widgets to put in each tab in the tab bar.
-              tabs: tabs
-                  .map((String name) => Tab(
-                        text: name,
-                      ))
-                  .toList(),
+      SliverList(
+          delegate: SliverChildBuilderDelegate(
+        (_, idx) => Padding(
+            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            child: WorkoutPhaseWidget(ordererdPhases[idx], () {
+              WorkoutSessionReorderPhasesWidget.showPhaseReorderModal(
+                  context, ordererdPhases,
+                  onReorder: (phase) => bloc.add(
+                      MoveWorkoutPhaseEditionEvent(phase, phase.sequence!)));
+            })),
+        childCount: ordererdPhases.length,
+      )),
+
+      // This SizedBox helps drag&drop at the bottom of the screen
+      if (state is WorkoutSessionManipulatorEditingState)
+        SliverToBoxAdapter(
+          child: Container(
+            height: 100,
+            child: Center(
+              child: RawMaterialButton(
+                onPressed: () {},
+                elevation: 2.0,
+                fillColor: Theme.of(context).primaryColor,
+                child: Icon(
+                  Icons.add,
+                  size: 30.0,
+                  color: Colors.white,
+                ),
+                padding: EdgeInsets.all(15.0),
+                shape: CircleBorder(),
+              ),
             ),
           ),
-          pinned: true,
         )
     ];
   }
 
-
-}
-
-class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
-  _SliverAppBarDelegate(this._tabBar);
-
-  final TabBar _tabBar;
-
-  @override
-  double get minExtent => _tabBar.preferredSize.height;
-
-  @override
-  double get maxExtent => _tabBar.preferredSize.height;
-
-  @override
-  Widget build(
-      BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return new Container(
-      child: _tabBar,
+  SliverAppBar _buildAppBar(
+      BuildContext context, WorkoutSessionManipulatorLoadedState state) {
+    final bloc = BlocProvider.of<WorkoutSessionManipulatorBloc>(context);
+    return SliverAppBar(
+      automaticallyImplyLeading: true,
+      backgroundColor: Theme.of(context).primaryColor,
+      expandedHeight: 125,
+      floating: true,
+      pinned: true,
+      flexibleSpace: Stack(
+        children: <Widget>[
+          Positioned.fill(
+            child: Image.network(
+              'https://source.unsplash.com/random?monochromatic+dark',
+              fit: BoxFit.cover,
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Container(
+                width: 300,
+                child: FlexibleSpaceBar(
+                    title: Text(
+                        'Week ${state.workoutSession.week}, ${getDayNameFromInt(state.workoutSession.week)}')),
+              ),
+              Expanded(child: Container()),
+              IconButton(
+                color: Colors.white,
+                icon: Icon(state is WorkoutSessionManipulatorEditingState
+                    ? Icons.save
+                    : Icons.edit),
+                onPressed: () => bloc.add(
+                    state is WorkoutSessionManipulatorEditingState
+                        ? SaveSessionWorkoutEditionEvent()
+                        : StartWorkoutSessionEditionEvent()),
+              )
+            ],
+          )
+        ],
+      ),
     );
-  }
-
-  @override
-  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
-    return false;
   }
 }

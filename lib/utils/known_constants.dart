@@ -1,18 +1,18 @@
 String getDayNameFromInt(int? day) {
   switch (day) {
-    case 0:
-      return 'Monday';
     case 1:
-      return 'Tuesday';
+      return 'Monday';
     case 2:
-      return 'Wednesday';
+      return 'Tuesday';
     case 3:
-      return 'Thursday';
+      return 'Wednesday';
     case 4:
-      return 'Friday';
+      return 'Thursday';
     case 5:
-      return 'Saturday';
+      return 'Friday';
     case 6:
+      return 'Saturday';
+    case 7:
       return 'Sunday';
   }
   return '';

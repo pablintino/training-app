@@ -1,104 +1,89 @@
-import 'package:expansion_tile_card/expansion_tile_card.dart';
 import 'package:flutter/material.dart';
 import 'package:training_app/models/workout_models.dart';
-import 'package:training_app/widgets/fixed_color_round_icon.dart';
 
-class WorkoutPhasesListWidget extends StatelessWidget {
-  final List<WorkoutPhase> _workoutPhases;
+class WorkoutItemWidget extends StatelessWidget {
+  final WorkoutItem workoutItem;
 
-  const WorkoutPhasesListWidget(this._workoutPhases, {Key? key})
-      : super(key: key);
+  const WorkoutItemWidget(this.workoutItem, {Key? key}) : super(key: key);
 
-  @override
   Widget build(BuildContext context) {
-    final sortedList = List<WorkoutPhase>.from(_workoutPhases);
-    sortedList.sort((a, b) => ((a.sequence != null && b.sequence != null)
-        ? (a.sequence! - b.sequence!)
-        : 0));
-
-    return ListView.builder(
-      key: const PageStorageKey('workoutSessionDetailsListView'),
-      shrinkWrap: true,
-      physics: const ClampingScrollPhysics(),
-      itemBuilder: (_, idx) => _PhaseContainerWidget(
-        sortedList[idx],
-        key: PageStorageKey('workoutSessionDetailsListViewTile$idx'),
-      ),
-      itemCount: _workoutPhases.length,
-    );
-  }
-}
-
-class _PhaseContainerWidget extends StatelessWidget {
-  final WorkoutPhase _workoutPhase;
-
-  const _PhaseContainerWidget(this._workoutPhase, {Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final sortedList = List<WorkoutItem>.from(_workoutPhase.items);
-    sortedList.sort((a, b) => ((a.sequence != null && b.sequence != null)
-        ? (a.sequence! - b.sequence!)
-        : 0));
-    return Padding(
-      padding: const EdgeInsets.all(5.0),
-      child: ExpansionTileCard(
-        initialElevation: 5.0,
-        elevation: 5.0,
-        leading: _workoutPhase.sequence != null
-            ? FixedColorRoundIcon(
-                _workoutPhase.sequence.toString(), Colors.grey, Colors.white)
-            : null,
-        title: Text(_workoutPhase.name ?? 'No name'),
-        children: <Widget>[
-          Divider(
-            thickness: 1.0,
-            height: 1.0,
-          ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 8.0,
-                vertical: 8.0,
-              ),
-              child: _buildItemList(context, sortedList),
-            ),
-          ),
+    return Card(
+      elevation: 2,
+      child: Column(
+        children: [
+          _buildItemHeader(context, workoutItem),
+          _buildItemDetails(context, workoutItem)
         ],
       ),
     );
   }
 
-  Widget _buildItemList(BuildContext context, List<WorkoutItem> workoutItems) {
-    return Column(
-      children: workoutItems.map((e) => _buildItem(context, e)).toList(),
-    );
-  }
-
-  Widget _buildItem(BuildContext context, WorkoutItem workoutItem) {
-    return Padding(
-      key: Key('${workoutItem.id!}'),
-      padding: EdgeInsets.symmetric(vertical: 0),
-      child: Card(
-        elevation: 2,
-        child: Column(
-          children: [
-            Container(
-              child: ListTileTheme(
-                tileColor: Theme.of(context).primaryColor.withOpacity(0.3),
-                child: ListTile(
-                  title: Text(
-                    workoutItem.name ?? 'No name',
+  Widget _buildItemHeader(BuildContext context, WorkoutItem workoutItem) {
+    return Container(
+      child: ListTileTheme(
+        tileColor: Theme.of(context).primaryColor.withOpacity(0.3),
+        child: ListTile(
+          title: Row(
+            children: [
+              Text(
+                workoutItem.name ?? 'No name',
+                style: TextStyle(
+                  fontSize: 15,
+                ),
+              ),
+              if (workoutItem.workModality != null)
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 5),
+                  child: Text(
+                    '(${workoutItem.workModality})',
                     style: TextStyle(
+                      fontStyle: FontStyle.italic,
                       fontSize: 15,
                     ),
                   ),
                 ),
+              Expanded(child: Container()),
+              PopupMenuButton<int>(
+                icon: Icon(Icons.more_horiz),
+                onSelected: (_) {
+
+                },
+                itemBuilder: (ctx) => [
+                  // popupmenu item 1
+                  PopupMenuItem(
+                    value: 1,
+                    // row has two child icon and text.
+                    child: Row(
+                      children: [
+                        Icon(Icons.star),
+                        SizedBox(
+                          // sized box with width 10
+                          width: 10,
+                        ),
+                        Text("Get The App")
+                      ],
+                    ),
+                  ),
+                  // popupmenu item 2
+                  PopupMenuItem(
+                    onTap: () {},
+                    value: 2,
+                    // row has two child icon and text
+                    child: Row(
+                      children: [
+                        Icon(Icons.chrome_reader_mode),
+                        SizedBox(
+                          // sized box with width 10
+                          width: 10,
+                        ),
+                        Text("About")
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ),
-            _buildItemDetails(context, workoutItem)
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -134,21 +119,18 @@ class _PhaseContainerWidget extends StatelessWidget {
       itemDetails = itemDetails + 'Rounds: ${workoutItem.rounds}';
     }
     if (workoutItem.timeCapSecs != null) {
-      itemDetails =
-          itemDetails + '\nTime cap: ${workoutItem.timeCapSecs} (secs)';
+      itemDetails = itemDetails +
+          ' | T\'Cap: ${_getItemFormattedTime(workoutItem.timeCapSecs!)}';
     }
     if (workoutItem.workTimeSecs != null) {
-      itemDetails =
-          itemDetails + '\nWork time: ${workoutItem.workTimeSecs} (secs)';
+      itemDetails = itemDetails +
+          ' | Work: ${_getItemFormattedTime(workoutItem.workTimeSecs!)}';
     }
     if (workoutItem.restTimeSecs != null) {
-      itemDetails =
-          itemDetails + '\nRest time: ${workoutItem.restTimeSecs} (secs)';
+      itemDetails = itemDetails +
+          ' | Rest: ${_getItemFormattedTime(workoutItem.restTimeSecs!)}';
     }
-    if (workoutItem.workModality != null &&
-        workoutItem.workModality!.isNotEmpty) {
-      itemDetails = itemDetails + '\nModality: ${workoutItem.workModality}';
-    }
+
     return itemDetails != ''
         ? Padding(
             padding: EdgeInsets.symmetric(vertical: 5),
@@ -242,5 +224,23 @@ class _PhaseContainerWidget extends StatelessWidget {
     }
 
     return Text('$reps $weight $distance');
+  }
+
+  String _getItemFormattedTime(int time) {
+    final hours = time ~/ 3600;
+    var result = '';
+    if (hours != 0) {
+      result = '${hours}h';
+    }
+    final tmp = time.remainder(3600);
+    final mins = tmp ~/ 60;
+    if (mins != 0) {
+      result = '$mins\'';
+    }
+    final secs = tmp.remainder(60);
+    if (secs != 0) {
+      result = '$secs\'\'';
+    }
+    return result;
   }
 }

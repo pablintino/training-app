@@ -82,11 +82,8 @@ class WorkoutManipulatorBloc
           newMap.remove(event.session.id);
         }
       } else {
-        newMap[event.session.id!] = WorkoutSession(
-            id: event.session.id,
-            phases: event.session.phases,
-            week: event.targetWeek,
-            weekDay: event.targetDay);
+        newMap[event.session.id!] = event.session
+            .copyWith(week: event.targetWeek, weekDay: event.targetDay);
       }
       emit(currentState.copyWith(movedSessions: newMap));
     }
