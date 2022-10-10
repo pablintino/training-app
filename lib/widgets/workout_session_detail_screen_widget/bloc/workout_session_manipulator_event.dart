@@ -37,3 +37,12 @@ class MoveWorkoutPhaseEditionEvent extends WorkoutSessionManipulatorEvent {
   @override
   List<Object?> get props => [phase, targetSequence];
 }
+
+class DeleteWorkoutPhaseEditionEvent extends WorkoutSessionManipulatorEvent {
+  final int workputPhaseId;
+
+  DeleteWorkoutPhaseEditionEvent(this.workputPhaseId);
+
+  @override
+  List<Object?> get props => [workputPhaseId];
+}

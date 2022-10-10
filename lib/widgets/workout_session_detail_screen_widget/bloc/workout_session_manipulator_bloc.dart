@@ -25,10 +25,36 @@ class WorkoutSessionManipulatorBloc extends Bloc<WorkoutSessionManipulatorEvent,
         (event, emit) => _handleSaveSessionWorkoutEditionEvent(emit));
     on<MoveWorkoutPhaseEditionEvent>(
         (event, emit) => _handleMoveWorkoutPhaseEditionEvent(emit, event));
+    on<DeleteWorkoutPhaseEditionEvent>(
+        (event, emit) => _handleDeleteSessionWorkoutEditionEvent(emit, event));
   }
 
   void _handleSaveSessionWorkoutEditionEvent(Emitter emit) {
     // TODO
+  }
+
+  void _handleDeleteSessionWorkoutEditionEvent(
+      Emitter emit, DeleteWorkoutPhaseEditionEvent event) {
+    if (state is WorkoutSessionManipulatorEditingState) {
+      final currentState = state as WorkoutSessionManipulatorEditingState;
+      final phase = currentState.workoutSession.phases
+          .firstWhereOrNull((element) => element.id == event.workputPhaseId);
+      if (!currentState.deletedPhases.containsKey(event.workputPhaseId) &&
+          phase != null) {
+        final movedPhases =
+            Map<int, WorkoutPhase>.from(currentState.movedPhases);
+        movedPhases.remove(event.workputPhaseId);
+        final deletedPhases =
+            Map<int, WorkoutPhase>.from(currentState.deletedPhases);
+        deletedPhases[event.workputPhaseId] = phase;
+
+        emit(currentState.copyWith(
+            movedPhases: movedPhases,
+            orderedPhases: getOrderedPhases(currentState.workoutSession,
+                movedPhases: movedPhases, deletedPhases: deletedPhases),
+            deletedPhases: deletedPhases));
+      }
+    }
   }
 
   void _handleMoveWorkoutPhaseEditionEvent(
@@ -53,7 +79,10 @@ class WorkoutSessionManipulatorBloc extends Bloc<WorkoutSessionManipulatorEvent,
         newMap[event.phase.id!] =
             event.phase.copyWith(sequence: event.targetSequence);
       }
-      emit(currentState.copyWith(movedPhases: newMap));
+      emit(currentState.copyWith(
+          movedPhases: newMap,
+          orderedPhases: getOrderedPhases(currentState.workoutSession,
+              movedPhases: newMap)));
     }
   }
 
@@ -74,13 +103,37 @@ class WorkoutSessionManipulatorBloc extends Bloc<WorkoutSessionManipulatorEvent,
         .getWorkoutSession(event.sessionId, fat: true)
         .then((session) {
       //TODO Control what to do with null sessions (not found)
-      final state =
-          WorkoutSessionManipulatorLoadedState(workoutSession: session!);
+      final state = WorkoutSessionManipulatorLoadedState(
+          workoutSession: session!, orderedPhases: getOrderedPhases(session!));
       emit(event.initEditMode
           ? WorkoutSessionManipulatorEditingState.fromLoadedState(state)
           : state);
     }).catchError((err) {
       print("errrrrorrr");
     });
+  }
+
+  List<WorkoutPhase> getOrderedPhases(WorkoutSession workoutSession,
+      {Map<int, WorkoutPhase>? movedPhases,
+      Map<int, WorkoutPhase>? deletedPhases}) {
+    final ordererdPhases =
+        List<WorkoutPhase>.from(workoutSession.phases, growable: true);
+    if (deletedPhases != null) {
+      for (final deletedId in deletedPhases.keys) {
+        ordererdPhases.removeWhere((element) => element.id == deletedId);
+      }
+    }
+    if (movedPhases != null) {
+      for (final movedKv in movedPhases.entries) {
+        final index =
+            ordererdPhases.indexWhere((element) => element.id == movedKv.key);
+        if (index >= 0) {
+          ordererdPhases.removeAt(index);
+          ordererdPhases.add(movedKv.value);
+        }
+      }
+    }
+    ordererdPhases.sort((a, b) => a.sequence!.compareTo(b.sequence!));
+    return ordererdPhases;
   }
 }

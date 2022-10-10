@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:training_app/models/workout_models.dart';
 import 'package:training_app/utils/known_constants.dart';
 import 'package:training_app/widgets/workout_session_detail_screen_widget/bloc/workout_session_manipulator_bloc.dart';
 import 'package:training_app/widgets/workout_session_detail_screen_widget/workout_phase_widget.dart';
@@ -61,33 +60,14 @@ class _WorkoutSessionScreenWidgetState
   List<Widget> _buildBody(
       BuildContext context, WorkoutSessionManipulatorLoadedState state) {
     // Todo, improve
-    final ordererdPhases =
-        List<WorkoutPhase>.from(state.workoutSession.phases, growable: true);
-    if (state is WorkoutSessionManipulatorEditingState) {
-      for (final movedKv in state.movedPhases.entries) {
-        final index =
-            ordererdPhases.indexWhere((element) => element.id == movedKv.key);
-        if (index >= 0) {
-          ordererdPhases.removeAt(index);
-          ordererdPhases.add(movedKv.value);
-        }
-      }
-    }
-    ordererdPhases.sort((a, b) => a.sequence!.compareTo(b.sequence!));
-
     final bloc = BlocProvider.of<WorkoutSessionManipulatorBloc>(context);
     return [
       SliverList(
           delegate: SliverChildBuilderDelegate(
         (_, idx) => Padding(
             padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            child: WorkoutPhaseWidget(ordererdPhases[idx], () {
-              WorkoutSessionReorderPhasesWidget.showPhaseReorderModal(
-                  context, ordererdPhases,
-                  onReorder: (phase) => bloc.add(
-                      MoveWorkoutPhaseEditionEvent(phase, phase.sequence!)));
-            })),
-        childCount: ordererdPhases.length,
+            child: WorkoutPhaseWidget(state.orderedPhases[idx])),
+        childCount: state.orderedPhases.length,
       )),
 
       // This SizedBox helps drag&drop at the bottom of the screen
@@ -136,26 +116,73 @@ class _WorkoutSessionScreenWidgetState
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Container(
-                width: 300,
+                width: MediaQuery.of(context).size.width * 3 / 4,
                 child: FlexibleSpaceBar(
                     title: Text(
                         'Week ${state.workoutSession.week}, ${getDayNameFromInt(state.workoutSession.week)}')),
               ),
               Expanded(child: Container()),
-              IconButton(
-                color: Colors.white,
-                icon: Icon(state is WorkoutSessionManipulatorEditingState
-                    ? Icons.save
-                    : Icons.edit),
-                onPressed: () => bloc.add(
-                    state is WorkoutSessionManipulatorEditingState
-                        ? SaveSessionWorkoutEditionEvent()
-                        : StartWorkoutSessionEditionEvent()),
-              )
+              ..._buildAppBarActions(context, state, bloc)
             ],
           )
         ],
       ),
     );
+  }
+
+  List<Widget> _buildAppBarActions(
+      BuildContext context,
+      WorkoutSessionManipulatorLoadedState state,
+      WorkoutSessionManipulatorBloc bloc) {
+    final options = _buildEditionOptions(context, state, bloc);
+    return [
+      if (options.isNotEmpty)
+        PopupMenuButton<Function>(
+          icon: Icon(Icons.more_horiz, color: Colors.white),
+          onSelected: (func) => func(),
+          itemBuilder: (ctx) {
+            return options;
+          },
+        ),
+      IconButton(
+        color: Colors.white,
+        icon: Icon(state is WorkoutSessionManipulatorEditingState
+            ? Icons.save
+            : Icons.edit),
+        onPressed: () => bloc.add(state is WorkoutSessionManipulatorEditingState
+            ? SaveSessionWorkoutEditionEvent()
+            : StartWorkoutSessionEditionEvent()),
+      )
+    ];
+  }
+
+  List<PopupMenuItem<Function>> _buildEditionOptions(
+      BuildContext context,
+      WorkoutSessionManipulatorLoadedState state,
+      WorkoutSessionManipulatorBloc bloc) {
+    return [
+      if (state.orderedPhases.isNotEmpty)
+        PopupMenuItem(
+          value: () {
+            {
+              WorkoutSessionReorderPhasesWidget.showPhaseReorderModal(
+                  context, state.orderedPhases,
+                  onReorder: (phase) => bloc.add(
+                      MoveWorkoutPhaseEditionEvent(phase, phase.sequence!)));
+            }
+          },
+          // row has two child icon and text.
+          child: Row(
+            children: [
+              Icon(Icons.reorder),
+              SizedBox(
+                // sized box with width 10
+                width: 10,
+              ),
+              Text("Reorder phases")
+            ],
+          ),
+        ),
+    ];
   }
 }

@@ -3,8 +3,10 @@ import 'package:training_app/models/workout_models.dart';
 
 class WorkoutItemWidget extends StatelessWidget {
   final WorkoutItem workoutItem;
+  final bool isEditing;
 
-  const WorkoutItemWidget(this.workoutItem, {Key? key}) : super(key: key);
+  const WorkoutItemWidget(this.workoutItem, this.isEditing, {Key? key})
+      : super(key: key);
 
   Widget build(BuildContext context) {
     return Card(
@@ -43,45 +45,44 @@ class WorkoutItemWidget extends StatelessWidget {
                   ),
                 ),
               Expanded(child: Container()),
-              PopupMenuButton<int>(
-                icon: Icon(Icons.more_horiz),
-                onSelected: (_) {
-
-                },
-                itemBuilder: (ctx) => [
-                  // popupmenu item 1
-                  PopupMenuItem(
-                    value: 1,
-                    // row has two child icon and text.
-                    child: Row(
-                      children: [
-                        Icon(Icons.star),
-                        SizedBox(
-                          // sized box with width 10
-                          width: 10,
-                        ),
-                        Text("Get The App")
-                      ],
+              if (isEditing)
+                PopupMenuButton<int>(
+                  icon: Icon(Icons.more_horiz),
+                  onSelected: (_) {},
+                  itemBuilder: (ctx) => [
+                    // popupmenu item 1
+                    PopupMenuItem(
+                      value: 1,
+                      // row has two child icon and text.
+                      child: Row(
+                        children: [
+                          Icon(Icons.star),
+                          SizedBox(
+                            // sized box with width 10
+                            width: 10,
+                          ),
+                          Text("Get The App")
+                        ],
+                      ),
                     ),
-                  ),
-                  // popupmenu item 2
-                  PopupMenuItem(
-                    onTap: () {},
-                    value: 2,
-                    // row has two child icon and text
-                    child: Row(
-                      children: [
-                        Icon(Icons.chrome_reader_mode),
-                        SizedBox(
-                          // sized box with width 10
-                          width: 10,
-                        ),
-                        Text("About")
-                      ],
+                    // popupmenu item 2
+                    PopupMenuItem(
+                      onTap: () {},
+                      value: 2,
+                      // row has two child icon and text
+                      child: Row(
+                        children: [
+                          Icon(Icons.chrome_reader_mode),
+                          SizedBox(
+                            // sized box with width 10
+                            width: 10,
+                          ),
+                          Text("About")
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
             ],
           ),
         ),
