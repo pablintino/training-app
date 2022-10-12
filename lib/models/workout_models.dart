@@ -4,6 +4,15 @@ import 'package:training_app/database/join_entities.dart';
 import 'package:training_app/models/exercises_models.dart';
 import 'package:training_app/networking/entities/workout_dtos.dart';
 
+abstract class AbstractSequentiable extends Equatable {
+  final int? sequence;
+
+  AbstractSequentiable({this.sequence});
+
+  @override
+  List<Object?> get props => [sequence];
+}
+
 class Workout extends Equatable {
   final String? name;
   final String? description;
@@ -81,27 +90,27 @@ class WorkoutSession extends Equatable {
   List<Object?> get props => [weekDay, week, id, phases];
 }
 
-class WorkoutPhase extends Equatable {
+class WorkoutPhase extends AbstractSequentiable {
   final String? name;
-  final int? sequence;
   final int? id;
   final List<WorkoutItem> items;
 
-  WorkoutPhase({this.id, this.name, this.sequence, this.items = const []});
+  WorkoutPhase({this.id, this.name, int? sequence, this.items = const []})
+      : super(sequence: sequence);
 
   WorkoutPhase.fromJoinedModel(JoinedWorkoutPhaseM joinedModel)
       : id = joinedModel.phase.id,
         name = joinedModel.phase.name,
-        sequence = joinedModel.phase.sequence,
         items = joinedModel.items
             .map((item) => WorkoutItem.fromJoinedModel(item))
-            .toList();
+            .toList(),
+        super(sequence: joinedModel.phase.sequence);
 
   WorkoutPhase.fromDto(WorkoutPhaseDto dto)
       : id = dto.id,
         name = dto.name,
-        sequence = dto.sequence,
-        items = dto.items.map((item) => WorkoutItem.fromDto(item)).toList();
+        items = dto.items.map((item) => WorkoutItem.fromDto(item)).toList(),
+        super(sequence: dto.sequence);
 
   WorkoutPhase copyWith(
       {int? id, String? name, int? sequence, List<WorkoutItem>? items}) {
@@ -114,12 +123,11 @@ class WorkoutPhase extends Equatable {
   }
 
   @override
-  List<Object?> get props => [name, sequence, id, items];
+  List<Object?> get props => [name, sequence, id, items, ...super.props];
 }
 
-class WorkoutItem extends Equatable {
+class WorkoutItem extends AbstractSequentiable {
   final String? name;
-  final int? sequence;
   final int? rounds;
   final int? restTimeSecs;
   final int? timeCapSecs;
@@ -136,13 +144,13 @@ class WorkoutItem extends Equatable {
       this.workModality,
       this.id,
       this.name,
-      this.sequence,
-      this.sets = const []});
+      int? sequence,
+      this.sets = const []})
+      : super(sequence: sequence);
 
   WorkoutItem.fromJoinedModel(JoinedWorkoutItemM joinedModel)
       : id = joinedModel.item.id,
         name = joinedModel.item.name,
-        sequence = joinedModel.item.sequence,
         rounds = joinedModel.item.rounds,
         workTimeSecs = joinedModel.item.workTimeSecs,
         workModality = joinedModel.item.workModality,
@@ -150,39 +158,39 @@ class WorkoutItem extends Equatable {
         timeCapSecs = joinedModel.item.timeCapSecs,
         sets = joinedModel.sets
             .map((set) => WorkoutSet.fromJoinedModel(set))
-            .toList();
+            .toList(),
+        super(sequence: joinedModel.item.sequence);
 
   WorkoutItem.fromDto(WorkoutItemDto dto)
       : id = dto.id,
         name = dto.name,
-        sequence = dto.sequence,
         rounds = dto.rounds,
         workTimeSecs = dto.workTimeSecs,
         workModality = dto.workModality,
         restTimeSecs = dto.restTimeSecs,
         timeCapSecs = dto.timeCapSecs,
-        sets = dto.sets.map((set) => WorkoutSet.fromDto(set)).toList();
+        sets = dto.sets.map((set) => WorkoutSet.fromDto(set)).toList(),
+        super(sequence: dto.sequence);
 
   @override
   List<Object?> get props => [
         name,
-        sequence,
         id,
         rounds,
         restTimeSecs,
         timeCapSecs,
         workTimeSecs,
         workModality,
-        sets
+        sets,
+        ...super.props
       ];
 }
 
-class WorkoutSet extends Equatable {
+class WorkoutSet extends AbstractSequentiable {
   final int? reps;
   final int? distance;
   final double? weight;
   final int? setExecutions;
-  final int? sequence;
   final int? id;
   final int? exerciseId;
   final Exercise? exercise;
@@ -192,40 +200,40 @@ class WorkoutSet extends Equatable {
       this.distance,
       this.weight,
       this.setExecutions,
-      this.sequence,
+      int? sequence,
       this.id,
       this.exerciseId,
       this.exercise});
 
   WorkoutSet.fromJoinedModel(JoinedWorkoutSetM joinedModel)
       : id = joinedModel.set.id,
-        sequence = joinedModel.set.sequence,
         reps = joinedModel.set.reps,
         weight = joinedModel.set.weight,
         distance = joinedModel.set.distance,
         setExecutions = joinedModel.set.setExecutions,
         exerciseId = joinedModel.exercise.id,
-        exercise = Exercise.fromModel(joinedModel.exercise);
+        exercise = Exercise.fromModel(joinedModel.exercise),
+        super(sequence: joinedModel.set.sequence);
 
   WorkoutSet.fromDto(WorkoutSetDto dto)
       : id = dto.id,
-        sequence = dto.sequence,
         reps = dto.reps,
         weight = dto.weight,
         distance = dto.distance,
         setExecutions = dto.setExecutions,
         exerciseId = dto.exerciseId,
-        exercise = null;
+        exercise = null,
+        super(sequence: dto.sequence);
 
   @override
   List<Object?> get props => [
         reps,
-        sequence,
         id,
         distance,
         weight,
         exerciseId,
         exercise,
-        setExecutions
+        setExecutions,
+        ...super.props
       ];
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:training_app/models/workout_models.dart';
 import 'package:training_app/utils/known_constants.dart';
 import 'package:training_app/widgets/workout_session_detail_screen_widget/bloc/workout_session_manipulator_bloc.dart';
 import 'package:training_app/widgets/workout_session_detail_screen_widget/workout_phase_widget.dart';
@@ -95,7 +96,7 @@ class _WorkoutSessionScreenWidgetState
   }
 
   SliverAppBar _buildAppBar(
-      BuildContext context, WorkoutSessionManipulatorLoadedState state) {
+      BuildContext context, final WorkoutSessionManipulatorLoadedState state) {
     final bloc = BlocProvider.of<WorkoutSessionManipulatorBloc>(context);
     return SliverAppBar(
       automaticallyImplyLeading: true,
@@ -165,10 +166,21 @@ class _WorkoutSessionScreenWidgetState
         PopupMenuItem(
           value: () {
             {
-              WorkoutSessionReorderPhasesWidget.showPhaseReorderModal(
-                  context, state.orderedPhases,
-                  onReorder: (phase) => bloc.add(
-                      MoveWorkoutPhaseEditionEvent(phase, phase.sequence!)));
+              WorkoutSessionReorderWidget.showPhaseReorderModal<WorkoutPhase>(
+                  context,
+                  state.orderedPhases,
+                  (phase) => ListTile(
+                        title: Text(
+                          phase.name ?? '<No name>',
+                          style: const TextStyle(
+                            fontSize: 15,
+                          ),
+                        ),
+                        trailing: Icon(Icons.drag_handle),
+                      ),
+                  title: const Text("Phases reorder"),
+                  onReorder: (phase, index) =>
+                      bloc.add(MoveWorkoutPhaseEditionEvent(phase, index)));
             }
           },
           // row has two child icon and text.
