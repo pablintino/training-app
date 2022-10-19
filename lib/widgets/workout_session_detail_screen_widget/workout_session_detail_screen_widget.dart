@@ -162,7 +162,8 @@ class _WorkoutSessionScreenWidgetState
       WorkoutSessionManipulatorLoadedState state,
       WorkoutSessionManipulatorBloc bloc) {
     return [
-      if (state.orderedPhases.isNotEmpty)
+      if (state.orderedPhases.isNotEmpty &&
+          state is WorkoutSessionManipulatorEditingState)
         PopupMenuItem(
           value: () {
             {

@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
-import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:get_it/get_it.dart';
 import 'package:training_app/models/workout_models.dart';
@@ -37,22 +36,24 @@ class WorkoutSessionManipulatorBloc extends Bloc<WorkoutSessionManipulatorEvent,
       Emitter emit, DeleteWorkoutPhaseEditionEvent event) {
     if (state is WorkoutSessionManipulatorEditingState) {
       final currentState = state as WorkoutSessionManipulatorEditingState;
-      final phase = currentState.workoutSession.phases
-          .firstWhereOrNull((element) => element.id == event.workputPhaseId);
-      if (!currentState.deletedPhases.containsKey(event.workputPhaseId) &&
-          phase != null) {
-        final movedPhases =
-            Map<int, WorkoutPhase>.from(currentState.movedPhases);
-        movedPhases.remove(event.workputPhaseId);
-        final deletedPhases =
-            Map<int, WorkoutPhase>.from(currentState.deletedPhases);
-        deletedPhases[event.workputPhaseId] = phase;
+
+      if (currentState.editedPhases.containsKey(event.workputPhaseId)) {
+        final editedPhasesMap = Map<int, WorkoutPhase>();
+        final orderedPhases = List<WorkoutPhase>.empty(growable: true);
+
+        var sequential = 0;
+        for (final sourcePhase in currentState.orderedPhases) {
+          if (sourcePhase.id != event.workputPhaseId) {
+            final editedPhase = currentState.editedPhases[sourcePhase.id]!
+                .copyWith(sequence: sequential);
+            editedPhasesMap[editedPhase.id!] = editedPhase;
+            orderedPhases.add(editedPhase);
+            sequential++;
+          }
+        }
 
         emit(currentState.copyWith(
-            movedPhases: movedPhases,
-            orderedPhases: getOrderedPhases(currentState.workoutSession,
-                movedPhases: movedPhases, deletedPhases: deletedPhases),
-            deletedPhases: deletedPhases));
+            editedPhases: editedPhasesMap, orderedPhases: orderedPhases));
       }
     }
   }
@@ -62,36 +63,38 @@ class WorkoutSessionManipulatorBloc extends Bloc<WorkoutSessionManipulatorEvent,
     if (state is WorkoutSessionManipulatorEditingState) {
       final currentState = state as WorkoutSessionManipulatorEditingState;
 
-      final originalPhase = currentState.workoutSession.phases
-          .firstWhereOrNull((element) => element.id == event.phase.id);
-      final newMap = Map<int, WorkoutPhase>.from(currentState.movedPhases);
-
-      // If nothing changed just skip
-      if (originalPhase == null ||
-          originalPhase.sequence == event.targetSequence) {
-        // One thing before skipping. If the phase is dragged back to its original
-        // position it can be removed from the moved map
-        if (originalPhase != null &&
-            currentState.movedPhases.containsKey(event.phase.id)) {
-          newMap.remove(event.phase.id);
+      if (currentState.editedPhases.containsKey(event.phase.id)) {
+        final tmpPhases =
+            List<WorkoutPhase>.from(currentState.orderedPhases, growable: true);
+        final phase = currentState.editedPhases[event.phase.id]!;
+        tmpPhases.removeWhere((element) => element.id == phase.id);
+        tmpPhases.insert(event.targetSequence, phase);
+        var sequence = 0;
+        final editedPhasesMap = Map<int, WorkoutPhase>();
+        final orderedPhases = List<WorkoutPhase>.empty(growable: true);
+        for (final sourcePhase in tmpPhases) {
+          final editedPhase = sourcePhase.copyWith(sequence: sequence);
+          editedPhasesMap[editedPhase.id!] = editedPhase;
+          orderedPhases.add(editedPhase);
+          sequence++;
         }
-      } else {
-        newMap[event.phase.id!] =
-            event.phase.copyWith(sequence: event.targetSequence);
+
+        emit(currentState.copyWith(
+            editedPhases: editedPhasesMap, orderedPhases: orderedPhases));
       }
-      emit(currentState.copyWith(
-          movedPhases: newMap,
-          orderedPhases: getOrderedPhases(currentState.workoutSession,
-              movedPhases: newMap)));
     }
   }
 
   void _handleStartWorkoutSessionEditionEvent(Emitter emit) {
     if (state is! WorkoutSessionManipulatorEditingState &&
         state is WorkoutSessionManipulatorLoadedState) {
+      final currentState = state as WorkoutSessionManipulatorLoadedState;
       emit(WorkoutSessionManipulatorEditingState.fromLoadedState(
-        state as WorkoutSessionManipulatorLoadedState,
-      ));
+          state as WorkoutSessionManipulatorLoadedState,
+          editedPhases: {
+            for (var phase in currentState.workoutSession.phases)
+              phase.id!: phase
+          }));
     }
   }
 
@@ -104,35 +107,25 @@ class WorkoutSessionManipulatorBloc extends Bloc<WorkoutSessionManipulatorEvent,
         .then((session) {
       //TODO Control what to do with null sessions (not found)
       final state = WorkoutSessionManipulatorLoadedState(
-          workoutSession: session!, orderedPhases: getOrderedPhases(session!));
+          workoutSession: session!,
+          orderedPhases: getWorkoutSessionOrderedPhases(session!));
       emit(event.initEditMode
-          ? WorkoutSessionManipulatorEditingState.fromLoadedState(state)
+          ? WorkoutSessionManipulatorEditingState.fromLoadedState(state,
+              editedPhases: {
+                  for (var phase in state.workoutSession.phases)
+                    phase.id!: phase
+                })
           : state);
     }).catchError((err) {
       print("errrrrorrr");
     });
   }
 
-  List<WorkoutPhase> getOrderedPhases(WorkoutSession workoutSession,
-      {Map<int, WorkoutPhase>? movedPhases,
-      Map<int, WorkoutPhase>? deletedPhases}) {
+  static List<WorkoutPhase> getWorkoutSessionOrderedPhases(
+      WorkoutSession workoutSession) {
     final ordererdPhases =
         List<WorkoutPhase>.from(workoutSession.phases, growable: true);
-    if (deletedPhases != null) {
-      for (final deletedId in deletedPhases.keys) {
-        ordererdPhases.removeWhere((element) => element.id == deletedId);
-      }
-    }
-    if (movedPhases != null) {
-      for (final movedKv in movedPhases.entries) {
-        final index =
-            ordererdPhases.indexWhere((element) => element.id == movedKv.key);
-        if (index >= 0) {
-          ordererdPhases.removeAt(index);
-          ordererdPhases.add(movedKv.value);
-        }
-      }
-    }
+
     ordererdPhases.sort((a, b) => a.sequence!.compareTo(b.sequence!));
     return ordererdPhases;
   }

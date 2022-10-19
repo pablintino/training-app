@@ -34,29 +34,25 @@ class WorkoutSessionManipulatorLoadedState
 class WorkoutSessionManipulatorEditingState
     extends WorkoutSessionManipulatorLoadedState {
   final bool isDragging;
-  final Map<int, WorkoutPhase> movedPhases;
-  final Map<int, WorkoutPhase> deletedPhases;
+  final Map<int, WorkoutPhase> editedPhases;
 
   WorkoutSessionManipulatorEditingState(
       {required WorkoutSession workoutSession,
       required List<WorkoutPhase> orderedPhases,
-      required this.deletedPhases,
       required this.isDragging,
-      required this.movedPhases})
+      required this.editedPhases})
       : super(workoutSession: workoutSession, orderedPhases: orderedPhases);
 
   WorkoutSessionManipulatorEditingState copyWith({
     bool? isDraggingSession,
     WorkoutSession? workoutSession,
     List<WorkoutPhase>? orderedPhases,
-    Map<int, WorkoutPhase>? movedPhases,
-    Map<int, WorkoutPhase>? deletedPhases,
+    Map<int, WorkoutPhase>? editedPhases,
   }) {
     return WorkoutSessionManipulatorEditingState(
         isDragging: isDraggingSession ?? this.isDragging,
         workoutSession: workoutSession ?? this.workoutSession,
-        movedPhases: movedPhases ?? this.movedPhases,
-        deletedPhases: deletedPhases ?? this.deletedPhases,
+        editedPhases: editedPhases ?? this.editedPhases,
         orderedPhases: orderedPhases ?? this.orderedPhases);
   }
 
@@ -64,19 +60,17 @@ class WorkoutSessionManipulatorEditingState
       WorkoutSessionManipulatorLoadedState state,
       {WorkoutSession? workoutSession,
       List<WorkoutPhase>? orderedPhases,
-      Map<int, WorkoutPhase>? deletedPhases,
+      Map<int, WorkoutPhase>? editedPhases,
       bool? isDragging}) {
     return WorkoutSessionManipulatorEditingState(
         workoutSession: workoutSession ?? state.workoutSession,
         orderedPhases: orderedPhases ?? state.orderedPhases,
         isDragging: isDragging ?? false,
-        deletedPhases: Map(),
-        movedPhases: Map());
+        editedPhases: editedPhases ?? Map());
   }
 
   @override
-  List<Object?> get props =>
-      [isDragging, movedPhases, deletedPhases, ...super.props];
+  List<Object?> get props => [isDragging, editedPhases, ...super.props];
 }
 
 class WorkoutSessionManipulatorErrorState
@@ -86,27 +80,24 @@ class WorkoutSessionManipulatorErrorState
   WorkoutSessionManipulatorErrorState._(this.error,
       {required WorkoutSession workoutSession,
       required List<WorkoutPhase> orderedPhases,
-      required Map<int, WorkoutPhase> deletedPhases,
       required bool isDragging,
-      required Map<int, WorkoutPhase> movedPhases})
+      required Map<int, WorkoutPhase> editedPhases})
       : super(
             workoutSession: workoutSession,
             orderedPhases: orderedPhases,
-            deletedPhases: deletedPhases,
             isDragging: isDragging,
-            movedPhases: movedPhases);
+            editedPhases: editedPhases);
 
   static WorkoutSessionManipulatorErrorState fromState(
       WorkoutSessionManipulatorEditingState state, String errorMessage,
       {WorkoutSession? workoutSession,
       List<WorkoutPhase>? orderedPhases,
-      Map<int, WorkoutPhase>? deletedPhases}) {
+      Map<int, WorkoutPhase>? editedPhases}) {
     return WorkoutSessionManipulatorErrorState._(errorMessage,
         workoutSession: workoutSession ?? state.workoutSession,
         orderedPhases: orderedPhases ?? state.orderedPhases,
-        deletedPhases: deletedPhases ?? state.deletedPhases,
-        isDragging: state.isDragging,
-        movedPhases: state.movedPhases);
+        editedPhases: editedPhases ?? state.editedPhases,
+        isDragging: state.isDragging);
   }
 
   @override
