@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:training_app/app_routes.dart';
 import 'package:training_app/models/workout_models.dart';
+import 'package:training_app/utils/conversion.dart';
+import 'package:training_app/widgets/workout_item_detail_screen_widget/workout_item_detail_screen_widget.dart';
+import 'package:training_app/widgets/workout_session_detail_screen_widget/bloc/workout_session_manipulator_bloc.dart';
 
 class WorkoutItemWidget extends StatelessWidget {
   final WorkoutItem workoutItem;
+  final WorkoutPhase parentWorkoutPhase;
   final bool isEditing;
 
-  const WorkoutItemWidget(this.workoutItem, this.isEditing, {Key? key})
+  const WorkoutItemWidget(
+      this.workoutItem, this.parentWorkoutPhase, this.isEditing,
+      {Key? key})
       : super(key: key);
 
   Widget build(BuildContext context) {
@@ -46,38 +54,43 @@ class WorkoutItemWidget extends StatelessWidget {
                 ),
               Expanded(child: Container()),
               if (isEditing)
-                PopupMenuButton<int>(
+                PopupMenuButton<Function>(
                   icon: Icon(Icons.more_horiz),
-                  onSelected: (_) {},
+                  onSelected: (func) => func(),
                   itemBuilder: (ctx) => [
                     // popupmenu item 1
                     PopupMenuItem(
-                      value: 1,
+                      value: () => Navigator.pushNamed(
+                          context, AppRoutes.WORKOUTS_ITEM_DETAILS_SCREEN_ROUTE,
+                          arguments: WorkoutItemScreenWidgetArguments(
+                              workoutItem,
+                              parentWorkoutPhase,
+                              BlocProvider.of<WorkoutSessionManipulatorBloc>(
+                                  context))),
                       // row has two child icon and text.
                       child: Row(
                         children: [
-                          Icon(Icons.star),
+                          Icon(Icons.edit),
                           SizedBox(
                             // sized box with width 10
                             width: 10,
                           ),
-                          Text("Get The App")
+                          Text("Edit")
                         ],
                       ),
                     ),
                     // popupmenu item 2
                     PopupMenuItem(
-                      onTap: () {},
-                      value: 2,
+                      value: () {},
                       // row has two child icon and text
                       child: Row(
                         children: [
-                          Icon(Icons.chrome_reader_mode),
+                          Icon(Icons.delete),
                           SizedBox(
                             // sized box with width 10
                             width: 10,
                           ),
-                          Text("About")
+                          Text("Delete")
                         ],
                       ),
                     ),
@@ -121,15 +134,15 @@ class WorkoutItemWidget extends StatelessWidget {
     }
     if (workoutItem.timeCapSecs != null) {
       itemDetails = itemDetails +
-          ' | T\'Cap: ${_getItemFormattedTime(workoutItem.timeCapSecs!)}';
+          ' | T\'Cap: ${ConversionUtils.secondsTimeToPrettyString(workoutItem.timeCapSecs!)}';
     }
     if (workoutItem.workTimeSecs != null) {
       itemDetails = itemDetails +
-          ' | Work: ${_getItemFormattedTime(workoutItem.workTimeSecs!)}';
+          ' | Work: ${ConversionUtils.secondsTimeToPrettyString(workoutItem.workTimeSecs!)}';
     }
     if (workoutItem.restTimeSecs != null) {
       itemDetails = itemDetails +
-          ' | Rest: ${_getItemFormattedTime(workoutItem.restTimeSecs!)}';
+          ' | Rest: ${ConversionUtils.secondsTimeToPrettyString(workoutItem.restTimeSecs!)}';
     }
 
     return itemDetails != ''
@@ -225,23 +238,5 @@ class WorkoutItemWidget extends StatelessWidget {
     }
 
     return Text('$reps $weight $distance');
-  }
-
-  String _getItemFormattedTime(int time) {
-    final hours = time ~/ 3600;
-    var result = '';
-    if (hours != 0) {
-      result = '${hours}h';
-    }
-    final tmp = time.remainder(3600);
-    final mins = tmp ~/ 60;
-    if (mins != 0) {
-      result = '$mins\'';
-    }
-    final secs = tmp.remainder(60);
-    if (secs != 0) {
-      result = '$secs\'\'';
-    }
-    return result;
   }
 }

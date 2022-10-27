@@ -60,7 +60,7 @@ class WorkoutPhaseWidget extends StatelessWidget {
           .map((workoutItem) => Padding(
                 key: Key('${workoutItem.id!}'),
                 padding: EdgeInsets.symmetric(vertical: 0),
-                child: WorkoutItemWidget(workoutItem, isEditing),
+                child: WorkoutItemWidget(workoutItem, _workoutPhase, isEditing),
               ))
           .toList(),
     );

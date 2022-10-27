@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:training_app/widgets/home_screen_widget/bloc/home_screen_bloc.dart';
 import 'package:training_app/widgets/home_screen_widget/home_screen_constants.dart';
 import 'package:training_app/widgets/drawer_navigation_widget/drawer_navigation_widget.dart';
-import 'package:training_app/widgets/workout_item_editor_widget/workout_item_editor_plugin.dart';
 import 'package:training_app/widgets/workout_list_widget/bloc/workout_list_bloc.dart';
 import 'package:training_app/widgets/workout_list_widget/workout_list_widget.dart';
 
@@ -36,13 +35,14 @@ class _HomeTabbedWidgetState extends State<HomeTabbedWidget> {
               body: PageView(
                 controller: _pageViewController,
                 children: <Widget>[
-                  BlocProvider(create: (ctx) => WorkoutListBloc()..add(WorkoutFetchEvent()),
+                  BlocProvider(
+                    create: (ctx) =>
+                        WorkoutListBloc()..add(WorkoutFetchEvent()),
                     child: WorkoutListWidget(),
                   ),
                   Container(
                     child: Center(
-                      //child: Text('Current'),
-                      child: WorkoutItemEditorWidget(),
+                      child: Text('Current session'),
                     ),
                   ),
                   Container(

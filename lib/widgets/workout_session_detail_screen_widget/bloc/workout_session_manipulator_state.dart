@@ -33,24 +33,20 @@ class WorkoutSessionManipulatorLoadedState
 
 class WorkoutSessionManipulatorEditingState
     extends WorkoutSessionManipulatorLoadedState {
-  final bool isDragging;
   final Map<int, WorkoutPhase> editedPhases;
 
   WorkoutSessionManipulatorEditingState(
       {required WorkoutSession workoutSession,
       required List<WorkoutPhase> orderedPhases,
-      required this.isDragging,
       required this.editedPhases})
       : super(workoutSession: workoutSession, orderedPhases: orderedPhases);
 
   WorkoutSessionManipulatorEditingState copyWith({
-    bool? isDraggingSession,
     WorkoutSession? workoutSession,
     List<WorkoutPhase>? orderedPhases,
     Map<int, WorkoutPhase>? editedPhases,
   }) {
     return WorkoutSessionManipulatorEditingState(
-        isDragging: isDraggingSession ?? this.isDragging,
         workoutSession: workoutSession ?? this.workoutSession,
         editedPhases: editedPhases ?? this.editedPhases,
         orderedPhases: orderedPhases ?? this.orderedPhases);
@@ -65,12 +61,11 @@ class WorkoutSessionManipulatorEditingState
     return WorkoutSessionManipulatorEditingState(
         workoutSession: workoutSession ?? state.workoutSession,
         orderedPhases: orderedPhases ?? state.orderedPhases,
-        isDragging: isDragging ?? false,
         editedPhases: editedPhases ?? Map());
   }
 
   @override
-  List<Object?> get props => [isDragging, editedPhases, ...super.props];
+  List<Object?> get props => [editedPhases, ...super.props];
 }
 
 class WorkoutSessionManipulatorErrorState
@@ -80,12 +75,10 @@ class WorkoutSessionManipulatorErrorState
   WorkoutSessionManipulatorErrorState._(this.error,
       {required WorkoutSession workoutSession,
       required List<WorkoutPhase> orderedPhases,
-      required bool isDragging,
       required Map<int, WorkoutPhase> editedPhases})
       : super(
             workoutSession: workoutSession,
             orderedPhases: orderedPhases,
-            isDragging: isDragging,
             editedPhases: editedPhases);
 
   static WorkoutSessionManipulatorErrorState fromState(
@@ -96,8 +89,7 @@ class WorkoutSessionManipulatorErrorState
     return WorkoutSessionManipulatorErrorState._(errorMessage,
         workoutSession: workoutSession ?? state.workoutSession,
         orderedPhases: orderedPhases ?? state.orderedPhases,
-        editedPhases: editedPhases ?? state.editedPhases,
-        isDragging: state.isDragging);
+        editedPhases: editedPhases ?? state.editedPhases);
   }
 
   @override

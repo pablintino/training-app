@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:training_app/models/workout_models.dart';
 import 'package:training_app/utils/known_constants.dart';
+import 'package:training_app/widgets/sequentiable_reorder_widget/sequentiable_reorder_widget.dart';
 import 'package:training_app/widgets/workout_session_detail_screen_widget/bloc/workout_session_manipulator_bloc.dart';
 import 'package:training_app/widgets/workout_session_detail_screen_widget/workout_phase_widget.dart';
-import 'package:training_app/widgets/workout_session_detail_screen_widget/workout_session_reoder_phases_widget.dart';
 
 class WorkoutSessionScreenWidgetArguments {
   final int sessionId;
@@ -167,7 +167,7 @@ class _WorkoutSessionScreenWidgetState
         PopupMenuItem(
           value: () {
             {
-              WorkoutSessionReorderWidget.showPhaseReorderModal<WorkoutPhase>(
+              SequentiableReorderWidget.showModal<WorkoutPhase>(
                   context,
                   state.orderedPhases,
                   (phase) => ListTile(

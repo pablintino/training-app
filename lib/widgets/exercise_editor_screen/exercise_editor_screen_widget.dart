@@ -160,6 +160,8 @@ class _ExerciseEditorScreenWidgetState
 
   @override
   void dispose() {
+    _nameController.dispose();
+    _descriptionController.dispose();
     _exerciseManipulationBloc.close();
     super.dispose();
   }

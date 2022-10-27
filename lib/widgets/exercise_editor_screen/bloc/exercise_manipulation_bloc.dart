@@ -139,11 +139,9 @@ class ExerciseManipulationBloc
     StringField descriptionField;
     if (value == null || value.isEmpty) {
       descriptionField = StringField.createInvalidFrom(
-          currentState, ValidationError.empty,
-          value: value);
+          currentState, ValidationError.empty, value);
     } else {
-      descriptionField =
-          StringField.createValidFrom(currentState, value: value);
+      descriptionField = StringField.createValidFrom(currentState, value);
     }
 
     return descriptionField;
@@ -153,8 +151,7 @@ class ExerciseManipulationBloc
       OnGoingExerciseManipulationState currentState, String? value) async {
     if (value == null || value.isEmpty) {
       return StringField.createInvalidFrom(
-          currentState.exerciseName, ValidationError.empty,
-          value: value);
+          currentState.exerciseName, ValidationError.empty, value);
     }
     final exercise = await _exercisesRepository.getByName(value);
     if (exercise != null &&
@@ -162,9 +159,8 @@ class ExerciseManipulationBloc
             exercise.id != currentState.initialExercise?.id)) {
       // If new the name should be unique
       return StringField.createInvalidFrom(
-          currentState.exerciseName, ValidationError.alreadyExists,
-          value: value);
+          currentState.exerciseName, ValidationError.alreadyExists, value);
     }
-    return StringField.createValidFrom(currentState.exerciseName, value: value);
+    return StringField.createValidFrom(currentState.exerciseName, value);
   }
 }

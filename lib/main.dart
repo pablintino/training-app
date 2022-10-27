@@ -18,6 +18,7 @@ import 'package:training_app/widgets/exercise_screen/exercise_list_screen_widget
 import 'package:training_app/widgets/splash_screen_widget/splash_screen_widget.dart';
 import 'package:training_app/widgets/main_app_widget/main_app_widget.dart';
 import 'package:training_app/widgets/workout_detail_screen_widget/workout_detail_screen_widget.dart';
+import 'package:training_app/widgets/workout_item_detail_screen_widget/workout_item_detail_screen_widget.dart';
 import 'package:training_app/widgets/workout_session_detail_screen_widget/workout_session_detail_screen_widget.dart';
 import 'database/database.dart';
 
@@ -47,6 +48,8 @@ class MyApp extends StatelessWidget {
             AppRoutes.HOME_SCREEN_ROUTE: (context) => MainAppWidget(),
             AppRoutes.EXERCISES_LISTS_SCREEN_ROUTE: (context) =>
                 ExerciseListScreenWidget(),
+            AppRoutes.WORKOUTS_ITEM_DETAILS_SCREEN_ROUTE: (context) =>
+                WorkoutItemScreenWidget(),
             AppRoutes.WORKOUTS_SESSIONS_DETAILS_SCREEN_ROUTE: (context) =>
                 WorkoutSessionScreenWidget(),
             AppRoutes.WORKOUTS_WORKOUT_DETAILS_SCREEN_ROUTE: (context) =>

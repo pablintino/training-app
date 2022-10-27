@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:training_app/models/workout_models.dart';
 
-class WorkoutSessionReorderWidget<T extends AbstractSequentiable>
+class SequentiableReorderWidget<T extends AbstractSequentiable>
     extends StatefulWidget {
   final List<T> elements;
   final ListTile Function(T) builder;
   final Function(T, int index)? onReorder;
   final Text? title;
 
-  WorkoutSessionReorderWidget._(
+  SequentiableReorderWidget._(
       {Key? key,
       required this.elements,
       required this.builder,
@@ -16,7 +16,7 @@ class WorkoutSessionReorderWidget<T extends AbstractSequentiable>
       this.title})
       : super(key: key);
 
-  static void showPhaseReorderModal<T extends AbstractSequentiable>(
+  static void showModal<T extends AbstractSequentiable>(
       BuildContext buildContext,
       List<T> orderedPhases,
       ListTile Function(T) builder,
@@ -29,7 +29,7 @@ class WorkoutSessionReorderWidget<T extends AbstractSequentiable>
       ),
       builder: (BuildContext context) {
         return Wrap(children: [
-          WorkoutSessionReorderWidget<T>._(
+          SequentiableReorderWidget<T>._(
             elements: orderedPhases,
             onReorder: onReorder,
             builder: builder,
@@ -42,12 +42,12 @@ class WorkoutSessionReorderWidget<T extends AbstractSequentiable>
 
   @override
   State<StatefulWidget> createState() {
-    return _WorkoutSessionReorderWidgetState<T>();
+    return _SequentiableReorderWidgetState<T>();
   }
 }
 
-class _WorkoutSessionReorderWidgetState<T extends AbstractSequentiable>
-    extends State<WorkoutSessionReorderWidget<T>> {
+class _SequentiableReorderWidgetState<T extends AbstractSequentiable>
+    extends State<SequentiableReorderWidget<T>> {
   @override
   Widget build(BuildContext context) {
     return Column(

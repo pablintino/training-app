@@ -210,11 +210,9 @@ class WorkoutManipulatorBloc
     StringField descriptionField;
     if (value == null || value.isEmpty) {
       descriptionField = StringField.createInvalidFrom(
-          currentState, ValidationError.empty,
-          value: value);
+          currentState, ValidationError.empty, value);
     } else {
-      descriptionField =
-          StringField.createValidFrom(currentState, value: value);
+      descriptionField = StringField.createValidFrom(currentState, value);
     }
 
     return descriptionField;
@@ -224,8 +222,7 @@ class WorkoutManipulatorBloc
       WorkoutManipulatorEditingState currentState, String? value) async {
     if (value == null || value.isEmpty) {
       return StringField.createInvalidFrom(
-          currentState.workoutName, ValidationError.empty,
-          value: value);
+          currentState.workoutName, ValidationError.empty, value);
     }
     final workout = await _workoutRepository.getByName(value);
     if (workout != null &&
@@ -233,9 +230,8 @@ class WorkoutManipulatorBloc
             workout.id != currentState.workout?.id)) {
       // If new the name should be unique
       return StringField.createInvalidFrom(
-          currentState.workoutName, ValidationError.alreadyExists,
-          value: value);
+          currentState.workoutName, ValidationError.alreadyExists, value);
     }
-    return StringField.createValidFrom(currentState.workoutName, value: value);
+    return StringField.createValidFrom(currentState.workoutName, value);
   }
 }
