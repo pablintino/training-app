@@ -29,13 +29,25 @@ class SaveSessionWorkoutEditionEvent extends WorkoutSessionManipulatorEvent {
 }
 
 class MoveWorkoutPhaseEditionEvent extends WorkoutSessionManipulatorEvent {
-  final WorkoutPhase phase;
+  final int phaseId;
   final int targetSequence;
 
-  MoveWorkoutPhaseEditionEvent(this.phase, this.targetSequence);
+  MoveWorkoutPhaseEditionEvent(this.phaseId, this.targetSequence);
 
   @override
-  List<Object?> get props => [phase, targetSequence];
+  List<Object?> get props => [phaseId, targetSequence];
+}
+
+class MoveWorkoutItemEditionEvent extends WorkoutSessionManipulatorEvent {
+  final int workoutItemId;
+  final int parentPhaseId;
+  final int targetSequence;
+
+  MoveWorkoutItemEditionEvent(
+      this.workoutItemId, this.parentPhaseId, this.targetSequence);
+
+  @override
+  List<Object?> get props => [workoutItemId, targetSequence, parentPhaseId];
 }
 
 class DeleteWorkoutPhaseEditionEvent extends WorkoutSessionManipulatorEvent {

@@ -2,20 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:training_app/models/workout_models.dart';
 import 'package:training_app/widgets/fixed_color_round_icon.dart';
+import 'package:training_app/widgets/sequentiable_reorder_widget/sequentiable_reorder_widget.dart';
 import 'package:training_app/widgets/workout_session_detail_screen_widget/bloc/workout_session_manipulator_bloc.dart';
 import 'package:training_app/widgets/workout_session_detail_screen_widget/workout_item_widget.dart';
 
 class WorkoutPhaseWidget extends StatelessWidget {
   final WorkoutPhase _workoutPhase;
+  late List<WorkoutItem> _orderedPhaseItems;
 
-  WorkoutPhaseWidget(this._workoutPhase);
+  WorkoutPhaseWidget(this._workoutPhase) {
+    _orderedPhaseItems = List<WorkoutItem>.from(_workoutPhase.items);
+    _orderedPhaseItems.sort((a, b) =>
+        ((a.sequence != null && b.sequence != null)
+            ? (a.sequence! - b.sequence!)
+            : 0));
+  }
 
   @override
   Widget build(BuildContext context) {
-    final sortedList = List<WorkoutItem>.from(_workoutPhase.items);
-    sortedList.sort((a, b) => ((a.sequence != null && b.sequence != null)
-        ? (a.sequence! - b.sequence!)
-        : 0));
     final bloc = BlocProvider.of<WorkoutSessionManipulatorBloc>(context);
     return BlocBuilder<WorkoutSessionManipulatorBloc,
             WorkoutSessionManipulatorState>(
@@ -31,7 +35,7 @@ class WorkoutPhaseWidget extends StatelessWidget {
                       : null,
                   title: Text(_workoutPhase.name ?? 'No name'),
                   trailing: state is WorkoutSessionManipulatorEditingState
-                      ? _buildPhaseOptions(context, sortedList, bloc)
+                      ? _buildPhaseOptions(context, bloc, state)
                       : null,
                 ),
                 Divider(
@@ -45,7 +49,7 @@ class WorkoutPhaseWidget extends StatelessWidget {
                       horizontal: 8.0,
                       vertical: 8.0,
                     ),
-                    child: _buildItemList(context, sortedList,
+                    child: _buildItemList(context,
                         state is WorkoutSessionManipulatorEditingState),
                   ),
                 ),
@@ -53,10 +57,9 @@ class WorkoutPhaseWidget extends StatelessWidget {
             )));
   }
 
-  Widget _buildItemList(
-      BuildContext context, List<WorkoutItem> workoutItems, bool isEditing) {
+  Widget _buildItemList(BuildContext context, bool isEditing) {
     return Column(
-      children: workoutItems
+      children: _orderedPhaseItems
           .map((workoutItem) => Padding(
                 key: Key('${workoutItem.id!}'),
                 padding: EdgeInsets.symmetric(vertical: 0),
@@ -66,14 +69,16 @@ class WorkoutPhaseWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildPhaseOptions(BuildContext context,
-      List<WorkoutItem> workoutItems, WorkoutSessionManipulatorBloc bloc) {
+  Widget _buildPhaseOptions(
+      BuildContext context,
+      WorkoutSessionManipulatorBloc bloc,
+      WorkoutSessionManipulatorEditingState state) {
     return PopupMenuButton<Function>(
       icon: Icon(Icons.more_horiz),
-      onSelected: (func) => func(context, workoutItems),
+      onSelected: (func) => func(),
       itemBuilder: (ctx) => [
         PopupMenuItem(
-          value: (_, __) =>
+          value: () =>
               bloc.add(DeleteWorkoutPhaseEditionEvent(_workoutPhase.id!)),
           // row has two child icon and text
           child: Row(
@@ -84,6 +89,34 @@ class WorkoutPhaseWidget extends StatelessWidget {
                 width: 10,
               ),
               Text("Delete")
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: () => SequentiableReorderWidget.showModal<WorkoutItem>(
+              context,
+              _orderedPhaseItems,
+              (item) => ListTile(
+                    title: Text(
+                      item.name ?? '<No name>',
+                      style: const TextStyle(
+                        fontSize: 15,
+                      ),
+                    ),
+                    trailing: Icon(Icons.drag_handle),
+                  ),
+              title: const Text("Items reorder"),
+              onReorder: (item, index) => bloc.add(MoveWorkoutItemEditionEvent(
+                  item.id!, _workoutPhase.id!, index))),
+          // row has two child icon and text
+          child: Row(
+            children: [
+              Icon(Icons.reorder),
+              SizedBox(
+                // sized box with width 10
+                width: 10,
+              ),
+              Text("Reorder items")
             ],
           ),
         ),

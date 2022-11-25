@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:get_it/get_it.dart';
 import 'package:training_app/models/workout_models.dart';
@@ -26,6 +27,8 @@ class WorkoutSessionManipulatorBloc extends Bloc<WorkoutSessionManipulatorEvent,
         (event, emit) => _handleMoveWorkoutPhaseEditionEvent(emit, event));
     on<DeleteWorkoutPhaseEditionEvent>(
         (event, emit) => _handleDeleteSessionWorkoutEditionEvent(emit, event));
+    on<MoveWorkoutItemEditionEvent>(
+        (event, emit) => _handleMoveWorkoutItemEditionEvent(emit, event));
   }
 
   void _handleSaveSessionWorkoutEditionEvent(Emitter emit) {
@@ -58,15 +61,48 @@ class WorkoutSessionManipulatorBloc extends Bloc<WorkoutSessionManipulatorEvent,
     }
   }
 
+  void _handleMoveWorkoutItemEditionEvent(
+      Emitter emit, MoveWorkoutItemEditionEvent event) {
+    if (state is WorkoutSessionManipulatorEditingState) {
+      final currentState = state as WorkoutSessionManipulatorEditingState;
+
+      if (currentState.editedPhases.containsKey(event.parentPhaseId)) {
+        final parentPhase = currentState.editedPhases[event.parentPhaseId]!;
+        final tmpItems =
+            List<WorkoutItem>.from(parentPhase.items, growable: true);
+        final originalItem = parentPhase.items
+            .firstWhereOrNull((element) => element.id == event.workoutItemId);
+        if (originalItem != null) {
+          tmpItems.removeWhere((element) => element.id == originalItem.id);
+          tmpItems.insert(event.targetSequence, originalItem);
+          var sequence = 0;
+          final orderedItems = List<WorkoutItem>.empty(growable: true);
+          for (final sourceItem in tmpItems) {
+            orderedItems.add(sourceItem.copyWith(sequence: sequence));
+            sequence++;
+          }
+
+          final editedPhasesMap =
+              Map<int, WorkoutPhase>.from(currentState.editedPhases);
+          editedPhasesMap[event.parentPhaseId] =
+              parentPhase.copyWith(items: orderedItems);
+          emit(currentState.copyWith(
+              editedPhases: editedPhasesMap,
+              orderedPhases: getWorkoutOrderedPhases(editedPhasesMap.values)));
+        }
+      }
+    }
+  }
+
   void _handleMoveWorkoutPhaseEditionEvent(
       Emitter emit, MoveWorkoutPhaseEditionEvent event) {
     if (state is WorkoutSessionManipulatorEditingState) {
       final currentState = state as WorkoutSessionManipulatorEditingState;
 
-      if (currentState.editedPhases.containsKey(event.phase.id)) {
+      if (currentState.editedPhases.containsKey(event.phaseId)) {
         final tmpPhases =
             List<WorkoutPhase>.from(currentState.orderedPhases, growable: true);
-        final phase = currentState.editedPhases[event.phase.id]!;
+        final phase = currentState.editedPhases[event.phaseId]!;
         tmpPhases.removeWhere((element) => element.id == phase.id);
         tmpPhases.insert(event.targetSequence, phase);
         var sequence = 0;
@@ -108,7 +144,7 @@ class WorkoutSessionManipulatorBloc extends Bloc<WorkoutSessionManipulatorEvent,
       //TODO Control what to do with null sessions (not found)
       final state = WorkoutSessionManipulatorLoadedState(
           workoutSession: session!,
-          orderedPhases: getWorkoutSessionOrderedPhases(session!));
+          orderedPhases: getWorkoutOrderedPhases(session.phases));
       emit(event.initEditMode
           ? WorkoutSessionManipulatorEditingState.fromLoadedState(state,
               editedPhases: {
@@ -121,12 +157,12 @@ class WorkoutSessionManipulatorBloc extends Bloc<WorkoutSessionManipulatorEvent,
     });
   }
 
-  static List<WorkoutPhase> getWorkoutSessionOrderedPhases(
-      WorkoutSession workoutSession) {
-    final ordererdPhases =
-        List<WorkoutPhase>.from(workoutSession.phases, growable: true);
+  static List<WorkoutPhase> getWorkoutOrderedPhases(
+      Iterable<WorkoutPhase> workoutPhases) {
+    final orderedPhases =
+        List<WorkoutPhase>.from(workoutPhases, growable: true);
 
-    ordererdPhases.sort((a, b) => a.sequence!.compareTo(b.sequence!));
-    return ordererdPhases;
+    orderedPhases.sort((a, b) => a.sequence!.compareTo(b.sequence!));
+    return orderedPhases;
   }
 }

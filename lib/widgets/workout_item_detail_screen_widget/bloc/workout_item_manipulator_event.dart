@@ -67,3 +67,13 @@ class WorkoutItemModalityChanged extends WorkoutItemManipulatorEvent {
   @override
   List<Object?> get props => [modality];
 }
+
+class MoveWorkoutSetEditionEvent extends WorkoutItemManipulatorEvent {
+  final WorkoutSet set;
+  final int targetSequence;
+
+  MoveWorkoutSetEditionEvent(this.set, this.targetSequence);
+
+  @override
+  List<Object?> get props => [set, targetSequence];
+}

@@ -18,7 +18,7 @@ class SequentiableReorderWidget<T extends AbstractSequentiable>
 
   static void showModal<T extends AbstractSequentiable>(
       BuildContext buildContext,
-      List<T> orderedPhases,
+      List<T> orderedElements,
       ListTile Function(T) builder,
       {Function(T, int index)? onReorder,
       Text? title}) async {
@@ -30,7 +30,7 @@ class SequentiableReorderWidget<T extends AbstractSequentiable>
       builder: (BuildContext context) {
         return Wrap(children: [
           SequentiableReorderWidget<T>._(
-            elements: orderedPhases,
+            elements: List<T>.of(orderedElements),
             onReorder: onReorder,
             builder: builder,
             title: title,

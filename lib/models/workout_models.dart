@@ -172,6 +172,30 @@ class WorkoutItem extends AbstractSequentiable {
         sets = dto.sets.map((set) => WorkoutSet.fromDto(set)).toList(),
         super(sequence: dto.sequence);
 
+  WorkoutItem copyWith({
+    String? name,
+    int? rounds,
+    int? restTimeSecs,
+    int? timeCapSecs,
+    int? workTimeSecs,
+    String? workModality,
+    int? id,
+    int? sequence,
+    List<WorkoutSet>? sets,
+  }) {
+    return WorkoutItem(
+      name: name ?? this.name,
+      rounds: rounds ?? this.rounds,
+      restTimeSecs: restTimeSecs ?? this.restTimeSecs,
+      timeCapSecs: timeCapSecs ?? this.timeCapSecs,
+      workTimeSecs: workTimeSecs ?? this.workTimeSecs,
+      workModality: workModality ?? this.workModality,
+      id: id ?? this.id,
+      sequence: sequence ?? this.sequence,
+      sets: sets ?? this.sets,
+    );
+  }
+
   @override
   List<Object?> get props => [
         name,
@@ -203,7 +227,8 @@ class WorkoutSet extends AbstractSequentiable {
       int? sequence,
       this.id,
       this.exerciseId,
-      this.exercise});
+      this.exercise})
+      : super(sequence: sequence);
 
   WorkoutSet.fromJoinedModel(JoinedWorkoutSetM joinedModel)
       : id = joinedModel.set.id,
@@ -224,6 +249,27 @@ class WorkoutSet extends AbstractSequentiable {
         exerciseId = dto.exerciseId,
         exercise = null,
         super(sequence: dto.sequence);
+
+  WorkoutSet copyWith({
+    int? id,
+    int? reps,
+    int? sequence,
+    double? weight,
+    int? setExecutions,
+    int? exerciseId,
+    Exercise? exercise,
+  }) {
+    return WorkoutSet(
+      id: id ?? this.id,
+      reps: reps ?? this.reps,
+      sequence: sequence ?? this.sequence,
+      weight: weight ?? this.weight,
+      distance: distance ?? this.distance,
+      setExecutions: setExecutions ?? this.setExecutions,
+      exerciseId: exerciseId ?? this.exerciseId,
+      exercise: exercise ?? this.exercise,
+    );
+  }
 
   @override
   List<Object?> get props => [

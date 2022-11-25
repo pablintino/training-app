@@ -29,6 +29,8 @@ class WorkoutItemManipulatorBloc
         (event, emit) => _handleTimeCapChangedEvent(emit, event));
     on<WorkoutItemRoundsChanged>(
         (event, emit) => _handleWorkRoundsChangedEvent(emit, event));
+    on<MoveWorkoutSetEditionEvent>(
+        (event, emit) => _handleMoveWorkoutSetEditionEvent(emit, event));
     on<WorkoutItemNameChanged>(
         (event, emit) => _handleWorkoutItemNameChanged(emit, event),
         transformer:
@@ -115,6 +117,33 @@ class WorkoutItemManipulatorBloc
       workoutItemRounds: IntegerField(value: event.workoutItem.rounds),
       workoutItemName: StringField(value: event.workoutItem.name),
     ));
+  }
+
+  void _handleMoveWorkoutSetEditionEvent(
+      Emitter emit, MoveWorkoutSetEditionEvent event) {
+    if (state is WorkoutItemManipulatorEditingState) {
+      final currentState = state as WorkoutItemManipulatorEditingState;
+
+      if (currentState.editedSets.containsKey(event.set.id)) {
+        final tmpSets =
+            List<WorkoutSet>.from(currentState.orderedSets, growable: true);
+        final set = currentState.editedSets[event.set.id]!;
+        tmpSets.removeWhere((element) => element.id == set.id);
+        tmpSets.insert(event.targetSequence, set);
+        var sequence = 0;
+        final editedSetsMap = Map<int, WorkoutSet>();
+        final orderedSets = List<WorkoutSet>.empty(growable: true);
+        for (final sourceSet in tmpSets) {
+          final editedPhase = sourceSet.copyWith(sequence: sequence);
+          editedSetsMap[editedPhase.id!] = editedPhase;
+          orderedSets.add(editedPhase);
+          sequence++;
+        }
+
+        emit(currentState.copyWith(
+            editedSets: editedSetsMap, orderedSets: orderedSets));
+      }
+    }
   }
 
   static List<WorkoutSet> getWorkoutItemOrderedSets(WorkoutItem workoutItem) {

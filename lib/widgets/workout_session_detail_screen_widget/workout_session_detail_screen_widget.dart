@@ -181,7 +181,7 @@ class _WorkoutSessionScreenWidgetState
                       ),
                   title: const Text("Phases reorder"),
                   onReorder: (phase, index) =>
-                      bloc.add(MoveWorkoutPhaseEditionEvent(phase, index)));
+                      bloc.add(MoveWorkoutPhaseEditionEvent(phase.id!, index)));
             }
           },
           // row has two child icon and text.

@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:training_app/models/workout_models.dart';
 import 'package:training_app/utils/conversion.dart';
 import 'package:training_app/utils/form_utils.dart';
-import 'package:training_app/widgets/sequentiable_reorder_widget/sequentiable_reorder_widget.dart';
 import 'package:training_app/widgets/time_picker_widget.dart';
 import 'package:training_app/widgets/two_letters_icon.dart';
 import 'package:training_app/widgets/workout_session_detail_screen_widget/bloc/workout_session_manipulator_bloc.dart';
@@ -176,11 +175,21 @@ class _WorkoutItemScreenWidgetState extends State<WorkoutItemScreenWidget> {
           ),
         )
       ])),
-      SliverList(
-          delegate: SliverChildBuilderDelegate(
-        (ctx, idx) => _buildSetWidget(ctx, state.orderedSets[idx]),
-        childCount: state.orderedSets.length,
-      )),
+      // SliverList(
+      //     delegate: SliverChildBuilderDelegate(
+      //   (ctx, idx) => _buildSetWidget(ctx, state.orderedSets[idx]),
+      //   childCount: state.orderedSets.length,
+      // )),
+      SliverReorderableList(
+        itemBuilder: (ctx, idx) => ReorderableDragStartListener(
+            index: idx,
+            key: Key("$idx"),
+            child: _buildSetWidget(ctx, state.orderedSets[idx])),
+        onReorder: (int oldIndex, int newIndex) => bloc.add(
+            MoveWorkoutSetEditionEvent(state.orderedSets[oldIndex],
+                oldIndex < newIndex ? newIndex - 1 : newIndex)),
+        itemCount: state.orderedSets.length,
+      ),
       SliverToBoxAdapter(
         child: Container(
           height: 100,
@@ -301,25 +310,7 @@ class _WorkoutItemScreenWidgetState extends State<WorkoutItemScreenWidget> {
     return [
       if (state.orderedSets.isNotEmpty)
         PopupMenuItem(
-          value: () {
-            {
-              SequentiableReorderWidget.showModal<WorkoutSet>(
-                  context,
-                  state.orderedSets,
-                  (set) => ListTile(
-                        title: Text(
-                          // TODO THis needs something more sophisticated as multiple sets can have the same exercise with different parameters
-                          set.exercise?.name ?? '<No name>',
-                          style: const TextStyle(
-                            fontSize: 15,
-                          ),
-                        ),
-                        trailing: Icon(Icons.drag_handle),
-                      ),
-                  title: const Text("Sets reorder"),
-                  onReorder: (phase, index) {});
-            }
-          },
+          value: () {},
           // row has two child icon and text.
           child: Row(
             children: [
