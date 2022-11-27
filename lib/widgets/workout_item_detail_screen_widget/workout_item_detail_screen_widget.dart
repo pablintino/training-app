@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:training_app/app_routes.dart';
 import 'package:training_app/models/workout_models.dart';
 import 'package:training_app/utils/conversion.dart';
 import 'package:training_app/utils/form_utils.dart';
 import 'package:training_app/widgets/time_picker_widget.dart';
 import 'package:training_app/widgets/two_letters_icon.dart';
 import 'package:training_app/widgets/workout_session_detail_screen_widget/bloc/workout_session_manipulator_bloc.dart';
+import 'package:training_app/widgets/workout_set_detail_screen_widget/workout_set_detail_screen_widget.dart';
 
 import 'bloc/workout_item_manipulator_bloc.dart';
 
@@ -184,7 +186,7 @@ class _WorkoutItemScreenWidgetState extends State<WorkoutItemScreenWidget> {
         itemBuilder: (ctx, idx) => ReorderableDragStartListener(
             index: idx,
             key: Key("$idx"),
-            child: _buildSetWidget(ctx, state.orderedSets[idx])),
+            child: _buildSetWidget(ctx, bloc, state.orderedSets[idx])),
         onReorder: (int oldIndex, int newIndex) => bloc.add(
             MoveWorkoutSetEditionEvent(state.orderedSets[oldIndex],
                 oldIndex < newIndex ? newIndex - 1 : newIndex)),
@@ -212,7 +214,8 @@ class _WorkoutItemScreenWidgetState extends State<WorkoutItemScreenWidget> {
     ];
   }
 
-  Padding _buildSetWidget(BuildContext context, WorkoutSet workoutSet) {
+  Padding _buildSetWidget(BuildContext context, WorkoutItemManipulatorBloc bloc,
+      WorkoutSet workoutSet) {
     return Padding(
         padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         child: Card(
@@ -227,6 +230,13 @@ class _WorkoutItemScreenWidgetState extends State<WorkoutItemScreenWidget> {
                     factor: 0.65,
                   ),
                   title: Text(workoutSet.exercise?.name ?? "<no name>"),
+                  trailing: IconButton(
+                    icon: Icon(Icons.edit),
+                    onPressed: () => Navigator.pushNamed(
+                        context, AppRoutes.WORKOUTS_SET_DETAILS_SCREEN_ROUTE,
+                        arguments:
+                            WorkoutSetScreenWidgetArguments(workoutSet, bloc)),
+                  ),
                 ),
                 Align(
                   alignment: Alignment.centerLeft,

@@ -37,6 +37,11 @@ class ExercisesRepository {
             exercises.map((e) => Exercise.fromModel(e)).toList());
   }
 
+  Future<List<Exercise>> getExercises() async {
+    return await (_db.exerciseDAO.getAllExercises()).then(
+        (exercises) => exercises.map((e) => Exercise.fromModel(e)).toList());
+  }
+
   Future<Exercise?> getByName(String name) async {
     return await _db.exerciseDAO
         .getByName(name)
