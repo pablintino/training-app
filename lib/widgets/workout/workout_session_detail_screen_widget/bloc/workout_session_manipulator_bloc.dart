@@ -3,9 +3,11 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:training_app/models/workout_models.dart';
 import 'package:training_app/repositories/workouts_repository.dart';
+import 'package:training_app/widgets/workout/bloc/workout_global_editing_bloc.dart';
 
 part 'workout_session_manipulator_event.dart';
 
@@ -14,10 +16,18 @@ part 'workout_session_manipulator_state.dart';
 class WorkoutSessionManipulatorBloc extends Bloc<WorkoutSessionManipulatorEvent,
     WorkoutSessionManipulatorState> {
   final WorkoutRepository _workoutRepository;
+  final WorkoutGlobalEditingBloc workoutGlobalEditingBloc;
+  late StreamSubscription<WorkoutGlobalEditingState>
+      workoutGlobalEditingBlocSubscription;
 
-  WorkoutSessionManipulatorBloc()
+  WorkoutSessionManipulatorBloc(this.workoutGlobalEditingBloc)
       : _workoutRepository = GetIt.instance<WorkoutRepository>(),
         super(WorkoutSessionDetailsInitial()) {
+    // Register to global editing bloc changes
+    workoutGlobalEditingBlocSubscription = workoutGlobalEditingBloc.stream
+        .listen(_onWorkoutGlobalEditingBlocStateChange);
+
+    //Register events
     on<LoadSessionEvent>((event, emit) => _handleLoadSessionEvent(emit, event));
     on<StartWorkoutSessionEditionEvent>(
         (event, emit) => _handleStartWorkoutSessionEditionEvent(emit));
@@ -30,6 +40,9 @@ class WorkoutSessionManipulatorBloc extends Bloc<WorkoutSessionManipulatorEvent,
     on<MoveWorkoutItemEditionEvent>(
         (event, emit) => _handleMoveWorkoutItemEditionEvent(emit, event));
   }
+
+  void _onWorkoutGlobalEditingBlocStateChange(
+      WorkoutGlobalEditingState state) {}
 
   void _handleSaveSessionWorkoutEditionEvent(Emitter emit) {
     // TODO
@@ -164,5 +177,12 @@ class WorkoutSessionManipulatorBloc extends Bloc<WorkoutSessionManipulatorEvent,
 
     orderedPhases.sort((a, b) => a.sequence!.compareTo(b.sequence!));
     return orderedPhases;
+  }
+
+  @override
+  @mustCallSuper
+  Future<void> close() async {
+    workoutGlobalEditingBlocSubscription.cancel();
+    return super.close();
   }
 }

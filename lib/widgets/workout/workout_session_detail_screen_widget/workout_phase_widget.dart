@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:training_app/app_routes.dart';
 import 'package:training_app/models/workout_models.dart';
 import 'package:training_app/widgets/fixed_color_round_icon.dart';
 import 'package:training_app/widgets/sequentiable_reorder_widget/sequentiable_reorder_widget.dart';
-import 'package:training_app/widgets/workout_session_detail_screen_widget/bloc/workout_session_manipulator_bloc.dart';
-import 'package:training_app/widgets/workout_session_detail_screen_widget/workout_item_widget.dart';
+import 'package:training_app/widgets/workout/bloc/workout_global_editing_bloc.dart';
+import 'package:training_app/widgets/workout/workout_item_detail_screen_widget/workout_item_detail_screen_widget.dart';
+import 'package:training_app/widgets/workout/workout_session_detail_screen_widget/bloc/workout_session_manipulator_bloc.dart';
+import 'package:training_app/widgets/workout/workout_session_detail_screen_widget/workout_item_widget.dart';
 
 class WorkoutPhaseWidget extends StatelessWidget {
   final WorkoutPhase _workoutPhase;
@@ -63,7 +66,17 @@ class WorkoutPhaseWidget extends StatelessWidget {
           .map((workoutItem) => Padding(
                 key: Key('${workoutItem.id!}'),
                 padding: EdgeInsets.symmetric(vertical: 0),
-                child: WorkoutItemWidget(workoutItem, _workoutPhase, isEditing),
+                child: WorkoutItemWidget(
+                    workoutItem,
+                    _workoutPhase,
+                    isEditing,
+                    (workoutItem) => Navigator.pushNamed(
+                        context, AppRoutes.WORKOUTS_ITEM_DETAILS_SCREEN_ROUTE,
+                        arguments: WorkoutItemScreenWidgetArguments(
+                            workoutItem,
+                            _workoutPhase,
+                            BlocProvider.of<WorkoutGlobalEditingBloc>(
+                                context)))),
               ))
           .toList(),
     );

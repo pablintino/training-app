@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:training_app/app_routes.dart';
 import 'package:training_app/utils/form_utils.dart';
-import 'package:training_app/widgets/workout_detail_screen_widget/bloc/workout_manipulator_bloc.dart';
+import 'package:training_app/widgets/common/common_section_separator.dart';
+import 'package:training_app/widgets/common/common_sliver_app_bar.dart';
+import 'package:training_app/widgets/common/fields/common_text_form_field.dart';
+import 'package:training_app/widgets/workout/bloc/workout_global_editing_bloc.dart';
+import 'package:training_app/widgets/workout/workout_detail_screen_widget/bloc/workout_manipulator_bloc.dart';
 import 'package:training_app/models/workout_models.dart';
-import 'package:training_app/widgets/workout_list_widget/bloc/workout_list_bloc.dart';
-import 'package:training_app/widgets/workout_session_detail_screen_widget/workout_session_detail_screen_widget.dart';
-import 'package:training_app/widgets/workout_detail_screen_widget/workout_session_week_widget.dart';
+import 'package:training_app/widgets/workout/workout_list_widget/bloc/workout_list_bloc.dart';
+import 'package:training_app/widgets/workout/workout_session_detail_screen_widget/workout_session_detail_screen_widget.dart';
+import 'package:training_app/widgets/workout/workout_detail_screen_widget/workout_session_week_widget.dart';
 
 class WorkoutScreenWidgetArguments {
   final int workoutId;
@@ -44,9 +48,16 @@ class _WorkoutDetailsScreenWidgetState
     final args = ModalRoute.of(context)!.settings.arguments
         as WorkoutScreenWidgetArguments;
     return Scaffold(
-        body: BlocProvider<WorkoutManipulatorBloc>(
-      create: (_) => WorkoutManipulatorBloc(args.workoutListBloc)
-        ..add(LoadWorkoutEvent(args.workoutId)),
+        body: MultiBlocProvider(
+      providers: [
+        BlocProvider<WorkoutGlobalEditingBloc>(
+          create: (_) => WorkoutGlobalEditingBloc(),
+        ),
+        BlocProvider<WorkoutManipulatorBloc>(
+            create: (ctx) => WorkoutManipulatorBloc(args.workoutListBloc,
+                BlocProvider.of<WorkoutGlobalEditingBloc>(ctx))
+              ..add(LoadWorkoutEvent(args.workoutId)))
+      ],
       child: BlocConsumer<WorkoutManipulatorBloc, WorkoutManipulatorState>(
           listener: _stateChangeListener,
           builder: (ctx, state) => state is WorkoutManipulatorLoadedState
@@ -77,78 +88,31 @@ class _WorkoutDetailsScreenWidgetState
     }
   }
 
-  SliverAppBar _buildAppBar(
-      BuildContext context, WorkoutManipulatorLoadedState state) {
+  Widget _buildAppBar(
+      BuildContext context, final WorkoutManipulatorLoadedState state) {
     final bloc = BlocProvider.of<WorkoutManipulatorBloc>(context);
-    return SliverAppBar(
-      automaticallyImplyLeading: true,
-      backgroundColor: Theme.of(context).primaryColor,
-      expandedHeight: 125,
-      floating: true,
-      pinned: true,
-      flexibleSpace: Stack(
-        children: <Widget>[
-          Positioned.fill(
-            child: Image.network(
-              'https://source.unsplash.com/random?monochromatic+dark',
-              fit: BoxFit.cover,
-            ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Container(
-                width: 300,
-                child: FlexibleSpaceBar(title: Text(state.workout.name!)),
-              ),
-              Expanded(child: Container()),
-              IconButton(
-                color: Colors.white,
-                icon: Icon(state is WorkoutManipulatorEditingState
-                    ? Icons.save
-                    : Icons.edit),
-                onPressed: () => bloc.add(
-                    state is WorkoutManipulatorEditingState
-                        ? SaveWorkoutEditionEvent()
-                        : StartWorkoutEditionEvent()),
-              )
-            ],
-          )
-        ],
-      ),
+    return CommonSliverAppBar(
+      options: [
+        IconButton(
+          color: Colors.white,
+          icon: Icon(state is WorkoutManipulatorEditingState
+              ? Icons.save
+              : Icons.edit),
+          onPressed: () => bloc.add(state is WorkoutManipulatorEditingState
+              ? SaveWorkoutEditionEvent()
+              : StartWorkoutEditionEvent()),
+        )
+      ],
+      title: Text(state.workout.name!),
     );
   }
 
   List<Widget> _buildBody(BuildContext context,
       WorkoutManipulatorLoadedState state, ScrollController _scroller) {
-    final groupedSessions = _groupSessionByWeek(state);
     final bloc = BlocProvider.of<WorkoutManipulatorBloc>(context);
     return [
-      SliverList(
-          delegate: SliverChildListDelegate([
-        _buildWorkoutNameField(state, bloc),
-        _buildWorkoutDescriptionField(state, bloc),
-        _buildSessionsSeparator(context),
-      ])),
-      SliverList(
-          delegate: SliverChildBuilderDelegate(
-        (_, idx) => WorkoutSessionWeekWidget(
-          groupedSessions[groupedSessions.keys.elementAt(idx)]!,
-          state is WorkoutManipulatorEditingState,
-          groupedSessions.keys.elementAt(idx),
-          onDragStatusChange: (isDragging) =>
-              bloc.add(SetSessionDraggingEvent(true)),
-          onTap: (session) => Navigator.pushNamed(
-              context, AppRoutes.WORKOUTS_SESSIONS_DETAILS_SCREEN_ROUTE,
-              arguments: WorkoutSessionScreenWidgetArguments(
-                  session.id!, state is WorkoutManipulatorEditingState)),
-          onDragShouldAccept: (_, __, ___) => true,
-          onDragAccept: (session, week, day) =>
-              bloc.add(DragSessionWorkoutEditionEvent(session, week, day)),
-        ),
-        childCount: groupedSessions.keys.length,
-      )),
+      _buildWorkoutFields(state, bloc),
+      _buildSessionsList(context, state, bloc),
 
       // This SizedBox helps drag&drop at the bottom of the screen
       if (state is WorkoutManipulatorEditingState)
@@ -172,6 +136,57 @@ class _WorkoutDetailsScreenWidgetState
           ),
         )
     ];
+  }
+
+  SliverPadding _buildSessionsList(BuildContext context,
+      WorkoutManipulatorLoadedState state, WorkoutManipulatorBloc bloc) {
+    final groupedSessions = _groupSessionByWeek(state);
+    return SliverPadding(
+        padding: EdgeInsets.symmetric(horizontal: 10),
+        sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+          (_, idx) => Padding(
+            padding: EdgeInsets.symmetric(vertical: 5),
+            child: WorkoutSessionWeekWidget(
+              groupedSessions[groupedSessions.keys.elementAt(idx)]!,
+              state is WorkoutManipulatorEditingState,
+              groupedSessions.keys.elementAt(idx),
+              onDragStatusChange: (isDragging) =>
+                  bloc.add(SetSessionDraggingEvent(true)),
+              onTap: (session) => Navigator.pushNamed(
+                  context, AppRoutes.WORKOUTS_SESSIONS_DETAILS_SCREEN_ROUTE,
+                  arguments: WorkoutSessionScreenWidgetArguments(
+                      session.id!,
+                      state is WorkoutManipulatorEditingState,
+                      BlocProvider.of<WorkoutGlobalEditingBloc>(context))),
+              onDragShouldAccept: (_, __, ___) => true,
+              onDragAccept: (session, week, day) =>
+                  bloc.add(DragSessionWorkoutEditionEvent(session, week, day)),
+            ),
+          ),
+          childCount: groupedSessions.keys.length,
+        )));
+  }
+
+  SliverPadding _buildWorkoutFields(
+      WorkoutManipulatorLoadedState state, WorkoutManipulatorBloc bloc) {
+    return SliverPadding(
+        padding: EdgeInsets.symmetric(horizontal: 10),
+        sliver: SliverList(
+            delegate: SliverChildListDelegate([
+          CommonTextFormField(
+            hint: 'Name',
+            enabled: state is WorkoutManipulatorEditingState,
+            controller: _nameController,
+            focusNode: _nameFocusNode,
+            onChanged: (value) => bloc.add(NameInputUpdateEvent(value)),
+            style: TextStyle(fontSize: 25.0),
+            textAlign: TextAlign.left,
+            validationMessage: _getNameValidationError(state),
+          ),
+          _buildWorkoutDescriptionField(state, bloc),
+          CommonSectionSeparator(title: 'Sessions'),
+        ])));
   }
 
   Map<int, List<WorkoutSession>> _groupSessionByWeek(
@@ -199,87 +214,21 @@ class _WorkoutDetailsScreenWidgetState
 
   Widget _buildWorkoutDescriptionField(WorkoutManipulatorLoadedState state,
       WorkoutManipulatorBloc workoutManipulatorBloc) {
-    final isEditing = state is WorkoutManipulatorEditingState;
     return state.workout.description != null ||
             state is WorkoutManipulatorEditingState
-        ? Padding(
-            padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 10),
-            child: TextFormField(
-              enabled: state is WorkoutManipulatorEditingState,
-              controller: _descriptionController,
-              focusNode: _descriptionFocusNode,
-              onChanged: (value) => workoutManipulatorBloc
-                  .add(DescriptionInputUpdateEvent(value)),
-              decoration: !isEditing
-                  ? InputDecoration(
-                      border: InputBorder.none,
-                      hintText: state.workout.name!,
-                      errorText: _getDescriptionValidationError(state))
-                  : InputDecoration(
-                      errorText: _getDescriptionValidationError(state)),
-              style: TextStyle(fontSize: 15.0),
-              maxLines: 3,
-              textAlign: TextAlign.left,
-            ),
+        ? CommonTextFormField(
+            hint: 'Description',
+            enabled: state is WorkoutManipulatorEditingState,
+            controller: _descriptionController,
+            focusNode: _descriptionFocusNode,
+            onChanged: (value) =>
+                workoutManipulatorBloc.add(DescriptionInputUpdateEvent(value)),
+            style: TextStyle(fontSize: 15.0),
+            maxLines: 3,
+            textAlign: TextAlign.left,
+            validationMessage: _getDescriptionValidationError(state),
           )
         : Container();
-  }
-
-  Widget _buildSessionsSeparator(BuildContext context) {
-    return PreferredSize(
-      preferredSize:
-          Size(double.infinity, MediaQuery.of(context).size.height / 6),
-      child: Padding(
-        padding: const EdgeInsets.all(10.0),
-        child: Column(
-          children: [
-            Container(
-              alignment: AlignmentDirectional.topStart,
-              child: Text(
-                'Sessions',
-                style: TextStyle(fontSize: 18.0),
-                textAlign: TextAlign.left,
-              ),
-            ),
-            Row(
-              children: [
-                Container(
-                  width: MediaQuery.of(context).size.width - 50,
-                  child: Divider(
-                    thickness: 1,
-                    color: Colors.blue.withOpacity(0.5),
-                  ),
-                ),
-                Expanded(child: Container())
-              ],
-            )
-          ],
-        ),
-      ),
-    );
-  }
-
-  Padding _buildWorkoutNameField(WorkoutManipulatorLoadedState state,
-      WorkoutManipulatorBloc workoutManipulatorBloc) {
-    final isEditing = state is WorkoutManipulatorEditingState;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 10),
-      child: TextFormField(
-        enabled: isEditing,
-        controller: _nameController,
-        focusNode: _nameFocusNode,
-        onChanged: (value) =>
-            workoutManipulatorBloc.add(NameInputUpdateEvent(value)),
-        decoration: !isEditing
-            ? InputDecoration(
-                border: InputBorder.none,
-                hintText: state.workout.name!,
-                errorText: _getNameValidationError(state))
-            : InputDecoration(errorText: _getNameValidationError(state)),
-        style: TextStyle(fontSize: 25.0),
-        textAlign: TextAlign.left,
-      ),
-    );
   }
 
   Widget _buildScrollView(

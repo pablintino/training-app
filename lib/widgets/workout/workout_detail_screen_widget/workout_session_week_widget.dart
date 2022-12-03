@@ -24,30 +24,26 @@ class WorkoutSessionWeekWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
-      child: Card(
-        elevation: 5.0,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ListTile(
-
-              title: Text('Week ${weekSessions.elementAt(0).week}'),
+    return Card(
+      elevation: 5.0,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ListTile(
+            title: Text('Week ${weekSessions.elementAt(0).week}'),
+          ),
+          const Divider(
+            thickness: 1.0,
+            height: 1.0,
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 10.0,
+              vertical: 5.0,
             ),
-            const Divider(
-              thickness: 1.0,
-              height: 1.0,
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 10.0,
-                vertical: 5.0,
-              ),
-              child: _buildList(context),
-            )
-          ],
-        ),
+            child: _buildList(context),
+          )
+        ],
       ),
     );
   }

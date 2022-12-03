@@ -17,10 +17,10 @@ import 'package:training_app/repositories/workouts_repository.dart';
 import 'package:training_app/widgets/exercise_screen/exercise_list_screen_widget.dart';
 import 'package:training_app/widgets/splash_screen_widget/splash_screen_widget.dart';
 import 'package:training_app/widgets/main_app_widget/main_app_widget.dart';
-import 'package:training_app/widgets/workout_detail_screen_widget/workout_detail_screen_widget.dart';
-import 'package:training_app/widgets/workout_item_detail_screen_widget/workout_item_detail_screen_widget.dart';
-import 'package:training_app/widgets/workout_session_detail_screen_widget/workout_session_detail_screen_widget.dart';
-import 'package:training_app/widgets/workout_set_detail_screen_widget/workout_set_detail_screen_widget.dart';
+import 'package:training_app/widgets/workout/workout_detail_screen_widget/workout_detail_screen_widget.dart';
+import 'package:training_app/widgets/workout/workout_item_detail_screen_widget/workout_item_detail_screen_widget.dart';
+import 'package:training_app/widgets/workout/workout_session_detail_screen_widget/workout_session_detail_screen_widget.dart';
+import 'package:training_app/widgets/workout/workout_set_detail_screen_widget/workout_set_detail_screen_widget.dart';
 import 'database/database.dart';
 
 void main() {

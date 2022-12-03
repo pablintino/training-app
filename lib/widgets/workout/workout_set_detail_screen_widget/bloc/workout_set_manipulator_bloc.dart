@@ -7,7 +7,7 @@ import 'package:training_app/models/exercises_models.dart';
 import 'package:training_app/models/workout_models.dart';
 import 'package:training_app/repositories/exercises_repository.dart';
 import 'package:training_app/utils/form_utils.dart';
-import 'package:training_app/widgets/workout_item_detail_screen_widget/bloc/workout_item_manipulator_bloc.dart';
+import 'package:training_app/widgets/workout/bloc/workout_global_editing_bloc.dart';
 
 part 'workout_set_manipulator_event.dart';
 
@@ -16,9 +16,9 @@ part 'workout_set_manipulator_state.dart';
 class WorkoutSetManipulatorBloc
     extends Bloc<WorkoutSetManipulatorEvent, WorkoutSetManipulatorState> {
   final ExercisesRepository _exercisesRepository;
-  final WorkoutItemManipulatorBloc _itemManipulatorBloc;
+  final WorkoutGlobalEditingBloc workoutGlobalEditingBloc;
 
-  WorkoutSetManipulatorBloc(this._itemManipulatorBloc)
+  WorkoutSetManipulatorBloc(this.workoutGlobalEditingBloc)
       : _exercisesRepository = GetIt.instance<ExercisesRepository>(),
         super(WorkoutSetManipulatorInitial()) {
     on<LoadSetEvent>((event, emit) => _handleLoadSetEvent(emit, event));

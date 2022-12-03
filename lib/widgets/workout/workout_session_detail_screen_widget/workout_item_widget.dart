@@ -3,16 +3,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:training_app/app_routes.dart';
 import 'package:training_app/models/workout_models.dart';
 import 'package:training_app/utils/conversion.dart';
-import 'package:training_app/widgets/workout_item_detail_screen_widget/workout_item_detail_screen_widget.dart';
-import 'package:training_app/widgets/workout_session_detail_screen_widget/bloc/workout_session_manipulator_bloc.dart';
+import 'package:training_app/widgets/workout/workout_item_detail_screen_widget/workout_item_detail_screen_widget.dart';
+import 'package:training_app/widgets/workout/workout_session_detail_screen_widget/bloc/workout_session_manipulator_bloc.dart';
 
 class WorkoutItemWidget extends StatelessWidget {
   final WorkoutItem workoutItem;
   final WorkoutPhase parentWorkoutPhase;
   final bool isEditing;
+  final Function(WorkoutItem) onTap;
 
   const WorkoutItemWidget(
-      this.workoutItem, this.parentWorkoutPhase, this.isEditing,
+      this.workoutItem, this.parentWorkoutPhase, this.isEditing, this.onTap,
       {Key? key})
       : super(key: key);
 
@@ -32,72 +33,36 @@ class WorkoutItemWidget extends StatelessWidget {
     return Container(
       child: ListTileTheme(
         tileColor: Theme.of(context).primaryColor.withOpacity(0.3),
-        child: ListTile(
-          title: Row(
-            children: [
-              Text(
-                workoutItem.name ?? 'No name',
-                style: TextStyle(
-                  fontSize: 15,
-                ),
-              ),
-              if (workoutItem.workModality != null)
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 5),
-                  child: Text(
-                    '(${workoutItem.workModality})',
-                    style: TextStyle(
-                      fontStyle: FontStyle.italic,
-                      fontSize: 15,
-                    ),
+        child: InkWell(
+          child: ListTile(
+            title: Row(
+              children: [
+                Text(
+                  workoutItem.name ?? 'No name',
+                  style: TextStyle(
+                    fontSize: 15,
                   ),
                 ),
-              Expanded(child: Container()),
-              if (isEditing)
-                PopupMenuButton<Function>(
-                  icon: Icon(Icons.more_horiz),
-                  onSelected: (func) => func(),
-                  itemBuilder: (ctx) => [
-                    // popupmenu item 1
-                    PopupMenuItem(
-                      value: () => Navigator.pushNamed(
-                          context, AppRoutes.WORKOUTS_ITEM_DETAILS_SCREEN_ROUTE,
-                          arguments: WorkoutItemScreenWidgetArguments(
-                              workoutItem,
-                              parentWorkoutPhase,
-                              BlocProvider.of<WorkoutSessionManipulatorBloc>(
-                                  context))),
-                      // row has two child icon and text.
-                      child: Row(
-                        children: [
-                          Icon(Icons.edit),
-                          SizedBox(
-                            // sized box with width 10
-                            width: 10,
-                          ),
-                          Text("Edit")
-                        ],
+                if (workoutItem.workModality != null)
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 5),
+                    child: Text(
+                      '(${workoutItem.workModality})',
+                      style: TextStyle(
+                        fontStyle: FontStyle.italic,
+                        fontSize: 15,
                       ),
                     ),
-                    // popupmenu item 2
-                    PopupMenuItem(
-                      value: () {},
-                      // row has two child icon and text
-                      child: Row(
-                        children: [
-                          Icon(Icons.delete),
-                          SizedBox(
-                            // sized box with width 10
-                            width: 10,
-                          ),
-                          Text("Delete")
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-            ],
+                  ),
+                Expanded(child: Container()),
+              ],
+            ),
           ),
+          onTap: () {
+            if (isEditing) {
+              onTap(workoutItem);
+            }
+          },
         ),
       ),
     );

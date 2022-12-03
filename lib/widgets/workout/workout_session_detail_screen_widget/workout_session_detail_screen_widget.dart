@@ -2,15 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:training_app/models/workout_models.dart';
 import 'package:training_app/utils/known_constants.dart';
+import 'package:training_app/widgets/common/common_sliver_app_bar.dart';
 import 'package:training_app/widgets/sequentiable_reorder_widget/sequentiable_reorder_widget.dart';
-import 'package:training_app/widgets/workout_session_detail_screen_widget/bloc/workout_session_manipulator_bloc.dart';
-import 'package:training_app/widgets/workout_session_detail_screen_widget/workout_phase_widget.dart';
+import 'package:training_app/widgets/workout/bloc/workout_global_editing_bloc.dart';
+import 'package:training_app/widgets/workout/workout_session_detail_screen_widget/bloc/workout_session_manipulator_bloc.dart';
+import 'package:training_app/widgets/workout/workout_session_detail_screen_widget/workout_phase_widget.dart';
 
 class WorkoutSessionScreenWidgetArguments {
   final int sessionId;
   final bool initEditMode;
+  final WorkoutGlobalEditingBloc workoutGlobalEditingBloc;
 
-  WorkoutSessionScreenWidgetArguments(this.sessionId, this.initEditMode);
+  WorkoutSessionScreenWidgetArguments(
+      this.sessionId, this.initEditMode, this.workoutGlobalEditingBloc);
 }
 
 class WorkoutSessionScreenWidget extends StatefulWidget {
@@ -30,20 +34,26 @@ class _WorkoutSessionScreenWidgetState
     final args = ModalRoute.of(context)!.settings.arguments
         as WorkoutSessionScreenWidgetArguments;
     return Scaffold(
-        body: SafeArea(
-      child: BlocProvider<WorkoutSessionManipulatorBloc>(
-        create: (_) => WorkoutSessionManipulatorBloc()
-          ..add(LoadSessionEvent(args.sessionId, args.initEditMode)),
-        child: BlocBuilder<WorkoutSessionManipulatorBloc,
-                WorkoutSessionManipulatorState>(
-            builder: (ctx, state) =>
-                state is WorkoutSessionManipulatorLoadedState
-                    ? _buildScrollView(ctx, state)
-                    : const Center(
-                        child: Text('No data'),
-                      )),
+      body: SafeArea(
+        child: MultiBlocProvider(
+          providers: [
+            BlocProvider.value(value: args.workoutGlobalEditingBloc),
+            BlocProvider<WorkoutSessionManipulatorBloc>(
+                create: (_) => WorkoutSessionManipulatorBloc(
+                    args.workoutGlobalEditingBloc)
+                  ..add(LoadSessionEvent(args.sessionId, args.initEditMode)))
+          ],
+          child: BlocBuilder<WorkoutSessionManipulatorBloc,
+                  WorkoutSessionManipulatorState>(
+              builder: (ctx, state) =>
+                  state is WorkoutSessionManipulatorLoadedState
+                      ? _buildScrollView(ctx, state)
+                      : const Center(
+                          child: Text('No data'),
+                        )),
+        ),
       ),
-    ));
+    );
   }
 
   Widget _buildScrollView(
@@ -59,7 +69,8 @@ class _WorkoutSessionScreenWidgetState
   }
 
   List<Widget> _buildBody(
-      BuildContext context, WorkoutSessionManipulatorLoadedState state) {
+      BuildContext context,
+      WorkoutSessionManipulatorLoadedState state) {
     // Todo, improve
     final bloc = BlocProvider.of<WorkoutSessionManipulatorBloc>(context);
     return [
@@ -67,7 +78,8 @@ class _WorkoutSessionScreenWidgetState
           delegate: SliverChildBuilderDelegate(
         (_, idx) => Padding(
             padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            child: WorkoutPhaseWidget(state.orderedPhases[idx])),
+            child: WorkoutPhaseWidget(
+                state.orderedPhases[idx])),
         childCount: state.orderedPhases.length,
       )),
 
@@ -95,46 +107,18 @@ class _WorkoutSessionScreenWidgetState
     ];
   }
 
-  SliverAppBar _buildAppBar(
+  Widget _buildAppBar(
       BuildContext context, final WorkoutSessionManipulatorLoadedState state) {
-    final bloc = BlocProvider.of<WorkoutSessionManipulatorBloc>(context);
-    return SliverAppBar(
-      automaticallyImplyLeading: true,
-      backgroundColor: Theme.of(context).primaryColor,
-      expandedHeight: 125,
-      floating: true,
-      pinned: true,
-      flexibleSpace: Stack(
-        children: <Widget>[
-          Positioned.fill(
-            child: Image.network(
-              'https://source.unsplash.com/random?monochromatic+dark',
-              fit: BoxFit.cover,
-            ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Container(
-                width: MediaQuery.of(context).size.width * 3 / 4,
-                child: FlexibleSpaceBar(
-                    title: Text(
-                        'Week ${state.workoutSession.week}, ${getDayNameFromInt(state.workoutSession.week)}')),
-              ),
-              Expanded(child: Container()),
-              ..._buildAppBarActions(context, state, bloc)
-            ],
-          )
-        ],
-      ),
+    return CommonSliverAppBar(
+      options: _buildAppBarActions(context, state),
+      title: Text(
+          'Week ${state.workoutSession.week}, ${getDayNameFromInt(state.workoutSession.week)}'),
     );
   }
 
   List<Widget> _buildAppBarActions(
-      BuildContext context,
-      WorkoutSessionManipulatorLoadedState state,
-      WorkoutSessionManipulatorBloc bloc) {
+      BuildContext context, WorkoutSessionManipulatorLoadedState state) {
+    final bloc = BlocProvider.of<WorkoutSessionManipulatorBloc>(context);
     final options = _buildEditionOptions(context, state, bloc);
     return [
       if (options.isNotEmpty)

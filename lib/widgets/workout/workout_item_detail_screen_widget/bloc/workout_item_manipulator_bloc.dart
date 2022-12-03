@@ -3,11 +3,13 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:training_app/models/workout_models.dart';
 import 'package:training_app/repositories/workouts_repository.dart';
 import 'package:training_app/utils/form_utils.dart';
 import 'package:training_app/utils/streams.dart';
+import 'package:training_app/widgets/workout/bloc/workout_global_editing_bloc.dart';
 
 part 'workout_item_manipulator_event.dart';
 
@@ -16,10 +18,18 @@ part 'workout_item_manipulator_state.dart';
 class WorkoutItemManipulatorBloc
     extends Bloc<WorkoutItemManipulatorEvent, WorkoutItemManipulatorState> {
   final WorkoutRepository _workoutRepository;
+  final WorkoutGlobalEditingBloc workoutGlobalEditingBloc;
+  late StreamSubscription<WorkoutGlobalEditingState>
+      workoutGlobalEditingBlocSubscription;
 
-  WorkoutItemManipulatorBloc()
+  WorkoutItemManipulatorBloc(this.workoutGlobalEditingBloc)
       : _workoutRepository = GetIt.instance<WorkoutRepository>(),
         super(WorkoutItemManipulatorInitialState()) {
+    // Register to global editing bloc changes
+    workoutGlobalEditingBlocSubscription = workoutGlobalEditingBloc.stream
+        .listen(_onWorkoutGlobalEditingBlocStateChange);
+
+    //Register events
     on<LoadItemEvent>((event, emit) => _handleLoadItemEvent(emit, event));
     on<WorkoutItemWorkTimeChanged>(
         (event, emit) => _handleWorkTimeChangedEvent(emit, event));
@@ -41,6 +51,9 @@ class WorkoutItemManipulatorBloc
         transformer:
             DebounceTransformer.debounce(const Duration(milliseconds: 250)));
   }
+
+  void _onWorkoutGlobalEditingBlocStateChange(
+      WorkoutGlobalEditingState state) {}
 
   void _handleWorkoutItemNameChanged(
       Emitter emit, WorkoutItemNameChanged event) {
@@ -171,5 +184,12 @@ class WorkoutItemManipulatorBloc
           currentState.workoutItemName, ValidationError.alreadyExists, value);
     }
     return StringField.createValidFrom(currentState.workoutItemName, value);
+  }
+
+  @override
+  @mustCallSuper
+  Future<void> close() async {
+    workoutGlobalEditingBlocSubscription.cancel();
+    return super.close();
   }
 }

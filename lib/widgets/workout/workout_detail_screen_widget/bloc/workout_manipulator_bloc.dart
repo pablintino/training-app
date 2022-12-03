@@ -3,12 +3,14 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:training_app/models/workout_models.dart';
 import 'package:training_app/repositories/workouts_repository.dart';
 import 'package:training_app/utils/form_utils.dart';
 import 'package:training_app/utils/streams.dart';
-import 'package:training_app/widgets/workout_list_widget/bloc/workout_list_bloc.dart';
+import 'package:training_app/widgets/workout/bloc/workout_global_editing_bloc.dart';
+import 'package:training_app/widgets/workout/workout_list_widget/bloc/workout_list_bloc.dart';
 
 part 'workout_manipulator_event.dart';
 
@@ -25,10 +27,18 @@ class WorkoutManipulatorBloc
     extends Bloc<WorkoutManipulatorEvent, WorkoutManipulatorState> {
   final WorkoutRepository _workoutRepository;
   final WorkoutListBloc workoutListBloc;
+  late StreamSubscription<WorkoutGlobalEditingState>
+      workoutGlobalEditingBlocSubscription;
 
-  WorkoutManipulatorBloc(this.workoutListBloc)
+  WorkoutManipulatorBloc(
+      this.workoutListBloc, WorkoutGlobalEditingBloc workoutGlobalEditingBloc)
       : _workoutRepository = GetIt.instance<WorkoutRepository>(),
         super(WorkoutManipulatorInitialState()) {
+    // Register to global editing bloc changes
+    workoutGlobalEditingBlocSubscription = workoutGlobalEditingBloc.stream
+        .listen(_onWorkoutGlobalEditingBlocStateChange);
+
+    //Register events
     on<LoadWorkoutEvent>((event, emit) => _handleLoadWorkoutEvent(emit, event));
     on<SetSessionDraggingEvent>(
         (event, emit) => _handleSessionDraggingEvent(emit, event));
@@ -47,6 +57,9 @@ class WorkoutManipulatorBloc
         transformer:
             DebounceTransformer.debounce(const Duration(milliseconds: 250)));
   }
+
+  void _onWorkoutGlobalEditingBlocStateChange(
+      WorkoutGlobalEditingState state) {}
 
   Future<void> _handleLoadWorkoutEvent(
       Emitter emit, LoadWorkoutEvent event) async {
@@ -206,17 +219,9 @@ class WorkoutManipulatorBloc
   StringField _updateDescriptionField(
     StringField currentState,
     String? value,
-  ) {
-    StringField descriptionField;
-    if (value == null || value.isEmpty) {
-      descriptionField = StringField.createInvalidFrom(
-          currentState, ValidationError.empty, value);
-    } else {
-      descriptionField = StringField.createValidFrom(currentState, value);
-    }
-
-    return descriptionField;
-  }
+  ) =>
+      StringField.createValidFrom(
+          currentState, value != null && value.isEmpty ? null : value);
 
   Future<StringField> _updateNameField(
       WorkoutManipulatorEditingState currentState, String? value) async {
@@ -233,5 +238,13 @@ class WorkoutManipulatorBloc
           currentState.workoutName, ValidationError.alreadyExists, value);
     }
     return StringField.createValidFrom(currentState.workoutName, value);
+  }
+
+
+  @override
+  @mustCallSuper
+  Future<void> close() async {
+    workoutGlobalEditingBlocSubscription.cancel();
+    return super.close();
   }
 }

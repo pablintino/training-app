@@ -5,8 +5,8 @@ import 'package:scroll_to_index/scroll_to_index.dart';
 import 'package:training_app/app_routes.dart';
 import 'package:training_app/widgets/list_search_widget/list_search_widget.dart';
 import 'package:training_app/widgets/simple_list_item.dart';
-import 'package:training_app/widgets/workout_detail_screen_widget/workout_detail_screen_widget.dart';
-import 'package:training_app/widgets/workout_list_widget/bloc/workout_list_bloc.dart';
+import 'package:training_app/widgets/workout/workout_detail_screen_widget/workout_detail_screen_widget.dart';
+import 'package:training_app/widgets/workout/workout_list_widget/bloc/workout_list_bloc.dart';
 
 class WorkoutListWidget extends StatefulWidget {
   @override
